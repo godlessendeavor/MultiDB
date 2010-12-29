@@ -1,0 +1,11 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<classpath>
+	<classpathentry kind="src" path="src"/>
+	<classpathentry kind="con" path="org.eclipse.jdt.launching.JRE_CONTAINER"/>
+	<classpathentry kind="lib" path="D:/Documents and Settings/thrasher/My Documents/Java Projects/CLASS_LIB/mp3spi1.9.4.jar"/>
+	<classpathentry kind="lib" path="D:/Documents and Settings/thrasher/My Documents/Java Projects/CLASS_LIB/mysql-connector-java-5.1.7-bin.jar"/>
+	<classpathentry kind="lib" path="D:/Documents and Settings/thrasher/My Documents/Java Projects/CLASS_LIB/tritonus_share.jar"/>
+	<classpathentry kind="lib" path="D:/Documents and Settings/thrasher/My Documents/Java Projects/CLASS_LIB/EaSynthLookAndFeel.jar"/>
+	<classpathentry kind="lib" path="D:/Documents and Settings/thrasher/My Documents/Java Projects/CLASS_LIB/jvftp.jar"/>
+	<classpathentry kind="output" path="build/classes"/>
+</classpath>
