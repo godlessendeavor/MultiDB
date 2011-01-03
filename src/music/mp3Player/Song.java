@@ -13,6 +13,7 @@ public class Song implements Serializable, Comparable<Object> {
     public String name;
     public String timeSt;
     public String group;
+    public String album;
     public String tagTitle;
     public String bitrate;
     public String brFormat;

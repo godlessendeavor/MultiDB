@@ -1,12 +1,10 @@
-/*
- * To change this template, choose Tools | Templates
- * and open the template in the editor.
- */
 package music.mp3Player;
 
 import java.io.File;
 import java.util.ArrayList;
 import java.util.Collections;
+import java.util.LinkedList;
+import java.util.List;
 import java.util.Map;
 import javax.sound.sampled.AudioFileFormat;
 import javax.sound.sampled.AudioSystem;
@@ -27,13 +25,14 @@ public class TabModelPlayList extends AbstractTableModel {
 	public static final int COL_NAME=0;
 	public static final int COL_TIME=1;
 	public static final int COL_GROUP=2;
-	public static final int COL_TITLE=3;
-	public static final int COL_BR=4;
-	public static final int COL_SF=5;
-	public static final int COL_T=6;
-	public static final int COL_P=7;
-	public static final int COL_CHANGE=8;
-	public static final int COL_CURRENT_SONG=9;
+	public static final int COL_ALBUM=3;
+	public static final int COL_TITLE=4;
+	public static final int COL_BR=5;
+	public static final int COL_SF=6;
+	public static final int COL_T=7;
+	public static final int COL_P=8;
+	public static final int COL_CHANGE=9;
+	public static final int COL_CURRENT_SONG=10;
 	
 	public File pathFolder;
 	public String group="";
@@ -44,23 +43,25 @@ public class TabModelPlayList extends AbstractTableModel {
     public int numSongs=0;
 
     public TabModelPlayList(){
-    	labels = new String[10];// Se obtiene cada una de las etiquetas para cada columna
+    	labels = new String[11];// Se obtiene cada una de las etiquetas para cada columna
         labels[0] = "File name";
-        labels[1] = "Time";
+        labels[1] = "Length";
         labels[2] = "Group";
-        labels[3] = "Tag title";
-        labels[4] = "Bitrate";
-        labels[5] = "Sampling Format";
-        labels[6] = "t";
-        labels[7] = "p";
-        labels[8] = "change";
-        labels[9] = "currentSong";
+        labels[3] = "Album";
+        labels[4] = "Tag title";
+        labels[5] = "Bitrate";
+        labels[6] = "Sampling Format";
+        labels[7] = "t";
+        labels[8] = "p";
+        labels[9] = "change";
+        labels[10] = "currentSong";
         
         data = new ArrayList<Song>();
     }
 
-    public void searchFiles(File pathFolder) throws MP3FilesNotFound{
-    	
+    public List<Song> searchFiles(File pathFolder,boolean addToTable,String group,String album) throws MP3FilesNotFound{
+    	List<Song> songList = new LinkedList<Song>();
+    	int songsFound=0;
     	this.pathFolder=pathFolder;
     	String[] files = pathFolder.list();
         int tam = files.length;
@@ -69,7 +70,7 @@ public class TabModelPlayList extends AbstractTableModel {
             int index=0;
             for (int j = 0; j < tam; j++) {
             	if (files[j].matches("(?i).*.mp3")){
-                    numSongs++;
+            		songsFound++;
                     song = new Song();
                     index=files[j].lastIndexOf(".");
                     song.name = files[j].substring(0, index);
@@ -77,18 +78,24 @@ public class TabModelPlayList extends AbstractTableModel {
                     song.path = new File(pathFolder.getAbsolutePath() + "\\" + files[j]);
                     song.change=false;
                     tagReader(song);
-                    data.add(song);
+                    if (song.group==null) song.group=group;
+                    if ((song.group.compareTo("")==0)&&(group!=null)) song.group=group;
+                    if (song.album==null) song.album=album;
+                    if ((song.album.compareTo("")==0)&&(album!=null)) song.album=album;
+                    if (addToTable) data.add(song);
+                    songList.add(song);
                 }else{
                 	File posFolder = new File(pathFolder+"\\"+files[j]);
-                	if (posFolder.isDirectory()) searchFiles(posFolder);
+                	if (posFolder.isDirectory()) searchFiles(posFolder,addToTable,group,album);
                 }
             }	
         }
         
-        if (numSongs==0) {
-			System.out.println("No mp3 files found");
+        if (songsFound==0) {
+			//System.out.println("No mp3 files found");
 			throw (new MP3FilesNotFound());
 		}
+        return songList;
     }
     
     public int getRowCount() {
@@ -104,13 +111,14 @@ public class TabModelPlayList extends AbstractTableModel {
         if (columnIndex == 0) ob = data.get(rowIndex).name;
         if (columnIndex == 1) ob = data.get(rowIndex).timeSt;
         if (columnIndex == 2) ob = data.get(rowIndex).group;
-        if (columnIndex == 3) ob = data.get(rowIndex).tagTitle;
-        if (columnIndex == 4) ob = data.get(rowIndex).bitrate;
-        if (columnIndex == 5) ob = data.get(rowIndex).brFormat;
-        if (columnIndex == 6) ob = data.get(rowIndex).path;
-        if (columnIndex == 7) ob = data.get(rowIndex).time;
-        if (columnIndex == 8) ob = data.get(rowIndex).change;
-        if (columnIndex == 9) ob = data.get(rowIndex).currentSong;
+        if (columnIndex == 3) ob = data.get(rowIndex).album;
+        if (columnIndex == 4) ob = data.get(rowIndex).tagTitle;
+        if (columnIndex == 5) ob = data.get(rowIndex).bitrate;
+        if (columnIndex == 6) ob = data.get(rowIndex).brFormat;
+        if (columnIndex == 7) ob = data.get(rowIndex).path;
+        if (columnIndex == 8) ob = data.get(rowIndex).time;
+        if (columnIndex == 9) ob = data.get(rowIndex).change;
+        if (columnIndex == 10) ob = data.get(rowIndex).currentSong;
         return ob;
     }
 
@@ -124,24 +132,27 @@ public class TabModelPlayList extends AbstractTableModel {
         this.setValueAt(song.name, row, 0);
         this.setValueAt(song.timeSt, row, 1);
         this.setValueAt(song.group, row, 2);
-        this.setValueAt(song.tagTitle, row, 3);
-        this.setValueAt(song.bitrate, row, 4);
-        this.setValueAt(song.brFormat, row, 5);
-        this.setValueAt(song.path, row, 6);
-        this.setValueAt(song.time, row, 7);
-        this.setValueAt(song.change, row, 8);
-        this.setValueAt(song.currentSong, row, 9);
+        this.setValueAt(song.album, row, 3);
+        this.setValueAt(song.tagTitle, row, 4);
+        this.setValueAt(song.bitrate, row, 5);
+        this.setValueAt(song.brFormat, row, 6);
+        this.setValueAt(song.path, row, 7);
+        this.setValueAt(song.time, row, 8);
+        this.setValueAt(song.change, row, 9);
+        this.setValueAt(song.currentSong, row, 10);
         this.fireTableRowsUpdated(row, row);
     }
 
     public int addSong(Song song) {
         data.add(song);
+        numSongs++;
         this.fireTableRowsInserted(data.size(), data.size());
         return (data.size() - 1);
     }
 
     public void deleteSong(int row) {
         data.remove(row);
+        numSongs--;
         this.fireTableRowsDeleted(row, row);
     }
 
@@ -150,6 +161,7 @@ public class TabModelPlayList extends AbstractTableModel {
     	for(int row=0;row<plLength;row++){
     		data.remove(0);
     	}
+    	numSongs=0;
     }
     
     public void sort() {
@@ -169,6 +181,8 @@ public class TabModelPlayList extends AbstractTableModel {
             song.convertTime();
             key = "author";
             song.group = (String) properties.get(key);
+            key = "album";
+            song.album = (String) properties.get(key);
             key = "title";
             song.tagTitle = (String) properties.get(key);
             key="mp3.bitrate.nominal.bps";

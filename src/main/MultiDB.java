@@ -33,6 +33,7 @@ import java.text.Collator;
 import java.util.ArrayList;
 import java.util.LinkedList;
 import java.util.List;
+import java.util.Random;
 import java.util.Set;
 import java.util.TreeSet;
 
@@ -121,7 +122,7 @@ public class MultiDB extends JFrame implements music.db.DataBaseLabels{
     public final int EQ_NUM_BANDS = 10;
     public final String configFileName="multiDB.config";
     public final String LYR_PLAYER_NAME="playerLyricsMenu";
-    public final String LYR_MENU_NAME="nenuViewLyrics"; 
+    public final String LYR_MENU_NAME="menuViewLyrics"; 
     public final int IND_MUSIC_TAB = 0;
     public final int IND_MOVIES_TAB = 1;
     public final int IND_DOCS_TAB = 2;
@@ -162,6 +163,7 @@ public class MultiDB extends JFrame implements music.db.DataBaseLabels{
     public List<Integer> selectedView = new LinkedList<Integer>();//selected Rows in table (View)
     public List<Integer> selectedModel = new LinkedList<Integer>();//selected Rows in table (Model)   
     public TimerThread timerThread;
+    public RandomPlayThread randomPlayThread;
     public Clipboard sysClipboard;
     public long lastTime;
     public int currentCharPos;
@@ -211,12 +213,13 @@ public class MultiDB extends JFrame implements music.db.DataBaseLabels{
     public JMenuItem menuOpcionesCopiarPortadas;
     public JMenuItem menuOpcionesCoverBackup;
     public JMenuItem menuCopyReviews2BUP;
-    public JMenuItem menuvViewNewDiscsViaWeb;
-    public JMenuItem menuPlay;
-    public JMenuItem menuViewLyrics;
+    public JMenuItem menuViewNewDiscsViaWeb;    
+    public JMenuItem menuPlayRandom;
     public JTabbedPane multiPane;
     public MultiDB f;
-    public JPopupMenu popupTable;    
+    public JPopupMenu popupTable;
+    public JMenuItem menuPlay;
+    public JMenuItem menuViewLyrics;
     public MusicTableRender coloredTableRenderer;
     public JFileChooser fc = new JFileChooser(new NewFileSystemView());
     
@@ -447,11 +450,17 @@ public class MultiDB extends JFrame implements music.db.DataBaseLabels{
         menuCopyReviews2BUP.addActionListener(copyReviewsHandler);
         menuOpciones.add(menuCopyReviews2BUP);
         //item VIEWNEWDISCS
-        menuvViewNewDiscsViaWeb = new JMenuItem("Search new discs via web");
-        menuvViewNewDiscsViaWeb.setMnemonic('m');
+        menuViewNewDiscsViaWeb = new JMenuItem("Search new discs via web");
+        menuViewNewDiscsViaWeb.setMnemonic('v');
         ViewNewDiscsHandler viewNewDiscsHandler = new ViewNewDiscsHandler();
-        menuvViewNewDiscsViaWeb.addActionListener(viewNewDiscsHandler);
-        menuOpciones.add(menuvViewNewDiscsViaWeb);
+        menuViewNewDiscsViaWeb.addActionListener(viewNewDiscsHandler);
+        menuOpciones.add(menuViewNewDiscsViaWeb);
+        //item PLAYRANDOM
+        menuPlayRandom = new JMenuItem("Play files at random");
+        menuPlayRandom.setMnemonic('p');
+        PlayRandomHandler playRandomHandler = new PlayRandomHandler();
+        menuPlayRandom.addActionListener(playRandomHandler);
+        menuOpciones.add(menuPlayRandom);
         
        
 
@@ -1432,8 +1441,63 @@ public class MultiDB extends JFrame implements music.db.DataBaseLabels{
     	}	
     	return selectedModel;
     }
-    
+  //method to manage layout of playlist table  
+   public void managePlayListTable(){
+	   ////managing layout
+       try{
+       	TableColumn c = playListTable.getColumn("t");
+       	playListTable.removeColumn(c);
+       	c = playListTable.getColumn("p");
+       	playListTable.removeColumn(c);
+       	c = playListTable.getColumn("change");
+       	playListTable.removeColumn(c);
+       	c = playListTable.getColumn("currentSong");
+       	playListTable.removeColumn(c);
+           c = playListTable.getColumn("File name");
+           c.setMinWidth(180);
+           c.setPreferredWidth(180);
+           c = playListTable.getColumn("Length");
+           c.setMinWidth(35);
+           c.setPreferredWidth(35);
+           c = playListTable.getColumn("Group");
+           c.setMinWidth(130);
+           c.setPreferredWidth(130);
+           c = playListTable.getColumn("Album");
+           c.setMinWidth(200);
+           c = playListTable.getColumn("Tag title");
+           c.setMinWidth(200);
+           c.setPreferredWidth(200);
+           c = playListTable.getColumn("Bitrate");
+           c.setMinWidth(40);
+           c.setPreferredWidth(40);
+           c = playListTable.getColumn("Sampling Format");
+           c.setMinWidth(30);
+           c.setPreferredWidth(30);
+       	
+       }catch(IllegalArgumentException ex)
+       {
+       //	System.out.println("Error pintando tabla de reproducción!!");
+       	//ex.printStackTrace();
+       }
+       
+   }
    
+   //method to return indexes of discs which mark is over than provided
+   public List<Integer> getListOfDiscsByMark(Double mark){
+	   List<Integer> list = new LinkedList<Integer>();
+	   Double currentMark=new Double(0.0);
+	   String sMark=new String("");
+	   for(int currentIndex=0;currentIndex<musicTabModel.getRowCount();currentIndex++){
+		   sMark=(String)musicTabModel.getValueAt(currentIndex, COL_MARK);
+		   try{
+			   currentMark=Double.parseDouble(sMark);
+			   if (currentMark>=mark) list.add(currentIndex);
+		   }catch(NumberFormatException e){
+			   //nothing to do
+		   }
+	   }
+	   return list;	   
+   }
     
 
     ///////////////////////////////////HANDLERS///////////////////////////////////////////
@@ -1578,6 +1642,7 @@ public class MultiDB extends JFrame implements music.db.DataBaseLabels{
 	                                       }
 	                                       backUpConnected=true;
 	                                       menuPlay.setEnabled(true);
+	                                       menuPlayRandom.setEnabled(true);
 	                                       menuViewLyrics.setEnabled(true);
 	                                   } catch (NumberFormatException e) {
 	                                       errorSint(backUpPath + "\\" + nombreGrupo + "\\" + discosGrupo[k]);
@@ -2206,53 +2271,17 @@ public class MultiDB extends JFrame implements music.db.DataBaseLabels{
        File pathDisc;
         public void actionPerformed(ActionEvent e) {
             try {
+            	
                 pathDisc = (File) musicTabModel.getValueAt(selectedModelRow,COL_PATH);
-                playList.group = (String) musicTabModel.getValueAt(selectedModelRow,COL_GROUP);
-                playList.album = (String) musicTabModel.getValueAt(selectedModelRow,COL_TITLE);
                 playList.removeAllRows();
                 playList.numSongs=0;
-                playList.searchFiles(pathDisc);
+                playList.searchFiles(pathDisc,true,(String)musicTabModel.getValueAt(selectedModelRow,COL_GROUP),(String)musicTabModel.getValueAt(selectedModelRow,COL_TITLE));
                 playListTable.setModel(playList);
                 //handler to play the song selected wit doubleclick on list
                 PlayThisSongHandler playThisSongHandler = new PlayThisSongHandler();
                 playListTable.addMouseListener(playThisSongHandler);   
                 
-                
-                ////managing layout
-                try{
-                	TableColumn c = playListTable.getColumn("t");
-                	playListTable.removeColumn(c);
-                	c = playListTable.getColumn("p");
-                	playListTable.removeColumn(c);
-                	c = playListTable.getColumn("change");
-                	playListTable.removeColumn(c);
-                	c = playListTable.getColumn("currentSong");
-                	playListTable.removeColumn(c);
-                    c = playListTable.getColumn("File name");
-                    c.setMinWidth(180);
-                    c.setPreferredWidth(180);
-                    c = playListTable.getColumn("Time");
-                    c.setMinWidth(35);
-                    c.setPreferredWidth(35);
-                    c = playListTable.getColumn("Group");
-                    c.setMinWidth(130);
-                    c.setPreferredWidth(130);
-                    c = playListTable.getColumn("Tag title");
-                    c.setMinWidth(200);
-                    c.setPreferredWidth(200);
-                    c = playListTable.getColumn("Bitrate");
-                    c.setMinWidth(40);
-                    c.setPreferredWidth(40);
-                    c = playListTable.getColumn("Sampling Format");
-                    c.setMinWidth(30);
-                    c.setPreferredWidth(30);
-                	
-                }catch(IllegalArgumentException ex)
-                {
-                //	System.out.println("Error pintando tabla de reproducción!!");
-                	//ex.printStackTrace();
-                }
-                
+                managePlayListTable();
                 
                 mp3Player.playList(playList);
                 timerThread = new TimerThread();
@@ -2265,6 +2294,26 @@ public class MultiDB extends JFrame implements music.db.DataBaseLabels{
             } catch (MP3FilesNotFound ex) {
                 reviewView.append("Cannot find playable files\n");
             }
+        }
+    } //Playing disc
+   
+   private class PlayRandomHandler implements ActionListener{
+
+       private Double mark=-1.0;
+
+        public void actionPerformed(ActionEvent e) {
+            	mp3Player.randomPlay=true;
+            	while ((mark<=0)||(mark>=10)){
+	            	String sMark = JOptionPane.showInputDialog("Please insert the minimum mark of discs which to play");
+	            	try{
+	            		mark=Double.valueOf(sMark).doubleValue();
+	            	}catch(NumberFormatException ex){	            		
+	            	}
+	            	if ((mark<=0)||(mark>=10)) JOptionPane.showMessageDialog(f,"Mark must be between 0 and 10");
+            	}
+            	randomPlayThread = new RandomPlayThread();
+            	randomPlayThread.mark=mark;
+            	randomPlayThread.start();
         }
     } //Playing disc
    
@@ -2572,8 +2621,9 @@ public class MultiDB extends JFrame implements music.db.DataBaseLabels{
 					menuOpciones.setEnabled(true);
 	   	   			menuRelDBBU.setEnabled(true);
 	   	   			menuAddBUDB.setEnabled(true);
-	   	   			menuPlay.setEnabled(true);
-	   	   			menuViewLyrics.setEnabled(true);
+	   	   			if (backUpConnected) menuPlay.setEnabled(true);
+	   	   		    if (backUpConnected) menuViewLyrics.setEnabled(true);
+	   	   		    if (backUpConnected) menuPlayRandom.setEnabled(true);
 	   	   			break;
 	   	   		case IND_MOVIES_TAB:
 	   	   			menuOpciones.setEnabled(false);
@@ -2581,6 +2631,7 @@ public class MultiDB extends JFrame implements music.db.DataBaseLabels{
 	   	   			menuAddBUDB.setEnabled(false);
 	   	   			menuPlay.setEnabled(false);
 	   	   			menuViewLyrics.setEnabled(false);
+	   	   		    menuPlayRandom.setEnabled(false);
 	   	   			break;
 	   	   		case IND_DOCS_TAB:
 	   	   			menuOpciones.setEnabled(false);
@@ -2588,6 +2639,7 @@ public class MultiDB extends JFrame implements music.db.DataBaseLabels{
 	   	   			menuAddBUDB.setEnabled(false);
 	   	   			menuPlay.setEnabled(false);
 	   	   			menuViewLyrics.setEnabled(false);
+	   	   			menuPlayRandom.setEnabled(false);
 	   	   			break;	
 	  			}
 	}
@@ -2734,6 +2786,7 @@ public class MultiDB extends JFrame implements music.db.DataBaseLabels{
         	   }
            }
           if (timerThread!=null) timerThread.closed=true;
+          if (randomPlayThread!=null) randomPlayThread=null;
           frame.dispose();
           frame=null;
        }
@@ -3285,6 +3338,72 @@ public class MultiDB extends JFrame implements music.db.DataBaseLabels{
 			lyricsView.setText(webReader.getLyricsOfDisc(lyricsGroup,lyricsAlbum));	
 		}
    }
+   
+   public class RandomPlayThread extends Thread {
+	   
+       private File pathDisc;
+       private Random rand = new Random();
+       private int randomDisc=0,randomSong=0;
+       private List<Integer> selectedDiscs = new LinkedList<Integer>();
+       private List<Song> songsInPath = new LinkedList<Song>();
+       private Song currentSong;
+       public Double mark=0.0;
+       private String currentGroup, currentAlbum;
+	   
+		public RandomPlayThread() {
+			super();
+		}
+
+		@Override
+		public void run() {
+
+			selectedDiscs=getListOfDiscsByMark(mark);
+        	
+            do{
+            	playList.removeAllRows();
+            	for (int numSong=1;numSong<10;numSong++){
+            		randomDisc=rand.nextInt(selectedDiscs.size());
+            		pathDisc = (File) musicTabModel.getValueAt(selectedDiscs.get(randomDisc),COL_PATH);
+            		try {
+            			 songsInPath.clear();
+                         playList.numSongs=0;
+                         currentGroup=(String)musicTabModel.getValueAt(selectedDiscs.get(randomDisc),COL_GROUP);
+                         currentAlbum=(String)musicTabModel.getValueAt(selectedDiscs.get(randomDisc),COL_TITLE);
+                         songsInPath=playList.searchFiles(pathDisc,false,currentGroup,currentAlbum);
+                         randomSong=rand.nextInt(songsInPath.size());
+                         currentSong=songsInPath.get(randomSong);
+                         playList.addSong(currentSong);
+            		} catch (MP3FilesNotFound ex) {
+                 }
+            	}
+                
+               
+                playListTable.setModel(playList);
+                //handler to play the song selected wit doubleclick on list
+                PlayThisSongHandler playThisSongHandler = new PlayThisSongHandler();
+                playListTable.addMouseListener(playThisSongHandler);   
+                
+                managePlayListTable();               
+                
+                mp3Player.playList(playList);
+                timerThread = new TimerThread();
+                timerThread.setDaemon(true);
+                timerThread.start();
+                playerFrame.setVisible(true);
+                int divLoc=Math.min(400, playListTable.getHeight()+ pauseResumeButton.getHeight()+stopButton.getHeight()+songSlider.getHeight()+songInformation.getHeight()+60);
+                splitPlayer.setDividerLocation(divLoc);
+
+            	synchronized(MP3Player.lock) {
+                   try {
+                		MP3Player.lock.wait();
+                   } catch (InterruptedException ex) {
+                        ex.printStackTrace();
+                   }
+                   
+            	}
+            } while(true);
+		}
+  }
 
    //////////////////////////////////////WORKARAOUND FOR BUGS IN XP AND VISTA FOR JFILECHOOSER///////////////
    private static class NewFileSystemView extends FileSystemView {

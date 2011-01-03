@@ -28,8 +28,10 @@ public class MP3Player {
     public PlayingListener playingListener;
     public MP3Player mp3Player;
     public PlayerThread pt;
+    public boolean randomPlay=false;
     public float[] equalizer = new float[32];
     public Equalizer eq = new Equalizer();
+    public static Object lock= new Object();
     
     
     public MP3Player(String fileName) {
@@ -163,9 +165,17 @@ public class MP3Player {
 
         @Override
         public void playbackFinished(PlaybackEvent evt) {
-            if ((currentSong <= list.getRowCount())&&(seqPlaying)) {
+            if ((currentSong < list.getRowCount())&&(seqPlaying)) {
                 currentSong++;
                 playList();
+                
+            }
+            if ((randomPlay)&&(seqPlaying)&&(currentSong == list.getRowCount())){
+            	currentSong=0;
+            	System.out.println("Now currentSong is "+currentSong);
+            	synchronized (lock) {
+            		lock.notify();
+				}
             }
         }
         
