@@ -7,5 +7,8 @@
 	<classpathentry kind="lib" path="D:/Documents and Settings/thrasher/My Documents/Java Projects/CLASS_LIB/tritonus_share.jar"/>
 	<classpathentry kind="lib" path="D:/Documents and Settings/thrasher/My Documents/Java Projects/CLASS_LIB/EaSynthLookAndFeel.jar"/>
 	<classpathentry kind="lib" path="D:/Documents and Settings/thrasher/My Documents/Java Projects/CLASS_LIB/jvftp.jar"/>
+	<classpathentry kind="lib" path="D:/Documents and Settings/thrasher/My Documents/Java Projects/CLASS_LIB/commons-lang-2.5/commons-lang-2.5.jar"/>
+	<classpathentry kind="lib" path="D:/Documents and Settings/thrasher/My Documents/Java Projects/CLASS_LIB/commons-lang-2.5/commons-lang-2.5-javadoc.jar"/>
+	<classpathentry kind="lib" path="D:/Documents and Settings/thrasher/My Documents/Java Projects/CLASS_LIB/commons-lang-2.5/commons-lang-2.5-sources.jar"/>
 	<classpathentry kind="output" path="build/classes"/>
 </classpath>

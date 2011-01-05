@@ -172,7 +172,6 @@ public class MP3Player {
             }
             if ((randomPlay)&&(seqPlaying)&&(currentSong == list.getRowCount())){
             	currentSong=0;
-            	System.out.println("Now currentSong is "+currentSong);
             	synchronized (lock) {
             		lock.notify();
 				}

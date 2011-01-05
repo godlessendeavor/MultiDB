@@ -31,8 +31,10 @@ import java.io.IOException;
 import java.io.PrintWriter;
 import java.text.Collator;
 import java.util.ArrayList;
+import java.util.HashMap;
 import java.util.LinkedList;
 import java.util.List;
+import java.util.Map;
 import java.util.Random;
 import java.util.Set;
 import java.util.TreeSet;
@@ -126,6 +128,8 @@ public class MultiDB extends JFrame implements music.db.DataBaseLabels{
     public final int IND_MUSIC_TAB = 0;
     public final int IND_MOVIES_TAB = 1;
     public final int IND_DOCS_TAB = 2;
+    public final int SAVE_REVIEW=0;
+    public final int PASTE_IN_TABLE=1;
     //VARS
     
     //STATIC VARS
@@ -140,6 +144,8 @@ public class MultiDB extends JFrame implements music.db.DataBaseLabels{
     public static String webEMBand;
     public static String webEMRelease;
     public static String webEMLyrics;
+    public static String webMBSearch;
+    public static String webMBBand;
     public static String ftpUser;
     public static String ftpPassword;
     public static String ftpHost;
@@ -152,6 +158,7 @@ public class MultiDB extends JFrame implements music.db.DataBaseLabels{
     public static String musicTable="music";
     public static String moviesTable="movies";
     public static String docsTable="docs";
+    
     
     
     /////MULTIVARS
@@ -167,7 +174,7 @@ public class MultiDB extends JFrame implements music.db.DataBaseLabels{
     public Clipboard sysClipboard;
     public long lastTime;
     public int currentCharPos;
-    int testInt=0;
+    
     
     ///n-tuplas
     public music.db.TabMod musicTabModel;
@@ -213,14 +220,16 @@ public class MultiDB extends JFrame implements music.db.DataBaseLabels{
     public JMenuItem menuOpcionesCopiarPortadas;
     public JMenuItem menuOpcionesCoverBackup;
     public JMenuItem menuCopyReviews2BUP;
-    public JMenuItem menuViewNewDiscsViaWeb;    
+    public JMenu menuViewNewDiscsViaWeb;    
     public JMenuItem menuPlayRandom;
+    public JMenuItem menuViaEM;
+    public JMenuItem menuViaMB;
     public JTabbedPane multiPane;
     public MultiDB f;
     public JPopupMenu popupTable;
     public JMenuItem menuPlay;
     public JMenuItem menuViewLyrics;
-    public MusicTableRender coloredTableRenderer;
+    public MusicTableRenderer coloredTableRenderer;
     public JFileChooser fc = new JFileChooser(new NewFileSystemView());
     
         
@@ -231,7 +240,7 @@ public class MultiDB extends JFrame implements music.db.DataBaseLabels{
     //music specific
     public JLabel coversView,selectCoversView,bigCoversView;  //covers labels
     public JTextArea reviewView,infoText;
-    public JScrollPane spRev,splitLeft,newDiscsSp,bigCoversScroll;
+    public JScrollPane spRev,splitLeft,newDiscsSp,bigCoversScroll, infoScroll;
     public JSplitPane splitRight,mainSplit;
     public ImageIcon origIcon, scaledIcon, bigIcon;
     public JPopupMenu popupCover,popupReview;
@@ -450,19 +459,25 @@ public class MultiDB extends JFrame implements music.db.DataBaseLabels{
         menuCopyReviews2BUP.addActionListener(copyReviewsHandler);
         menuOpciones.add(menuCopyReviews2BUP);
         //item VIEWNEWDISCS
-        menuViewNewDiscsViaWeb = new JMenuItem("Search new discs via web");
+        menuViewNewDiscsViaWeb = new JMenu("Search new discs via web");
         menuViewNewDiscsViaWeb.setMnemonic('v');
-        ViewNewDiscsHandler viewNewDiscsHandler = new ViewNewDiscsHandler();
-        menuViewNewDiscsViaWeb.addActionListener(viewNewDiscsHandler);
+        ViewNewDiscsHandler viewNewDiscsHandlerEM = new ViewNewDiscsHandler("webEM");
+        ViewNewDiscsHandler viewNewDiscsHandlerMB = new ViewNewDiscsHandler("webMB");
+        menuViaEM = new JMenuItem("Via Encyclopedia Metallum");
+        menuViaEM.addActionListener(viewNewDiscsHandlerEM);
+        menuViewNewDiscsViaWeb.add(menuViaEM);
+        menuViaMB = new JMenuItem("Via Musicbrainz");
+        menuViaMB.addActionListener(viewNewDiscsHandlerMB);
+        menuViewNewDiscsViaWeb.add(menuViaMB);
         menuOpciones.add(menuViewNewDiscsViaWeb);
         //item PLAYRANDOM
         menuPlayRandom = new JMenuItem("Play files at random");
         menuPlayRandom.setMnemonic('p');
         PlayRandomHandler playRandomHandler = new PlayRandomHandler();
         menuPlayRandom.addActionListener(playRandomHandler);
+        menuPlayRandom.setEnabled(false);
         menuOpciones.add(menuPlayRandom);
-        
-       
+            
 
         menuBar.add(menuDataBase);
         menuBar.add(menuEdit);
@@ -534,7 +549,7 @@ public class MultiDB extends JFrame implements music.db.DataBaseLabels{
         	musicTableSorter.setSortable(i,false); //issue with TableRowSorter, disabling sorting, using only for filtering
         }
         
-        MusicTableRender musicTableRenderer = new MusicTableRender();
+        MusicTableRenderer musicTableRenderer = new MusicTableRenderer();
         musicJTable.setDefaultRenderer(Object.class,musicTableRenderer);
         
         //sizing cols
@@ -740,7 +755,7 @@ public class MultiDB extends JFrame implements music.db.DataBaseLabels{
 		newDiscsTab.setColumnSelectionAllowed(true); //no se pueden seleccionar columnas
 		newDiscsTab.setSelectionMode(ListSelectionModel.MULTIPLE_INTERVAL_SELECTION); 
 		
-		coloredTableRenderer = new MusicTableRender();
+		coloredTableRenderer = new MusicTableRenderer();
 		newDiscsTab.setDefaultRenderer(Object.class,coloredTableRenderer);
 		
 		newDiscsTabMod = new NewDiscTabMod();   
@@ -777,7 +792,8 @@ public class MultiDB extends JFrame implements music.db.DataBaseLabels{
 		infoFrame = new JFrame("Info");
 		infoFrame.setSize(500, 80);
 		infoText = new JTextArea();
-		infoFrame.add(infoText);
+		infoScroll = new JScrollPane(infoText);
+		infoFrame.add(infoScroll);
 		
 		//newDiscs Frame
 		newDiscsFrame = new JFrame("New Discs");
@@ -933,23 +949,29 @@ public class MultiDB extends JFrame implements music.db.DataBaseLabels{
         docsJTable.addKeyListener(tableKeyListener);
         
         ////////////////////specific handlers for music\\\\\\\\\\\\\\\\\\\\\\\\\
-        /////////////////////////////review//////////////////////////////////////////
+
         //popupreviewlistener
         PopupReviewListener popupReviewListener = new PopupReviewListener();
         reviewView.addMouseListener(popupReviewListener);
         
         //diferent method to add keystroke to the reviewView due to the fact that the other method doesn't work if the popup isn't showed 
         reviewView.getInputMap().put(KeyStroke.getKeyStroke("control S"), "saveReview");
-
+        AbstractActionsHandler saveReviewKHandler = new AbstractActionsHandler(SAVE_REVIEW);
         // Add the action to the component
-        reviewView.getActionMap().put("saveReview",
-            new AbstractAction("saveReview") {
-				private static final long serialVersionUID = 1L;
-				public void actionPerformed(ActionEvent evt) {
-                	saveCurrentReview();
-                }
-            }
-        );
+        reviewView.getActionMap().put("saveReview",saveReviewKHandler);
+        
+        
+        //pastelisteners Ctrl+V
+        musicJTable.getInputMap().put(KeyStroke.getKeyStroke("control V"), "pasteInTable");
+        moviesJTable.getInputMap().put(KeyStroke.getKeyStroke("control V"), "pasteInTable");
+        docsJTable.getInputMap().put(KeyStroke.getKeyStroke("control V"), "pasteInTable");
+        
+        // Add the action to the component
+        AbstractActionsHandler pasteHandler = new AbstractActionsHandler(PASTE_IN_TABLE);
+        musicJTable.getActionMap().put("pasteInTable",pasteHandler);
+        moviesJTable.getActionMap().put("pasteInTable",pasteHandler);
+        docsJTable.getActionMap().put("pasteInTable",pasteHandler);
+      
         
 
         /////////////////////////////covers//////////////////////////////////////////
@@ -1167,6 +1189,10 @@ public class MultiDB extends JFrame implements music.db.DataBaseLabels{
 	 					   webEMRelease=param;
 	 				   }else if (cad.indexOf("<webEMLyrics>")>-1){
 	 					   webEMLyrics=param;
+	 				   }else if (cad.indexOf("<webMBSearch>")>-1){
+	 					   webMBSearch=param;
+	 				   }else if (cad.indexOf("<webMBBand>")>-1){
+	 					   webMBBand=param;
 	 				   }else if (cad.indexOf("<ftpUser>")>-1){
 	 					   ftpUser=param;
 				   	   }else if (cad.indexOf("<ftpPswd>")>-1){
@@ -1394,6 +1420,7 @@ public class MultiDB extends JFrame implements music.db.DataBaseLabels{
 //method to save current review in the database
     public void saveCurrentReview(){
     	String review = reviewView.getText();
+    	review=review.replace("\"","\\\"");
     	musicTabModel.setValueAt(review,selectedModelRow,COL_REVIEW);
     	musicDataBase.updateReviewOnly(musicTabModel.getDiscAtRow(selectedModelRow));
     }
@@ -2190,9 +2217,15 @@ public class MultiDB extends JFrame implements music.db.DataBaseLabels{
    }  //FIN HANDLER COPYRREVIEWS
    
    private class ViewNewDiscsHandler implements ActionListener {
+	   
+	private Look4NewDiscsThread lookThread;
+	
+	ViewNewDiscsHandler(String web){
+		   lookThread = new Look4NewDiscsThread();
+		   lookThread.web=web;
+	   }
 	@Override
 	public void actionPerformed(ActionEvent arg0) {
-		Look4NewDiscsThread lookThread = new Look4NewDiscsThread();
 		lookThread.start();
 	}
    
@@ -2531,13 +2564,17 @@ public class MultiDB extends JFrame implements music.db.DataBaseLabels{
                    }
                }
                if (multiPane.getSelectedIndex()==IND_MUSIC_TAB){
-            	   reviewView.setText((String)musicTabModel.getValueAt(selectedModelRow, COL_REVIEW));
+            	   String review=(String)musicTabModel.getValueAt(selectedModelRow, COL_REVIEW);
+            	   review=review.replace("\\\"","\"");
+            	   reviewView.setText(review);
             	   showCover("front");
                }
            }   
        }      
    } //FIN HANDLER SELECCION DE DISCO
-  
+   
+  //////////////////////////////////KEYBOARD LISTENERS///////////////////////////////////////
+   
    //LISTENER FOR KEYBOARD USED FOR SEARCHING 
    private class TableKeyListener extends KeyAdapter {
 
@@ -2646,6 +2683,30 @@ public class MultiDB extends JFrame implements music.db.DataBaseLabels{
 	   
    }
 
+   
+   public class AbstractActionsHandler extends AbstractAction{
+
+		private static final long serialVersionUID = 1L;
+		private int mode=-1;
+		
+		public AbstractActionsHandler(int mode){
+			this.mode=mode;
+		}
+		@Override
+		public void actionPerformed(ActionEvent e) {
+			switch (mode){
+				case PASTE_IN_TABLE:     //PASTE IN TABLE
+					multiPasteInTable();
+					break;
+				case SAVE_REVIEW:     //SAVE REVIEW
+					saveCurrentReview();
+					break;					
+				default:
+					break;							
+			}			
+		}
+   	
+   }
 
    /////////////////////POPUPS LISTENERS/////////////////////////////////////////////////////////////////////
    
@@ -2864,15 +2925,15 @@ public class MultiDB extends JFrame implements music.db.DataBaseLabels{
    ////////////////////////////////////////////////////////////////////////////////////////////////
 
    
-   public class MusicTableRender extends JLabel implements TableCellRenderer {
+   public class MusicTableRenderer extends JLabel implements TableCellRenderer {
 	   
 	private static final long serialVersionUID = 1L;
 
-	public MusicTableRender() {
+	public MusicTableRenderer() {
 		super();
 	}
 
-	public MusicTableRender(String arg0) {
+	public MusicTableRenderer(String arg0) {
 		super(arg0);
 	}
 
@@ -3269,12 +3330,14 @@ public class MultiDB extends JFrame implements music.db.DataBaseLabels{
    
    public class Look4NewDiscsThread extends Thread {
 
-	   public String groupName;
+	   public String web="webEM";
+	   public String groupName;	   
 	   private Disc discDB=new Disc(),discWeb=new Disc();
 	   private boolean found;
 	   private ArrayList<Disc> discListWeb = new ArrayList<Disc>(),discListDB = new ArrayList<Disc>();
 	   private ArrayList<Disc> finalList = new ArrayList<Disc>();
 	   private Set<String> groupList= new TreeSet<String>(String.CASE_INSENSITIVE_ORDER);
+	   private int already=0;  //number of discs already in db
 	   
 		public Look4NewDiscsThread() {
 			super();
@@ -3288,35 +3351,40 @@ public class MultiDB extends JFrame implements music.db.DataBaseLabels{
 			discListWeb.clear();
 			finalList.clear();
 			infoText.setText("");
+			
 			for (int i=0;i<selectedModel.size();i++){				
 				groupName=musicTabModel.getDiscAtRow(selectedModel.get(i)).group;
 				if (!groupList.contains(groupName)){
-						groupList.add(groupName);
-						discListDB.clear();
-						discListDB = musicDataBase.getDiscsOfGroup(groupName);
-						infoFrame.setSize(500, 400);
-						infoFrame.setVisible(true);						
-						infoText.append("Looking for new discs of "+groupName+"\n");
-						discListWeb=webReader.getGroupInfo(groupName);
-						if ((discListWeb!=null)&&(discListWeb.size()!=0)){
-							for (int indWeb=0;indWeb<discListWeb.size();indWeb++){
-								//System.out.println(discList.get(disc).title);
-								found=false;
-								for (int indDB=0;indDB<discListDB.size();indDB++){
-									discDB=discListDB.get(indDB);
-									discWeb=discListWeb.get(indWeb);
-									if (String.CASE_INSENSITIVE_ORDER.compare(discWeb.title,discDB.title)==0){
-										found=true;
-										break;
-									}									
-								}
-								if (!found){
-									finalList.add(discWeb);
-								}
+					groupList.add(groupName);
+					discListDB.clear();
+					discListDB = musicDataBase.getDiscsOfGroup(groupName);
+					infoFrame.setSize(500, 400);
+					infoFrame.setVisible(true);						
+					infoText.append("Looking for new discs of "+groupName+"\n");
+					discListWeb=webReader.getGroupInfo(groupName,web);
+					if ((discListWeb!=null)&&(discListWeb.size()!=0)){
+						already=0;
+						for (int indWeb=0;indWeb<discListWeb.size();indWeb++){
+							//System.out.println(discList.get(disc).title);
+							found=false;							
+							for (int indDB=0;indDB<discListDB.size();indDB++){
+								discDB=discListDB.get(indDB);
+								discWeb=discListWeb.get(indWeb);
+								if (String.CASE_INSENSITIVE_ORDER.compare(discWeb.title,discDB.title)==0){
+									found=true;
+									already++;
+									break;
+								}									
 							}
+							if (!found){
+								finalList.add(discWeb);
+							}
+						}
 						infoText.append("Found "+discListWeb.size()+" albums in their discography\n");
-					}
-				}
+						if (already>0) infoText.append(already+" albums already on list\n");
+					}else infoText.append("Group not found or whithout album releases\n");
+					infoText.append("-----------------------------------------\n");
+				}				
 			}
 			newDiscsTabMod.setData(finalList);
 			if (finalList.size()>0) {
@@ -3325,7 +3393,7 @@ public class MultiDB extends JFrame implements music.db.DataBaseLabels{
 			} else infoText.append("No new discs found\n");
 			infoText.append("Done!");		
 		}
-   }
+   	}
 
    public class GetLyricsThread extends Thread {
 	   

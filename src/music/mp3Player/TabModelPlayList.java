@@ -158,7 +158,7 @@ public class TabModelPlayList extends AbstractTableModel {
 
     public void removeAllRows(){
     	int plLength = data.size();
-    	for(int row=0;row<plLength;row++){
+    	while (data.size()>0){
     		data.remove(0);
     	}
     	numSongs=0;
