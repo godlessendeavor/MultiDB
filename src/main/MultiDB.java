@@ -31,13 +31,12 @@ import java.io.IOException;
 import java.io.PrintWriter;
 import java.text.Collator;
 import java.util.ArrayList;
-import java.util.HashMap;
 import java.util.LinkedList;
 import java.util.List;
-import java.util.Map;
 import java.util.Random;
 import java.util.Set;
 import java.util.TreeSet;
+import java.util.regex.Pattern;
 
 import javax.swing.AbstractAction;
 import javax.swing.AbstractCellEditor;
@@ -69,6 +68,7 @@ import javax.swing.JTextField;
 import javax.swing.KeyStroke;
 import javax.swing.ListSelectionModel;
 import javax.swing.RowFilter;
+import javax.swing.ScrollPaneConstants;
 import javax.swing.SpinnerListModel;
 import javax.swing.SwingUtilities;
 import javax.swing.UIManager;
@@ -87,6 +87,7 @@ import javax.swing.table.TableColumn;
 import javax.swing.table.TableRowSorter;
 import javax.swing.undo.UndoManager;
 
+import sun.awt.HorizBagLayout;
 import sun.awt.shell.ShellFolder;
 
 import main.exceptions.MP3FilesNotFound;
@@ -286,7 +287,7 @@ public class MultiDB extends JFrame implements music.db.DataBaseLabels{
 
     public static void main(String[] args) {
         MultiDB aplicacion = new MultiDB();
-        aplicacion.initApi();     
+        aplicacion.initApi();  
     }
 
   
@@ -790,9 +791,13 @@ public class MultiDB extends JFrame implements music.db.DataBaseLabels{
          
         //copyinginfo frame
 		infoFrame = new JFrame("Info");
-		infoFrame.setSize(500, 80);
+		infoFrame.setSize(500, 300);
 		infoText = new JTextArea();
+		infoText.setWrapStyleWord(true);
+		infoText.setLineWrap(true);
 		infoScroll = new JScrollPane(infoText);
+		infoScroll.setHorizontalScrollBarPolicy(JScrollPane.HORIZONTAL_SCROLLBAR_NEVER);
+		infoScroll.setVerticalScrollBarPolicy(JScrollPane.VERTICAL_SCROLLBAR_AS_NEEDED);
 		infoFrame.add(infoScroll);
 		
 		//newDiscs Frame
@@ -1019,6 +1024,10 @@ public class MultiDB extends JFrame implements music.db.DataBaseLabels{
         this.setVisible(true);       
     }
 
+ 
+    
+  
+    
 
 ///////////////////////////////////////////////////////////////////////////////////
 //////////////////////ERRORS/////////////////////////////////////////////////////////////
@@ -1509,22 +1518,7 @@ public class MultiDB extends JFrame implements music.db.DataBaseLabels{
        
    }
    
-   //method to return indexes of discs which mark is over than provided
-   public List<Integer> getListOfDiscsByMark(Double mark){
-	   List<Integer> list = new LinkedList<Integer>();
-	   Double currentMark=new Double(0.0);
-	   String sMark=new String("");
-	   for(int currentIndex=0;currentIndex<musicTabModel.getRowCount();currentIndex++){
-		   sMark=(String)musicTabModel.getValueAt(currentIndex, COL_MARK);
-		   try{
-			   currentMark=Double.parseDouble(sMark);
-			   if (currentMark>=mark) list.add(currentIndex);
-		   }catch(NumberFormatException e){
-			   //nothing to do
-		   }
-	   }
-	   return list;	   
-   }
+  
     
 
     ///////////////////////////////////HANDLERS///////////////////////////////////////////
@@ -1825,13 +1819,13 @@ public class MultiDB extends JFrame implements music.db.DataBaseLabels{
 			String word = JOptionPane.showInputDialog(f,"Write the word you want to filter");
 			switch(multiPane.getSelectedIndex()){
   	   		case IND_MUSIC_TAB:
-  	   			musicTableSorter.setRowFilter(RowFilter.regexFilter(word));
+  	   			musicTableSorter.setRowFilter(RowFilter.regexFilter("(?i)"+word));
   	   			break;
   	   		case IND_MOVIES_TAB:
-  	   			moviesTableSorter.setRowFilter(RowFilter.regexFilter(word));
+  	   			moviesTableSorter.setRowFilter(RowFilter.regexFilter("(?i)"+word));
   	   			break;
   	   		case IND_DOCS_TAB:
-  	   			docsTableSorter.setRowFilter(RowFilter.regexFilter(word));
+  	   			docsTableSorter.setRowFilter(RowFilter.regexFilter("(?i)"+word));
   	   			break;	
 			}
 			
@@ -2197,6 +2191,7 @@ public class MultiDB extends JFrame implements music.db.DataBaseLabels{
 		                        		   Disc disc= new Disc();
 			                        	   disc=musicDataBase.getDiscByDG(nombreGrupo,nombreDisco);
 			                        	   row = musicTabModel.searchDisc(disc.id);
+			                        	   review=review.replace("\"","\\\"");
 			                        	   disc.review=review;
 			                        	   disc.mark=nota;
 			                        	   if (disc.id!=0) musicDataBase.updateDisc(disc, row);
@@ -2344,9 +2339,18 @@ public class MultiDB extends JFrame implements music.db.DataBaseLabels{
 	            	}
 	            	if ((mark<=0)||(mark>=10)) JOptionPane.showMessageDialog(f,"Mark must be between 0 and 10");
             	}
-            	randomPlayThread = new RandomPlayThread();
-            	randomPlayThread.mark=mark;
-            	randomPlayThread.start();
+	            Object[] options = {"Yes, please","No way!"};
+	            int select = JOptionPane.showOptionDialog(f,	"Would you like to seek in favourites songs?","Question",JOptionPane.YES_NO_OPTION,JOptionPane.QUESTION_MESSAGE,
+	            		null,     //do not use a custom Icon
+	            		options,  //the titles of buttons
+	            		options[0]); //default button title
+	            if (select!=JOptionPane.CLOSED_OPTION){
+	            	randomPlayThread = new RandomPlayThread();
+	            	if (select==JOptionPane.OK_OPTION) randomPlayThread.fav=true;
+	            	else randomPlayThread.fav=false;
+	            	randomPlayThread.mark=mark;
+	            	randomPlayThread.start();
+	            }            	
         }
     } //Playing disc
    
@@ -3354,6 +3358,7 @@ public class MultiDB extends JFrame implements music.db.DataBaseLabels{
 			
 			for (int i=0;i<selectedModel.size();i++){				
 				groupName=musicTabModel.getDiscAtRow(selectedModel.get(i)).group;
+
 				if (!groupList.contains(groupName)){
 					groupList.add(groupName);
 					discListDB.clear();
@@ -3409,10 +3414,12 @@ public class MultiDB extends JFrame implements music.db.DataBaseLabels{
    
    public class RandomPlayThread extends Thread {
 	   
+       public boolean fav;
        private File pathDisc;
        private Random rand = new Random();
        private int randomDisc=0,randomSong=0;
        private List<Integer> selectedDiscs = new LinkedList<Integer>();
+       private List<Integer> favSongs = new LinkedList<Integer>();
        private List<Song> songsInPath = new LinkedList<Song>();
        private Song currentSong;
        public Double mark=0.0;
@@ -3429,21 +3436,31 @@ public class MultiDB extends JFrame implements music.db.DataBaseLabels{
         	
             do{
             	playList.removeAllRows();
-            	for (int numSong=1;numSong<10;numSong++){
+                playList.numSongs=0;
+            	do {
             		randomDisc=rand.nextInt(selectedDiscs.size());
+            		favSongs.clear();
             		pathDisc = (File) musicTabModel.getValueAt(selectedDiscs.get(randomDisc),COL_PATH);
             		try {
             			 songsInPath.clear();
-                         playList.numSongs=0;
                          currentGroup=(String)musicTabModel.getValueAt(selectedDiscs.get(randomDisc),COL_GROUP);
                          currentAlbum=(String)musicTabModel.getValueAt(selectedDiscs.get(randomDisc),COL_TITLE);
                          songsInPath=playList.searchFiles(pathDisc,false,currentGroup,currentAlbum);
-                         randomSong=rand.nextInt(songsInPath.size());
-                         currentSong=songsInPath.get(randomSong);
-                         playList.addSong(currentSong);
+                         if (!fav){
+	                         randomSong=rand.nextInt(songsInPath.size());
+	                         currentSong=songsInPath.get(randomSong);
+	                         playList.addSong(currentSong);
+	                     }else{
+	                    	 seekFavSongs(randomDisc,songsInPath);
+	                    	 if (favSongs.size()>0){
+		                    	 randomSong=rand.nextInt(favSongs.size());
+		                         currentSong=songsInPath.get(favSongs.get(randomSong));
+		                         playList.addSong(currentSong);
+	                    	 }
+	                     }
             		} catch (MP3FilesNotFound ex) {
                  }
-            	}
+            	}while(playList.numSongs<10);
                 
                
                 playListTable.setModel(playList);
@@ -3470,6 +3487,57 @@ public class MultiDB extends JFrame implements music.db.DataBaseLabels{
                    
             	}
             } while(true);
+		}
+		
+		 //method to return indexes of discs which mark is over than provided
+		   public List<Integer> getListOfDiscsByMark(Double mark){
+			   List<Integer> list = new LinkedList<Integer>();
+			   Double currentMark=new Double(0.0);
+			   String sMark=new String("");
+			   for(int currentIndex=0;currentIndex<musicTabModel.getRowCount();currentIndex++){
+				   sMark=(String)musicTabModel.getValueAt(currentIndex, COL_MARK);
+				   try{
+					   currentMark=Double.parseDouble(sMark);
+					   if (currentMark>=mark) list.add(currentIndex);
+				   }catch(NumberFormatException e){
+					   //nothing to do
+				   }
+			   }
+			   return list;	   
+		   }
+		
+		public void seekFavSongs(int index,List<Song> songList){
+			String rev=musicTabModel.getDiscAtRow(selectedDiscs.get(index)).review;
+			String currFav="";
+			boolean added;
+			
+			while (rev.indexOf("\"") > -1) {
+				rev = rev.substring(rev.indexOf("\"")+"\"".length(),rev.length());
+				if (rev.indexOf("\"")>-1) {
+					currFav= rev.substring(0,rev.indexOf("\""));
+					rev = rev.substring(rev.indexOf("\"")+"\"".length(),rev.length());
+				}
+				for (int ind=0;ind<songList.size();ind++){
+					//System.out.println("rpobando "+currFav);
+					added=false;
+					if (songList.get(ind).name!=null){						
+						if ((Pattern.compile(Pattern.quote(currFav), Pattern.CASE_INSENSITIVE).matcher(songList.get(ind).name).find())){
+							favSongs.add(ind);
+							added=true;
+							break;
+						}
+					}
+					if (!added){
+						if (songList.get(ind).tagTitle!=null){							
+							if (Pattern.compile(Pattern.quote(currFav), Pattern.CASE_INSENSITIVE).matcher(songList.get(ind).tagTitle).find()){
+								favSongs.add(ind);
+								break;
+							}
+						}
+					}
+				}
+				
+			}
 		}
   }
 
