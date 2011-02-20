@@ -29,6 +29,7 @@ import music.db.Disc;
 public class WebReader {
 	private ArrayList<Disc> discList=new ArrayList<Disc>();
 	private final String webEMSearch=MultiDB.webEMSearch;// new String("http://www.metal-archives.com/search.php?string=");
+	private final String webEMSearchAdvanced="http://www.metal-archives.com/advanced.php?band_name=";
 	private final String webEMBand=MultiDB.webEMBand; // new String("http://www.metal-archives.com/band.php?id=");
 	private final String webEMRelease=MultiDB.webEMRelease; //new String("http://www.metal-archives.com/release.php?id=");
 	private final String webEMLyrics=MultiDB.webEMLyrics; //new String("http://www.metal-archives.com/viewlyrics.php?id=");
@@ -111,6 +112,7 @@ public class WebReader {
 			e.printStackTrace();
 		} catch (IOException e) {
 			e.printStackTrace();
+			return("400");
 		}
 		return(ret);
 	} 	
@@ -234,7 +236,7 @@ public class WebReader {
 	public String getLyricsOfDisc(String group,String disc){
 		String lyrics="";
 		ArrayList<Disc> dList = new ArrayList<Disc>();
-		String id = getGroupId(group,"WebEM");
+		String id = getGroupId(group,"webEM");
 		HTMLText=getHTMLfromURL(webEMBand+id);
 		groupInfo.reset();
 		groupInfo.group=group;
@@ -302,47 +304,94 @@ public class WebReader {
 	public String getGroupId(String group,String web){
 		String id="";
 		String[] currentGroup=new String[2];
-		
 		if (web.compareTo("webEM")==0){
 			try {
+				System.out.println(group);
 				group=URLEncoder.encode(group,"UTF-8");		
 				String webEMSearch2=webEMSearch+group+"&type=band";
+				System.out.println(webEMSearch2);
 				HTMLText=getHTMLfromURL(webEMSearch2);
-				int pos1=HTMLText.indexOf(bString);
-				int posOther=HTMLText.lastIndexOf(bString);
-				int pos2;
-				if ((pos1>-1)&(posOther==pos1)){
-					pos2=HTMLText.indexOf("'", pos1);
-					id=HTMLText.substring(pos1+bString.length(), pos2);
-				}else if (pos1>-1){
-					for (int itCol=0;itCol<tableModel.getRowCount();itCol++){
-						tableModel.removeRow(itCol);
-					}
-					while (pos1!=posOther){
-						pos2=HTMLText.indexOf("'>", pos1);
+				if (HTMLText.compareTo("400")!=0){
+					int pos1=HTMLText.indexOf(bString);
+					int posOther=HTMLText.lastIndexOf(bString);
+					int pos2;
+					System.out.println(HTMLText);
+					System.out.println("pos1 is: "+pos1+" and we search  for "+bString);
+					if ((pos1>-1)&(posOther==pos1)){
+						pos2=HTMLText.indexOf("'", pos1);
 						id=HTMLText.substring(pos1+bString.length(), pos2);
-						currentGroup[1]=id;
-						pos1=HTMLText.indexOf("<", pos2);
-						currentGroup[0]=HTMLText.substring(pos2+2, pos1);	
-						tableModel.addRow(currentGroup);
-						pos1=HTMLText.indexOf(bString, pos1);
-						if (pos1<0) pos1=posOther;
-					}
-					ended=false;
-					if (groupsTable.getRowCount()<40) selectFrame.setSize(500, groupsTable.getRowCount()*20+60);
-					else selectFrame.setSize(500, 500);
-					selectFrame.setVisible(true);
-					synchronized(lock) {
-	                    if (!ended)
-	                    try {
-	                          lock.wait();
-	                    } catch (InterruptedException e) {
-	                                    e.printStackTrace();
-	                    }
-					}
-					id=groupId;
-				}else return null;
-			} catch (UnsupportedEncodingException e) {
+					}else if (pos1>-1){
+						for (int itCol=0;itCol<tableModel.getRowCount();itCol++){
+							tableModel.removeRow(itCol);
+						}
+						while (pos1!=posOther){
+							pos2=HTMLText.indexOf("'>", pos1);
+							id=HTMLText.substring(pos1+bString.length(), pos2);
+							currentGroup[1]=id;
+							pos1=HTMLText.indexOf("<", pos2);
+							currentGroup[0]=HTMLText.substring(pos2+2, pos1);	
+							tableModel.addRow(currentGroup);
+							pos1=HTMLText.indexOf(bString, pos1);
+							if (pos1<0) pos1=posOther;
+						}
+						ended=false;
+						if (groupsTable.getRowCount()<40) selectFrame.setSize(500, groupsTable.getRowCount()*20+60);
+						else selectFrame.setSize(500, 500);
+						selectFrame.setVisible(true);
+						synchronized(lock) {
+		                    if (!ended)
+		                    try {
+		                          lock.wait();
+		                    } catch (InterruptedException e) {
+		                                    e.printStackTrace();
+		                    }
+						}
+						id=groupId;
+					}else return null;
+				}else{
+					System.out.println("Entering here but nothing done");
+						webEMSearch2=webEMSearchAdvanced+group;
+						System.out.println(webEMSearch2);
+						HTMLText=getHTMLfromURL(webEMSearch2);
+						int pos1=HTMLText.indexOf(bString);
+						int posOther=HTMLText.lastIndexOf(bString);
+						int pos2;
+						System.out.println(HTMLText);
+						System.out.println("pos1 is: "+pos1+" and we search  for "+bString);
+						if ((pos1>-1)&(posOther==pos1)){
+							pos2=HTMLText.indexOf("'", pos1);
+							id=HTMLText.substring(pos1+bString.length(), pos2);
+						}else if (pos1>-1){
+							for (int itCol=0;itCol<tableModel.getRowCount();itCol++){
+								tableModel.removeRow(itCol);
+							}
+							while (pos1!=posOther){
+								pos2=HTMLText.indexOf("'>", pos1);
+								id=HTMLText.substring(pos1+bString.length(), pos2);
+								currentGroup[1]=id;
+								pos1=HTMLText.indexOf("<", pos2);
+								currentGroup[0]=HTMLText.substring(pos2+2, pos1);	
+								tableModel.addRow(currentGroup);
+								pos1=HTMLText.indexOf(bString, pos1);
+								if (pos1<0) pos1=posOther;
+							}
+							ended=false;
+							if (groupsTable.getRowCount()<40) selectFrame.setSize(500, groupsTable.getRowCount()*20+60);
+							else selectFrame.setSize(500, 500);
+							selectFrame.setVisible(true);
+							synchronized(lock) {
+			                    if (!ended)
+			                    try {
+			                          lock.wait();
+			                    } catch (InterruptedException ex) {
+			                                  ex.printStackTrace();
+			                    }
+							}
+							id=groupId;
+						}else return null;			
+					
+				}
+			} catch (Exception e) {
 				e.printStackTrace();
 			}
 		}else{ ///////////////////search on MUSICBRAINZ

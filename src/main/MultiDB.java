@@ -166,7 +166,8 @@ public class MultiDB extends JFrame implements music.db.DataBaseLabels{
     
     ///common
     public int selectedViewColumn = -1,selectedModelColumn=-1;
-    public int selectedViewRow = -1,lastSelectedViewRow = -1,selectedModelRow=-1,lastSelectedModelRow=-1;   
+    public int selectedViewRow = -1,lastSelectedViewRow = -1,selectedModelRow=-1,lastSelectedModelRow=-1;
+    public int selectedViewRowPlayer = -1,selectedModelRowPlayer=-1;  
     public FTPManager ftpManager;
     public List<Integer> selectedView = new LinkedList<Integer>();//selected Rows in table (View)
     public List<Integer> selectedModel = new LinkedList<Integer>();//selected Rows in table (Model)   
@@ -2367,9 +2368,9 @@ public class MultiDB extends JFrame implements music.db.DataBaseLabels{
     	   lyricsView.setText("");
     	   if (((JMenuItem)e.getSource()).getName().compareTo(LYR_PLAYER_NAME)==0) {
     	    	lyricsPath = playList.pathFolder;
-    	    	lyricsGroup=playList.group;
-    	    	lyricsAlbum=playList.album;
-    	    }
+    	    	lyricsGroup = playList.getSongAtRow(selectedModelRowPlayer).group;
+    	    	lyricsAlbum = playList.getSongAtRow(selectedModelRowPlayer).album;
+    	   }
     	    else if (((JMenuItem)e.getSource()).getName().compareTo(LYR_MENU_NAME)==0)  {
     	    	lyricsPath = musicTabModel.getDiscAtRow(selectedModelRow).path;
     	    	lyricsGroup=musicTabModel.getDiscAtRow(selectedModelRow).group;
@@ -2783,8 +2784,8 @@ public class MultiDB extends JFrame implements music.db.DataBaseLabels{
        public void mousePressed(MouseEvent e) {
            if (SwingUtilities.isRightMouseButton(e)) {
                Point p = e.getPoint();// get the coordinates of the mouse click
-               int selectedViewRowPlayer = playListTable.rowAtPoint(p);
-               int selectedModelRowPlayer = playListTable.convertRowIndexToModel(selectedViewRowPlayer);
+               selectedViewRowPlayer = playListTable.rowAtPoint(p);
+               selectedModelRowPlayer = playListTable.convertRowIndexToModel(selectedViewRowPlayer);
                playListTable.changeSelection(selectedViewRowPlayer, selectedModelRowPlayer, false, false);
            }
        }

@@ -78,9 +78,9 @@ public class TabModelPlayList extends AbstractTableModel {
                     song.path = new File(pathFolder.getAbsolutePath() + "\\" + files[j]);
                     song.change=false;
                     tagReader(song);
-                    if (song.group==null) song.group=group;
-                    if ((song.group.compareTo("")==0)&&(group!=null)) song.group=group;
-                    if (song.album==null) song.album=album;
+                    if (song.group==null) song.group=group; 
+                    else if ((song.group.compareTo("")==0)&&(group!=null)) song.group=group;
+                    if (song.album==null) song.album=album; else
                     if ((song.album.compareTo("")==0)&&(album!=null)) song.album=album;
                     if (addToTable) data.add(song);
                     songList.add(song);
