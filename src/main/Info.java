@@ -22,8 +22,8 @@ public class Info {
 	private static JScrollPane infoScroll; 
     public static Logger logger = Logger.getLogger("MultiDBlog");
 	public static Map<Integer, String> map= new HashMap<Integer,String>();
-	//Codes for definition of errors
-	//Database errors
+	//Codes for definition of warnings
+	
 	public static final Integer INFO_MSG =-1;
       
 	//Strings for definition of errors
@@ -44,43 +44,11 @@ public class Info {
     }
     
     
-    public static void setErrors(){
-    	map.put(INFO_MSG,"Error loading database driver");
+    public static void setWarnings(){
+    	map.put(INFO_MSG,"Info message");
     }
     
-    //without logging message
-	public static void showError(int code){
-		if (map.containsKey(code)) {
-			JOptionPane.showMessageDialog(f, map.get(code));
-			logger.log(Level.SEVERE,map.get(code));
-		}
-		else {
-			JOptionPane.showMessageDialog(f, UNDEF_MSG);
-			logger.log(Level.SEVERE,UNDEF_MSG);
-		}
-	}
-	
-	//with logging message
-	public static void showError(int code,String message){
-		if (map.containsKey(code)) {
-			JOptionPane.showMessageDialog(f, map.get(code));
-			logger.log(Level.SEVERE,map.get(code)+"\n"+message);
-		}			
-		else {
-			JOptionPane.showMessageDialog(f, UNDEF_MSG);
-			logger.log(Level.SEVERE,message);
-		}		
-	}
-	
-	//with logging message but no alert window
-	public static void writeError(int code,String message){
-		if (map.containsKey(code)) {
-			logger.log(Level.SEVERE,map.get(code)+"\n"+message);
-		}			
-		else {
-			logger.log(Level.SEVERE,message);
-		}		
-	}
+   
 	
 	//WARNINGS, doesn't log
 	//directory warning
