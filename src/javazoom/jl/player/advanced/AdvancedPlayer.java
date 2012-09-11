@@ -65,6 +65,7 @@ public class AdvancedPlayer
 		if (device!=null) audio = device;
 		else audio = FactoryRegistry.systemRegistry().createAudioDevice();
 		audio.open(decoder = new Decoder());
+
 	}
 
 	public void play() throws JavaLayerException

@@ -2,13 +2,18 @@
 <classpath>
 	<classpathentry kind="src" path="src"/>
 	<classpathentry kind="con" path="org.eclipse.jdt.launching.JRE_CONTAINER"/>
-	<classpathentry kind="lib" path="D:/Documents and Settings/thrasher/My Documents/Java Projects/CLASS_LIB/mp3spi1.9.4.jar"/>
-	<classpathentry kind="lib" path="D:/Documents and Settings/thrasher/My Documents/Java Projects/CLASS_LIB/mysql-connector-java-5.1.7-bin.jar"/>
-	<classpathentry kind="lib" path="D:/Documents and Settings/thrasher/My Documents/Java Projects/CLASS_LIB/tritonus_share.jar"/>
-	<classpathentry kind="lib" path="D:/Documents and Settings/thrasher/My Documents/Java Projects/CLASS_LIB/EaSynthLookAndFeel.jar"/>
-	<classpathentry kind="lib" path="D:/Documents and Settings/thrasher/My Documents/Java Projects/CLASS_LIB/jvftp.jar"/>
-	<classpathentry kind="lib" path="D:/Documents and Settings/thrasher/My Documents/Java Projects/CLASS_LIB/commons-lang-2.5/commons-lang-2.5.jar"/>
-	<classpathentry kind="lib" path="D:/Documents and Settings/thrasher/My Documents/Java Projects/CLASS_LIB/commons-lang-2.5/commons-lang-2.5-javadoc.jar"/>
-	<classpathentry kind="lib" path="D:/Documents and Settings/thrasher/My Documents/Java Projects/CLASS_LIB/commons-lang-2.5/commons-lang-2.5-sources.jar"/>
+	<classpathentry kind="lib" path="C:/Users/thrasher/git/MultiDB/CLASSPATH/commons-lang-2.4.jar"/>
+	<classpathentry kind="lib" path="C:/Users/thrasher/git/MultiDB/CLASSPATH/EaSynthLookAndFeel.jar"/>
+	<classpathentry kind="lib" path="C:/Users/thrasher/git/MultiDB/CLASSPATH/htmllexer.jar"/>
+	<classpathentry kind="lib" path="C:/Users/thrasher/git/MultiDB/CLASSPATH/htmlparser.jar"/>
+	<classpathentry kind="lib" path="C:/Users/thrasher/git/MultiDB/CLASSPATH/javacsv.jar"/>
+	<classpathentry kind="lib" path="C:/Users/thrasher/git/MultiDB/CLASSPATH/jl1.0.1.zip"/>
+	<classpathentry kind="lib" path="C:/Users/thrasher/git/MultiDB/CLASSPATH/jsoup-1.6.0.jar"/>
+	<classpathentry kind="lib" path="C:/Users/thrasher/git/MultiDB/CLASSPATH/jvftp.jar"/>
+	<classpathentry kind="lib" path="C:/Users/thrasher/git/MultiDB/CLASSPATH/mp3spi1.9.4.jar"/>
+	<classpathentry kind="lib" path="C:/Users/thrasher/git/MultiDB/CLASSPATH/mysql-connector-java-5.1.7-bin.jar"/>
+	<classpathentry kind="lib" path="C:/Users/thrasher/git/MultiDB/CLASSPATH/spiffy-with_source-all-0.05.jar"/>
+	<classpathentry kind="lib" path="C:/Users/thrasher/git/MultiDB/CLASSPATH/SuperCSV-1.52.jar"/>
+	<classpathentry kind="lib" path="C:/Users/thrasher/git/MultiDB/CLASSPATH/tritonus_share.jar"/>
 	<classpathentry kind="output" path="build/classes"/>
 </classpath>

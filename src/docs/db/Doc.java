@@ -6,9 +6,11 @@ import java.text.*;
 
 public class Doc implements Serializable, Comparable<Object> {
 
-    /**
-	 * 
-	 */
+    public static final int COL_ID=0;
+    public static final int COL_TITLE=1;
+    public static final int COL_LOC=2;
+    public static final int COL_THEME=3;
+    public static final int COL_COMMENTS=4; 
 		
 	private static final long serialVersionUID = 1L;
 	static public int caseCompare = 0;
@@ -20,7 +22,31 @@ public class Doc implements Serializable, Comparable<Object> {
 
     public Doc() {
     }
-    //interface comparable, para ordenar primero por t�tulo y luego por a�o
+    
+    public String[] toStringArray(){
+    	String[] ret = new String[5];
+    	ret[COL_ID]=Integer.toString(this.id);
+    	ret[COL_TITLE]=this.title;
+    	ret[COL_LOC]=this.loc;
+    	ret[COL_THEME]=DocTheme.getStringTheme(this.theme);
+    	ret[COL_COMMENTS]=this.comments;
+    	return ret;
+    }
+    
+    //the same as before but only for database relevant data
+    public String[] toStringArrayRel(){
+    	return(this.toStringArray());
+    }
+    
+    public void setFromStringArray(String[] array){
+    	this.id=Integer.parseInt(array[COL_ID]);
+        this.title=array[COL_TITLE];
+        this.loc=array[COL_LOC];
+        this.comments=array[COL_COMMENTS];
+        this.theme=DocTheme.getDocTheme(array[COL_THEME]);
+    }
+    
+    //interface comparable, para ordenar primero por titulo
 
     public int compareTo(Object otherDoc) {
         int valor = 0;
@@ -94,7 +120,8 @@ public class Doc implements Serializable, Comparable<Object> {
 	}
     
 	public String getThemeInString() {
-		if (theme==DocTheme.HISTORY){
+		return DocTheme.getStringTheme(theme);
+		/*if (theme==DocTheme.HISTORY){
 			return "HISTORY";
 		}else if(theme==DocTheme.WARFARE){
 			return "WARFARE";
@@ -104,7 +131,7 @@ public class Doc implements Serializable, Comparable<Object> {
 			return "F1";
 		}else if(theme==DocTheme.SECONDWW){
 			return "SECONDWW";
-		}else return "MISC";
+		}else return "MISC";*/
 	}
 
 	public void setTheme(DocTheme theme) {
@@ -112,7 +139,8 @@ public class Doc implements Serializable, Comparable<Object> {
 	}
 	
 	public void setThemeByString(String theme) {
-		DocTheme aux=DocTheme.MISC;
+		this.theme=DocTheme.getDocTheme(theme);
+		/*DocTheme aux=DocTheme.MISC;
 		if (theme.compareTo("HISTORY")==0){
 			aux=DocTheme.HISTORY;
 		}else if(theme.compareTo("WARFARE")==0){
@@ -124,7 +152,7 @@ public class Doc implements Serializable, Comparable<Object> {
 		}else if(theme.compareTo("SECONDWW")==0){
 			aux=DocTheme.SECONDWW;
 		}		
-		this.theme = aux;
+		this.theme = aux;*/
 	}
 	
 	public String getComments() {
@@ -135,7 +163,10 @@ public class Doc implements Serializable, Comparable<Object> {
 		this.comments = comments;
 	}
 
-
+	public String toString(){
+		return  "Id: "+this.id+" ,title: "+this.title+" ,loc: "+this.loc+" ,theme: "+this.theme+" ,comments: "+this.comments;
+	}
+	
     public void reset(){
     	this.id=0;
         this.title="";

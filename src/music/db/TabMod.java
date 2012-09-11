@@ -3,7 +3,6 @@ package music.db;
 
 import java.io.File;
 import java.sql.ResultSet;
-import java.sql.ResultSetMetaData;
 import java.util.ArrayList;
 import java.util.Collections;
 
@@ -11,20 +10,15 @@ import javax.swing.table.AbstractTableModel;
 
 import main.AbstractDDBB;
 import main.MultiDB;
+import db.CSV.CSV;
 
 
-/**
- *
- * @author thrasher
- */
-public class TabMod extends AbstractTableModel implements DataBaseLabels{
+public class TabMod extends AbstractTableModel{
 
-    
-	/**
-	 * 
-	 */
+  
 	private static final long serialVersionUID = 1L;
-	private String[] labels;
+	private static final int numCols=12;
+	private String[] labels=new String[numCols];
     private ArrayList<Disc> data;
     private AbstractDDBB dataBase = new AbstractDDBB();
     private ResultSet rs = null;
@@ -34,17 +28,30 @@ public class TabMod extends AbstractTableModel implements DataBaseLabels{
     public static String user=MultiDB.user;
     public static String pass=MultiDB.pass;
     public static String database=MultiDB.musicDatabase;
+    public static String table=MultiDB.musicTable;
     public static String mysqlPath=MultiDB.mysqlPath;
 
     public TabMod() {
-
+    	data=new ArrayList<Disc>();
+    	labels[Disc.COL_GROUP]="groupName";
+    	labels[Disc.COL_TITLE]="title";
+    	labels[Disc.COL_STYLE]="style";
+    	labels[Disc.COL_YEAR]="year";
+    	labels[Disc.COL_LOC]="loc";
+    	labels[Disc.COL_COPY]="copy";
+    	labels[Disc.COL_TYPE]="type";
+    	labels[Disc.COL_MARK]="mark";
+    	labels[Disc.COL_PRESENT]="present";
+    	labels[Disc.COL_REVIEW]="review";
+    	labels[Disc.COL_PATH]="path";
+    	labels[Disc.COL_ID]="Id";
         try {
-            if (dataBase.cargaControlador()) {
-                if (dataBase.open("jdbc:mysql://"+host+":"+port+"/"+database, user, pass)) {
-                    if (dataBase.select("Select * from music")) {
+            if (dataBase.cargaControlador()>-1) {
+                if (dataBase.open("jdbc:mysql://"+host+":"+port+"/"+database, user, pass)>-1) {
+                    if (dataBase.select("Select * from "+table)>-1) {
 
                         rs = dataBase.getRs();
-                        ResultSetMetaData metaDatos = rs.getMetaData();
+                        /*ResultSetMetaData metaDatos = rs.getMetaData();
                         // Se obtiene el numero de columnas.
                         int numCol = metaDatos.getColumnCount();
                         labels = new String[numCol+2];// Se obtiene cada una de las etiquetas para cada columna
@@ -53,8 +60,8 @@ public class TabMod extends AbstractTableModel implements DataBaseLabels{
                             // para ResultSetMetaData la primera columna es la 1.
                             labels[i] = metaDatos.getColumnLabel(i + 1);
                         }
-                        labels[i]="present"; //añadir columnas de presente en backup y directorio
-                        labels[i+1]="path";
+                        labels[i]="present"; //anhadir columnas de presente en backup y directorio
+                        labels[i+1]="path";*/
                         int countData = 0;
                          //Contamos los datos que hay
                         while (rs.next()) {
@@ -62,24 +69,24 @@ public class TabMod extends AbstractTableModel implements DataBaseLabels{
                         }
   
                         //data=new Disco[countData];
-                        data=new ArrayList<Disc>();
-                        dataBase.select("Select * from music");
-                        rs = dataBase.getRs();
                         
+                        dataBase.select("Select * from "+table);
+                        rs = dataBase.getRs();
+                        int i=0;
                         for (i = 0; i < countData; i++) {
                             rs.next();            
                             //data[i]= new Disco();
                             disc=new Disc();
-                            disc.id=(Integer)rs.getObject(COL_ID+1);
-                            disc.group=(String)rs.getObject(COL_GROUP+1);
-                            disc.title=(String)rs.getObject(COL_TITLE+1);
-                            disc.style=(String)rs.getObject(COL_STYLE+1);
-                            if ((Long)rs.getObject(COL_YEAR+1)!=null) disc.year=((Long)rs.getObject(COL_YEAR+1)).toString();
-                            disc.loc=(String)rs.getObject(COL_LOC+1);
-                            disc.copy=(String)rs.getObject(COL_COPY+1);
-                            disc.type=(String)rs.getObject(COL_TYPE+1);
-                            disc.mark=(String)rs.getObject(COL_MARK+1);
-                            disc.review=(String)rs.getObject(COL_REVIEW+1);
+                            disc.id=(Integer)rs.getObject(Disc.COL_ID+1);
+                            disc.group=(String)rs.getObject(Disc.COL_GROUP+1);
+                            disc.title=(String)rs.getObject(Disc.COL_TITLE+1);
+                            disc.style=(String)rs.getObject(Disc.COL_STYLE+1);
+                            if ((Long)rs.getObject(Disc.COL_YEAR+1)!=null) disc.year=((Long)rs.getObject(Disc.COL_YEAR+1)).toString();
+                            disc.loc=(String)rs.getObject(Disc.COL_LOC+1);
+                            disc.copy=(String)rs.getObject(Disc.COL_COPY+1);
+                            disc.type=(String)rs.getObject(Disc.COL_TYPE+1);
+                            disc.mark=(String)rs.getObject(Disc.COL_MARK+1);
+                            disc.review=(String)rs.getObject(Disc.COL_REVIEW+1);
                             disc.present=new String("NO");
                             disc.path=new File("");
                             data.add(disc);
@@ -90,11 +97,46 @@ public class TabMod extends AbstractTableModel implements DataBaseLabels{
                     Collections.sort(data);
                 }
             }         
+        }catch (com.mysql.jdbc.exceptions.jdbc4.CommunicationsException comex)
+	    {
+        	System.out.println("Excepcion durante el acceso a la base de datos");
+        	
         } catch (Exception ex) {
-            System.out.println("Excepcion durante el acceso a la base de datos");
-            ex.printStackTrace();
+        //System.out.println("Excepcion durante el acceso a la base de datos");
+        	ex.printStackTrace();
         }
+        
 
+    }
+    
+    public void setAllData(ArrayList<Disc> data){
+    	this.data=data;
+    	this.fireTableDataChanged();
+    }
+    
+    public void setAllDataString(ArrayList<String[]> data) {
+    	String[] currRow = new String[numCols];
+    	int size = this.getRowCount();
+		this.data.clear();
+		if (size>1) this.fireTableRowsDeleted(0, size-1);
+    	for (int currDisc=0;currDisc<data.size();currDisc++){
+    		Disc disc = new Disc();
+    		currRow = ((String[])data.get(currDisc));
+    		disc.setFromStringArray(currRow);
+            this.data.add(disc);
+    	}
+        Collections.sort(this.data);
+        size = this.getRowCount();
+        if (size>1) this.fireTableRowsInserted(0,size-1);
+        //this.fireTableDataChanged();
+    }
+    
+    public int saveToCSV(String filename){
+    	ArrayList<String[]> arrayString=new ArrayList<String[]>();
+    	for (int currRow=0;currRow<data.size();currRow++){
+    		arrayString.add(data.get(currRow).toStringArrayRel());
+    	}
+    	return CSV.storeCSV(filename,arrayString);
     }
 
     public int getRowCount() {
@@ -108,18 +150,18 @@ public class TabMod extends AbstractTableModel implements DataBaseLabels{
     public Object getValueAt(int rowIndex, int columnIndex) {
     	Object ob = new Object();
         
-        if (columnIndex==COL_ID) ob=data.get(rowIndex).id;
-        if (columnIndex==COL_GROUP) ob=data.get(rowIndex).group;
-        if (columnIndex==COL_TITLE) ob=data.get(rowIndex).title;
-        if (columnIndex==COL_STYLE) ob=data.get(rowIndex).style;
-        if (columnIndex==COL_YEAR) ob=data.get(rowIndex).year;
-        if (columnIndex==COL_LOC) ob=data.get(rowIndex).loc;
-        if (columnIndex==COL_COPY) ob=data.get(rowIndex).copy;
-        if (columnIndex==COL_TYPE) ob=data.get(rowIndex).type;
-        if (columnIndex==COL_MARK) ob=data.get(rowIndex).mark;
-        if (columnIndex==COL_REVIEW) ob=data.get(rowIndex).review;
-        if (columnIndex==COL_PRESENT) ob=data.get(rowIndex).present;
-        if (columnIndex==COL_PATH) ob=data.get(rowIndex).path;
+        if (columnIndex==Disc.COL_ID) ob=data.get(rowIndex).id;
+        if (columnIndex==Disc.COL_GROUP) ob=data.get(rowIndex).group;
+        if (columnIndex==Disc.COL_TITLE) ob=data.get(rowIndex).title;
+        if (columnIndex==Disc.COL_STYLE) ob=data.get(rowIndex).style;
+        if (columnIndex==Disc.COL_YEAR) ob=data.get(rowIndex).year;
+        if (columnIndex==Disc.COL_LOC) ob=data.get(rowIndex).loc;
+        if (columnIndex==Disc.COL_COPY) ob=data.get(rowIndex).copy;
+        if (columnIndex==Disc.COL_TYPE) ob=data.get(rowIndex).type;
+        if (columnIndex==Disc.COL_MARK) ob=data.get(rowIndex).mark;
+        if (columnIndex==Disc.COL_REVIEW) ob=data.get(rowIndex).review;
+        if (columnIndex==Disc.COL_PRESENT) ob=data.get(rowIndex).present;
+        if (columnIndex==Disc.COL_PATH) ob=data.get(rowIndex).path;
 
         return ob;
     }
@@ -131,18 +173,18 @@ public class TabMod extends AbstractTableModel implements DataBaseLabels{
     }
 
      public void setDiscAtRow(Disc disc, int row) {
-         this.setValueAt(disc.id,row,COL_ID);
-         this.setValueAt(disc.group,row,COL_GROUP);
-         this.setValueAt(disc.title,row,COL_TITLE);
-         this.setValueAt(disc.style,row,COL_STYLE);
-         this.setValueAt(disc.year,row,COL_YEAR);
-         this.setValueAt(disc.loc,row,COL_LOC);
-         this.setValueAt(disc.copy,row,COL_COPY);
-         this.setValueAt(disc.type,row,COL_TYPE);
-         this.setValueAt(disc.mark,row,COL_MARK);
-         this.setValueAt(disc.review,row,COL_REVIEW);
-         this.setValueAt(disc.present,row,COL_PRESENT);
-         this.setValueAt(disc.path,row,COL_PATH);
+         this.setValueAt(disc.id,row,Disc.COL_ID);
+         this.setValueAt(disc.group,row,Disc.COL_GROUP);
+         this.setValueAt(disc.title,row,Disc.COL_TITLE);
+         this.setValueAt(disc.style,row,Disc.COL_STYLE);
+         this.setValueAt(disc.year,row,Disc.COL_YEAR);
+         this.setValueAt(disc.loc,row,Disc.COL_LOC);
+         this.setValueAt(disc.copy,row,Disc.COL_COPY);
+         this.setValueAt(disc.type,row,Disc.COL_TYPE);
+         this.setValueAt(disc.mark,row,Disc.COL_MARK);
+         this.setValueAt(disc.review,row,Disc.COL_REVIEW);
+         this.setValueAt(disc.present,row,Disc.COL_PRESENT);
+         this.setValueAt(disc.path,row,Disc.COL_PATH);
          this.fireTableRowsUpdated(row, row);
     }
     public int addDisc(Disc disc){
@@ -167,18 +209,17 @@ public class TabMod extends AbstractTableModel implements DataBaseLabels{
         for(i=0;i<tam;i++){
             //Collator comparador = Collator.getInstance();
             //comparador.setStrength(Collator.PRIMARY);
-            //System.out.println("comparing "+data[i].group+" with "+group);
-            //groupComp = comparador.compare(data[i].group, group);
-            //discComp = comparador.compare(data[i].title, disc);
-            //if (groupComp==0&&discComp==0) {
-          /*  if ((data[i].group.compareToIgnoreCase(group)==0)&&(data[i].title.compareToIgnoreCase(disc)==0)){
-                    sol =i;
-                    break;
-            }*/
-             if ((data.get(i).group.compareToIgnoreCase(group)==0)&&(data.get(i).title.compareToIgnoreCase(disc)==0)){
-                    sol =i;
-                    break;
+            //System.out.println("comparing "+data.get(i).group+" with "+group);
+            //groupComp = comparador.compare(data.get(i).group, group);
+            //discComp = comparador.compare(data.get(i).title, disc);
+            //if (groupComp==0&&discComp==0) 
+            if ((data.get(i).group.compareToIgnoreCase(group)==0)){
+            		if (data.get(i).title.compareToIgnoreCase(disc)==0){
+            			sol =i;
+            			break;
+            		}
             }
+
         }
         return sol;
     }
@@ -199,14 +240,14 @@ public class TabMod extends AbstractTableModel implements DataBaseLabels{
     public int searchFirstElementWithLetter(char car, int col, int charPos,int currentRow) {
         int row, sol = -1;
         int tam = this.getRowCount();
-        String el;
+        String el,el2;
         for (row = currentRow; row < tam; row++) {
             Object ob = this.getValueAt(row, col);
             if (ob instanceof String) {
                 el = (String) this.getValueAt(row, col);
-                if (el.length() > charPos + 1) {
-					el = el.substring(charPos, charPos + 1);
-					if (el.compareToIgnoreCase(car + "") == 0) {
+                if (el.length() > charPos) {
+					el2 = el.substring(charPos, charPos + 1);
+					if (el2.compareToIgnoreCase(car + "") == 0) {
 						sol = row;
 						break;
 					}
@@ -234,7 +275,7 @@ public class TabMod extends AbstractTableModel implements DataBaseLabels{
     public boolean isCellEditable(int row, int col) {
         //Note that the data/cell address is constant,
         //no matter where the cell appears onscreen.
-        if ((col == COL_ID)||(col==COL_PRESENT)) {
+        if ((col == Disc.COL_ID)||(col==Disc.COL_PRESENT)) {
             return false;
         } else {
             return true;
@@ -244,18 +285,18 @@ public class TabMod extends AbstractTableModel implements DataBaseLabels{
     @Override
     public void setValueAt(Object value, int rowIndex, int columnIndex) {
      
-        if (columnIndex==COL_ID) data.get(rowIndex).id=(Integer)value;
-        if (columnIndex==COL_GROUP) data.get(rowIndex).group=(String)value;
-        if (columnIndex==COL_TITLE) data.get(rowIndex).title=(String)value;
-        if (columnIndex==COL_STYLE) data.get(rowIndex).style=(String)value;
-        if (columnIndex==COL_YEAR) data.get(rowIndex).year=value.toString();
-        if (columnIndex==COL_LOC) data.get(rowIndex).loc=(String)value;
-        if (columnIndex==COL_COPY) data.get(rowIndex).copy=(String)value;
-        if (columnIndex==COL_TYPE) data.get(rowIndex).type=(String)value;
-        if (columnIndex==COL_MARK) data.get(rowIndex).mark=(String)value;
-        if (columnIndex==COL_REVIEW) data.get(rowIndex).review=(String)value;
-        if (columnIndex==COL_PRESENT) data.get(rowIndex).present=(String)value;
-        if (columnIndex==COL_PATH) data.get(rowIndex).path=(File)value;
+        if (columnIndex==Disc.COL_ID) data.get(rowIndex).id=(Integer)value;
+        if (columnIndex==Disc.COL_GROUP) data.get(rowIndex).group=(String)value;
+        if (columnIndex==Disc.COL_TITLE) data.get(rowIndex).title=(String)value;
+        if (columnIndex==Disc.COL_STYLE) data.get(rowIndex).style=(String)value;
+        if (columnIndex==Disc.COL_YEAR) data.get(rowIndex).year=value.toString();
+        if (columnIndex==Disc.COL_LOC) data.get(rowIndex).loc=(String)value;
+        if (columnIndex==Disc.COL_COPY) data.get(rowIndex).copy=(String)value;
+        if (columnIndex==Disc.COL_TYPE) data.get(rowIndex).type=(String)value;
+        if (columnIndex==Disc.COL_MARK) data.get(rowIndex).mark=(String)value;
+        if (columnIndex==Disc.COL_REVIEW) data.get(rowIndex).review=(String)value;
+        if (columnIndex==Disc.COL_PRESENT) data.get(rowIndex).present=(String)value;
+        if (columnIndex==Disc.COL_PATH) data.get(rowIndex).path=(File)value;
         this.fireTableRowsUpdated(rowIndex, rowIndex);
     }
 

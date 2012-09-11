@@ -6,10 +6,10 @@ import java.util.Collections;
 import javax.swing.table.AbstractTableModel;
 
 
-public class NewDiscTabMod extends AbstractTableModel implements DataBaseLabels{
+public class NewDiscTabMod extends AbstractTableModel {
 
 	private static final long serialVersionUID = 1L;
-	private String[] labels={"Id","Group","Title","Style","Year","Location"};
+	private String[] labels={"Id","Group","Title","Type","Style","Year","Location"};
     private ArrayList<Disc> data = new ArrayList<Disc>();
     private Disc disc;
 
@@ -29,13 +29,13 @@ public class NewDiscTabMod extends AbstractTableModel implements DataBaseLabels{
 
     public Object getValueAt(int rowIndex, int columnIndex) {
     	Object ob = new Object();
-        
-        if (columnIndex==COL_ID) ob=data.get(rowIndex).id;
-        if (columnIndex==COL_GROUP) ob=data.get(rowIndex).group;
-        if (columnIndex==COL_TITLE) ob=data.get(rowIndex).title;
-        if (columnIndex==COL_STYLE) ob=data.get(rowIndex).style;
-        if (columnIndex==COL_YEAR) ob=data.get(rowIndex).year;
-        if (columnIndex==COL_LOC) ob=data.get(rowIndex).loc;
+        if (columnIndex==Disc.COL_NID) ob=data.get(rowIndex).id;
+        if (columnIndex==Disc.COL_NGROUP) ob=data.get(rowIndex).group;
+        if (columnIndex==Disc.COL_NTITLE) ob=data.get(rowIndex).title;
+        if (columnIndex==Disc.COL_NTYPE) ob=data.get(rowIndex).type;
+        if (columnIndex==Disc.COL_NSTYLE) ob=data.get(rowIndex).style;
+        if (columnIndex==Disc.COL_NYEAR) ob=data.get(rowIndex).year;
+        if (columnIndex==Disc.COL_NLOC) ob=data.get(rowIndex).loc;
         return ob;
     }
 
@@ -46,13 +46,13 @@ public class NewDiscTabMod extends AbstractTableModel implements DataBaseLabels{
     }
 
      public void setDiscAtRow(Disc disc, int row) {
-         this.setValueAt(disc.id,row,COL_ID);
-         this.setValueAt(disc.group,row,COL_GROUP);
-         this.setValueAt(disc.title,row,COL_TITLE);
-         this.setValueAt(disc.style,row,COL_STYLE);
-         this.setValueAt(disc.year,row,COL_YEAR);
-         this.setValueAt(disc.loc,row,COL_LOC);
-         this.setValueAt(disc.copy,row,COL_COPY);
+         this.setValueAt(disc.id,row,Disc.COL_NID);
+         this.setValueAt(disc.group,row,Disc.COL_NGROUP);
+         this.setValueAt(disc.title,row,Disc.COL_NTITLE);
+         this.setValueAt(disc.type,row,Disc.COL_NTYPE);
+         this.setValueAt(disc.style,row,Disc.COL_NSTYLE);
+         this.setValueAt(disc.year,row,Disc.COL_NYEAR);
+         this.setValueAt(disc.loc,row,Disc.COL_NLOC);
          this.fireTableRowsUpdated(row, row);
     }
      
@@ -121,12 +121,13 @@ public class NewDiscTabMod extends AbstractTableModel implements DataBaseLabels{
     @Override
     public void setValueAt(Object value, int rowIndex, int columnIndex) {
      
-        if (columnIndex==COL_ID) data.get(rowIndex).id=(Integer)value;
-        if (columnIndex==COL_GROUP) data.get(rowIndex).group=(String)value;
-        if (columnIndex==COL_TITLE) data.get(rowIndex).title=(String)value;
-        if (columnIndex==COL_STYLE) data.get(rowIndex).style=(String)value;
-        if (columnIndex==COL_YEAR) data.get(rowIndex).year=value.toString();
-        if (columnIndex==COL_LOC) data.get(rowIndex).loc=(String)value;
+        if (columnIndex==Disc.COL_NID) data.get(rowIndex).id=(Integer)value;
+        if (columnIndex==Disc.COL_NGROUP) data.get(rowIndex).group=(String)value;
+        if (columnIndex==Disc.COL_NTITLE) data.get(rowIndex).title=(String)value;
+        if (columnIndex==Disc.COL_NTYPE) data.get(rowIndex).type=(String)value;
+        if (columnIndex==Disc.COL_NSTYLE) data.get(rowIndex).style=(String)value;
+        if (columnIndex==Disc.COL_NYEAR) data.get(rowIndex).year=value.toString();
+        if (columnIndex==Disc.COL_NLOC) data.get(rowIndex).loc=(String)value;
         this.fireTableRowsUpdated(rowIndex, rowIndex);
     }
 

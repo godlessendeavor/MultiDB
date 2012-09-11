@@ -1,7 +1,7 @@
 package docs.db;
 
 public enum DocTheme {
-	HISTORY,SECONDWW,WARFARE,F1,MISC;
+	HISTORY,SECONDWW,WARFARE,F1,MISC,SCIENCE,PROTEST,SPORTS;
 	
 	public static DocTheme getDocTheme(String theme) {
 		DocTheme aux=MISC;
@@ -13,6 +13,12 @@ public enum DocTheme {
 			aux=MISC;
 		}else if(theme.compareTo("F1")==0){
 			aux=F1;
+		}else if(theme.compareTo("SCIENCE")==0){
+			aux=SCIENCE;
+		}else if(theme.compareTo("PROTEST")==0){
+			aux=PROTEST;
+		}else if(theme.compareTo("SPORTS")==0){
+			aux=SPORTS;
 		}else if(theme.compareTo("SECONDWW")==0){
 			aux=SECONDWW;
 		}
@@ -29,6 +35,12 @@ public enum DocTheme {
 			return "F1";
 		}else if(theme==SECONDWW){
 			return "SECONDWW";
+		}else if(theme==SCIENCE){
+			return "SCIENCE";
+		}else if(theme==PROTEST){
+			return "PROTEST";
+		}else if(theme==SPORTS){
+			return "SPORTS";
 		}else return "MISC";
 	}
 	

@@ -6,7 +6,6 @@ package movies.db;
 
 import java.io.File;
 import java.sql.ResultSet;
-import java.sql.ResultSetMetaData;
 import java.util.ArrayList;
 import java.util.Collections;
 
@@ -14,20 +13,14 @@ import javax.swing.table.AbstractTableModel;
 
 import main.AbstractDDBB;
 import main.MultiDB;
+import db.CSV.CSV;
 
 
-/**
- *
- * @author thrasher
- */
-public class TabMod extends AbstractTableModel implements DataBaseLabels{
+public class TabMod extends AbstractTableModel{
 
-    
-	/**
-	 * 
-	 */
 	private static final long serialVersionUID = 1L;
-	private String[] labels;
+	private static final int numCols=9;
+	private String[] labels = new String[numCols];
     private ArrayList<Movie> data;
     private AbstractDDBB dataBase = new AbstractDDBB();
     private ResultSet rs = null;
@@ -38,17 +31,25 @@ public class TabMod extends AbstractTableModel implements DataBaseLabels{
     public static String pass=MultiDB.pass;
     public static String database=MultiDB.moviesDatabase;
     public static String table=MultiDB.moviesTable;
-    public static String mysqlPath=DataBaseTable.mysqlPath;
 
     public TabMod() {
-
+        data=new ArrayList<Movie>();
+    	labels[Movie.COL_TITLE]="title";
+    	labels[Movie.COL_DIR]="director";
+    	labels[Movie.COL_YEAR]="year";
+    	labels[Movie.COL_LOC]="loc";
+    	labels[Movie.COL_OTHER]="other";
+    	labels[Movie.COL_PRESENT]="present";
+    	labels[Movie.COL_REVIEW]="review";
+    	labels[Movie.COL_PATH]="path";
+    	labels[Movie.COL_ID]="Id";        
         try {
-            if (dataBase.cargaControlador()) {
-                if (dataBase.open("jdbc:mysql://"+host+":"+port+"/"+database, user, pass)) {
-                    if (dataBase.select("Select * from "+table)) {
+            if (dataBase.cargaControlador()>-1) {
+                if (dataBase.open("jdbc:mysql://"+host+":"+port+"/"+database, user, pass)>-1) {
+                    if (dataBase.select("Select * from "+table)>-1) {
 
                         rs = dataBase.getRs();
-                        ResultSetMetaData metaDatos = rs.getMetaData();
+                        /*ResultSetMetaData metaDatos = rs.getMetaData();
                         // Se obtiene el numero de columnas.
                         int numCol = metaDatos.getColumnCount();
                         labels = new String[numCol+2];// Se obtiene cada una de las etiquetas para cada columna
@@ -58,7 +59,7 @@ public class TabMod extends AbstractTableModel implements DataBaseLabels{
                             labels[i] = metaDatos.getColumnLabel(i + 1);
                         }
                         labels[i]="present"; //añadir columnas de presente en backup y directorio
-                        labels[i+1]="path";
+                        labels[i+1]="path";*/
                         int countData = 0;
                          //Contamos los datos que hay
                         while (rs.next()) {
@@ -66,20 +67,19 @@ public class TabMod extends AbstractTableModel implements DataBaseLabels{
                         }
   
                         //data=new Disco[countData];
-                        data=new ArrayList<Movie>();
                         dataBase.select("Select * from "+table);
                         rs = dataBase.getRs();
                         
-                        for (i = 0; i < countData; i++) {
+                        for (int i = 0; i < countData; i++) {
                             rs.next();            
                             //data[i]= new Disco();
                             movie=new Movie();
-                            movie.id=(Integer)rs.getObject(COL_ID+1);
-                            movie.title=(String)rs.getObject(COL_TITLE+1);
-                            movie.other=(String)rs.getObject(COL_OTHER+1);
-                            if (rs.getObject(COL_YEAR + 1)!=null) movie.year = rs.getObject(COL_YEAR + 1).toString();
-                            movie.loc=(String)rs.getObject(COL_LOC+1);                     
-                            movie.director=(String)rs.getObject(COL_DIR+1);
+                            movie.id=(Integer)rs.getObject(Movie.COL_ID+1);
+                            movie.title=(String)rs.getObject(Movie.COL_TITLE+1);
+                            movie.other=(String)rs.getObject(Movie.COL_OTHER+1);
+                            if (rs.getObject(Movie.COL_YEAR + 1)!=null) movie.year = rs.getObject(Movie.COL_YEAR + 1).toString();
+                            movie.loc=(String)rs.getObject(Movie.COL_LOC+1);                     
+                            movie.director=(String)rs.getObject(Movie.COL_DIR+1);
                             //movie.review=(String)rs.getObject(COL_REVIEW+1);
                             movie.present=new String("NO");
                             movie.path=new File("");
@@ -97,6 +97,36 @@ public class TabMod extends AbstractTableModel implements DataBaseLabels{
         }
 
     }
+    
+    public void setAllData(ArrayList<Movie> data){
+    	this.data=data;
+    	this.fireTableDataChanged();
+    }
+    
+    public void setAllDataString(ArrayList<String[]> data) {
+    	String[] currRow = new String[numCols];
+    	int size = this.getRowCount();
+		this.data.clear();
+		if (size>1) this.fireTableRowsDeleted(0, size-1);
+    	for (int currDisc=0;currDisc<data.size();currDisc++){
+    		Movie movie = new Movie();
+    		currRow = ((String[])data.get(currDisc));
+    		movie.setFromStringArray(currRow);
+            this.data.add(movie);
+    	}
+   	   Collections.sort(this.data);
+       size = this.getRowCount();
+       if (size>1) this.fireTableRowsInserted(0,size-1);
+   
+    }
+    
+    public int saveToCSV(String filename){
+    	ArrayList<String[]> arrayString=new ArrayList<String[]>();
+    	for (int currRow=0;currRow<data.size();currRow++){
+    		arrayString.add(data.get(currRow).toStringArrayRel());
+    	}
+    	return CSV.storeCSV(filename,arrayString);
+    }
 
     public int getRowCount() {
         return data.size();
@@ -109,15 +139,15 @@ public class TabMod extends AbstractTableModel implements DataBaseLabels{
     public Object getValueAt(int rowIndex, int columnIndex) {
     	Object ob = new Object();
         
-        if (columnIndex==COL_ID) ob=data.get(rowIndex).id;
-        if (columnIndex==COL_TITLE) ob=data.get(rowIndex).title;
-        if (columnIndex==COL_DIR) ob=data.get(rowIndex).director;
-        if (columnIndex==COL_YEAR) ob=data.get(rowIndex).year;
-        if (columnIndex==COL_LOC) ob=data.get(rowIndex).loc;
-        if (columnIndex==COL_OTHER) ob=data.get(rowIndex).other;
-        if (columnIndex==COL_REVIEW) ob=data.get(rowIndex).review;
-        if (columnIndex==COL_PRESENT) ob=data.get(rowIndex).present;
-        if (columnIndex==COL_PATH) ob=data.get(rowIndex).path;
+        if (columnIndex==Movie.COL_ID) ob=data.get(rowIndex).id;
+        if (columnIndex==Movie.COL_TITLE) ob=data.get(rowIndex).title;
+        if (columnIndex==Movie.COL_DIR) ob=data.get(rowIndex).director;
+        if (columnIndex==Movie.COL_YEAR) ob=data.get(rowIndex).year;
+        if (columnIndex==Movie.COL_LOC) ob=data.get(rowIndex).loc;
+        if (columnIndex==Movie.COL_OTHER) ob=data.get(rowIndex).other;
+        if (columnIndex==Movie.COL_REVIEW) ob=data.get(rowIndex).review;
+        if (columnIndex==Movie.COL_PRESENT) ob=data.get(rowIndex).present;
+        if (columnIndex==Movie.COL_PATH) ob=data.get(rowIndex).path;
 
         return ob;
     }
@@ -129,15 +159,15 @@ public class TabMod extends AbstractTableModel implements DataBaseLabels{
     }
 
      public void setMovieAtRow(Movie movie, int row) {
-         this.setValueAt(movie.id,row,COL_ID);
-         this.setValueAt(movie.title,row,COL_TITLE);
-         this.setValueAt(movie.director,row,COL_DIR);
-         this.setValueAt(movie.year,row,COL_YEAR);
-         this.setValueAt(movie.loc,row,COL_LOC);
-         this.setValueAt(movie.other,row,COL_OTHER);
-         this.setValueAt(movie.review,row,COL_REVIEW);
-         this.setValueAt(movie.present,row,COL_PRESENT);
-         this.setValueAt(movie.path,row,COL_PATH);
+         this.setValueAt(movie.id,row,Movie.COL_ID);
+         this.setValueAt(movie.title,row,Movie.COL_TITLE);
+         this.setValueAt(movie.director,row,Movie.COL_DIR);
+         this.setValueAt(movie.year,row,Movie.COL_YEAR);
+         this.setValueAt(movie.loc,row,Movie.COL_LOC);
+         this.setValueAt(movie.other,row,Movie.COL_OTHER);
+         this.setValueAt(movie.review,row,Movie.COL_REVIEW);
+         this.setValueAt(movie.present,row,Movie.COL_PRESENT);
+         this.setValueAt(movie.path,row,Movie.COL_PATH);
          this.fireTableRowsUpdated(row, row);
     }
     public int addMovie(Movie movie){
@@ -228,7 +258,7 @@ public class TabMod extends AbstractTableModel implements DataBaseLabels{
     public boolean isCellEditable(int row, int col) {
         //Note that the data/cell address is constant,
         //no matter where the cell appears onscreen.
-        if ((col == COL_ID)||(col==COL_PRESENT)) {
+        if ((col == Movie.COL_ID)||(col==Movie.COL_PRESENT)) {
             return false;
         } else {
             return true;
@@ -238,15 +268,15 @@ public class TabMod extends AbstractTableModel implements DataBaseLabels{
     @Override
     public void setValueAt(Object value, int rowIndex, int columnIndex) {
      
-        if (columnIndex==COL_ID) data.get(rowIndex).id=(Integer)value;
-        if (columnIndex==COL_TITLE) data.get(rowIndex).title=(String)value;
-        if (columnIndex==COL_DIR) data.get(rowIndex).director=(String)value;
-        if (columnIndex==COL_YEAR) data.get(rowIndex).year=(String)value;
-        if (columnIndex==COL_OTHER) data.get(rowIndex).other=(String)value;
-        if (columnIndex==COL_LOC) data.get(rowIndex).loc=(String)value;
-        if (columnIndex==COL_REVIEW) data.get(rowIndex).review=(String)value;
-        if (columnIndex==COL_PRESENT) data.get(rowIndex).present=(String)value;
-        if (columnIndex==COL_PATH) data.get(rowIndex).path=(File)value;
+        if (columnIndex==Movie.COL_ID) data.get(rowIndex).id=(Integer)value;
+        if (columnIndex==Movie.COL_TITLE) data.get(rowIndex).title=(String)value;
+        if (columnIndex==Movie.COL_DIR) data.get(rowIndex).director=(String)value;
+        if (columnIndex==Movie.COL_YEAR) data.get(rowIndex).year=(String)value;
+        if (columnIndex==Movie.COL_OTHER) data.get(rowIndex).other=(String)value;
+        if (columnIndex==Movie.COL_LOC) data.get(rowIndex).loc=(String)value;
+        if (columnIndex==Movie.COL_REVIEW) data.get(rowIndex).review=(String)value;
+        if (columnIndex==Movie.COL_PRESENT) data.get(rowIndex).present=(String)value;
+        if (columnIndex==Movie.COL_PATH) data.get(rowIndex).path=(File)value;
         this.fireTableRowsUpdated(rowIndex, rowIndex);
     }
 

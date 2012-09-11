@@ -75,7 +75,6 @@ public class FactoryRegistry extends AudioDeviceFactory
 	{
 		AudioDevice device = null;
 		AudioDeviceFactory[] factories = getFactoriesPriority();
-		
 		if (factories==null)
 			throw new JavaLayerException(this+": no factories registered");
 		
@@ -91,7 +90,7 @@ public class FactoryRegistry extends AudioDeviceFactory
 				lastEx = ex;
 			}
 		}
-		
+
 		if (device==null && lastEx!=null)
 		{
 			throw new JavaLayerException("Cannot create AudioDevice", lastEx);	

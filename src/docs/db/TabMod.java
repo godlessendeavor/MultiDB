@@ -1,7 +1,3 @@
-/*
- * To change this template, choose Tools | Templates
- * and open the template in the editor.
- */
 package docs.db;
 
 import java.sql.ResultSet;
@@ -13,20 +9,19 @@ import javax.swing.table.AbstractTableModel;
 
 import main.AbstractDDBB;
 import main.MultiDB;
+import db.CSV.CSV;
 
 
 /**
  *
  * @author thrasher
  */
-public class TabMod extends AbstractTableModel implements DataBaseLabels{
+public class TabMod extends AbstractTableModel{
 
-    
-	/**
-	 * 
-	 */
+  
 	private static final long serialVersionUID = 1L;
-	private String[] labels;
+	private static final int numCols=5;
+	private String[] labels=new String[numCols];
     private ArrayList<Doc> data;
     private AbstractDDBB dataBase = new AbstractDDBB();
     private ResultSet rs = null;
@@ -41,10 +36,16 @@ public class TabMod extends AbstractTableModel implements DataBaseLabels{
 
     public TabMod() {
 
+        data=new ArrayList<Doc>();
+        labels[Doc.COL_TITLE]="title";
+    	labels[Doc.COL_LOC]="loc";
+    	labels[Doc.COL_THEME]="theme";
+    	labels[Doc.COL_COMMENTS]="comments";
+    	labels[Doc.COL_ID]="id"; 
         try {
-            if (dataBase.cargaControlador()) {
-                if (dataBase.open("jdbc:mysql://"+host+":"+port+"/"+database, user, pass)) {
-                    if (dataBase.select("Select * from "+table)) {
+            if (dataBase.cargaControlador()>-1) {
+                if (dataBase.open("jdbc:mysql://"+host+":"+port+"/"+database, user, pass)>-1) {
+                    if (dataBase.select("Select * from "+table)>-1) {
 
                         rs = dataBase.getRs();
                         ResultSetMetaData metaDatos = rs.getMetaData();
@@ -63,7 +64,6 @@ public class TabMod extends AbstractTableModel implements DataBaseLabels{
                         }
   
                         //data=new Disco[countData];
-                        data=new ArrayList<Doc>();
                         dataBase.select("Select * from "+table);
                         rs = dataBase.getRs();
                         
@@ -71,11 +71,11 @@ public class TabMod extends AbstractTableModel implements DataBaseLabels{
                             rs.next();            
                             //data[i]= new Disco();
                             doc=new Doc();
-                            doc.id=(Integer)rs.getObject(COL_ID+1);
-                            doc.title=(String)rs.getObject(COL_TITLE+1);
-    						doc.loc = (String) rs.getObject(COL_LOC + 1);
-    						doc.setThemeByString((String) rs.getObject(COL_THEME + 1));
-    						doc.comments = (String) rs.getObject(COL_COMMENTS + 1);
+                            doc.id=(Integer)rs.getObject(Doc.COL_ID+1);
+                            doc.title=(String)rs.getObject(Doc.COL_TITLE+1);
+    						doc.loc = (String) rs.getObject(Doc.COL_LOC + 1);
+    						doc.setThemeByString((String) rs.getObject(Doc.COL_THEME + 1));
+    						doc.comments = (String) rs.getObject(Doc.COL_COMMENTS + 1);
                             data.add(doc);
                         }
                     }
@@ -91,6 +91,36 @@ public class TabMod extends AbstractTableModel implements DataBaseLabels{
 
     }
 
+    
+    public void setAllData(ArrayList<Doc> data){
+    	this.data=data;
+    	this.fireTableDataChanged();
+    }
+    
+    public void setAllDataString(ArrayList<String[]> data) {
+    	String[] currRow = new String[numCols];
+    	int size = this.getRowCount();
+		this.data.clear();
+		if (size>1) this.fireTableRowsDeleted(0, size-1);
+    	for (int currDisc=0;currDisc<data.size();currDisc++){
+    		Doc doc = new Doc();
+    		currRow = ((String[])data.get(currDisc));
+    		doc.setFromStringArray(currRow);
+            this.data.add(doc);
+    	}
+        Collections.sort(this.data);
+        size = this.getRowCount();
+        if (size>1) this.fireTableRowsInserted(0,size-1);
+    }
+    
+    public int saveToCSV(String filename){
+    	ArrayList<String[]> arrayString=new ArrayList<String[]>();
+    	for (int currRow=0;currRow<data.size();currRow++){
+    		arrayString.add(data.get(currRow).toStringArrayRel());
+    	}
+    	return CSV.storeCSV(filename,arrayString);
+    }
+    
     public int getRowCount() {
         return data.size();
     }
@@ -102,11 +132,11 @@ public class TabMod extends AbstractTableModel implements DataBaseLabels{
     public Object getValueAt(int rowIndex, int columnIndex) {
     	Object ob = new Object();
         
-        if (columnIndex==COL_ID) ob=data.get(rowIndex).id;
-        if (columnIndex==COL_TITLE) ob=data.get(rowIndex).title;
-        if (columnIndex==COL_LOC) ob=data.get(rowIndex).loc;
-        if (columnIndex==COL_COMMENTS) ob=data.get(rowIndex).comments;
-        if (columnIndex==COL_THEME) ob=data.get(rowIndex).theme;
+        if (columnIndex==Doc.COL_ID) ob=data.get(rowIndex).id;
+        if (columnIndex==Doc.COL_TITLE) ob=data.get(rowIndex).title;
+        if (columnIndex==Doc.COL_LOC) ob=data.get(rowIndex).loc;
+        if (columnIndex==Doc.COL_COMMENTS) ob=data.get(rowIndex).comments;
+        if (columnIndex==Doc.COL_THEME) ob=data.get(rowIndex).theme;
         return ob;
     }
 
@@ -117,11 +147,11 @@ public class TabMod extends AbstractTableModel implements DataBaseLabels{
     }
 
      public void setDocAtRow(Doc doc, int row) {
-         this.setValueAt(doc.id,row,COL_ID);
-         this.setValueAt(doc.title,row,COL_TITLE);
-         this.setValueAt(doc.loc,row,COL_LOC);
-         this.setValueAt(doc.comments,row,COL_COMMENTS);
-         this.setValueAt(doc.theme,row,COL_THEME);
+         this.setValueAt(doc.id,row,Doc.COL_ID);
+         this.setValueAt(doc.title,row,Doc.COL_TITLE);
+         this.setValueAt(doc.loc,row,Doc.COL_LOC);
+         this.setValueAt(doc.comments,row,Doc.COL_COMMENTS);
+         this.setValueAt(doc.theme,row,Doc.COL_THEME);
          this.fireTableRowsUpdated(row, row);
     }
     public int addDoc(Doc doc){
@@ -203,7 +233,7 @@ public class TabMod extends AbstractTableModel implements DataBaseLabels{
 
     @Override
     public Class<? extends Object> getColumnClass(int c) {
-    	if (c==COL_THEME) return DocTheme.class; else return String.class;
+    	if (c==Doc.COL_THEME) return DocTheme.class; else return String.class;
    }
 
 
@@ -215,11 +245,11 @@ public class TabMod extends AbstractTableModel implements DataBaseLabels{
     @Override
     public void setValueAt(Object value, int rowIndex, int columnIndex) {
      
-        if (columnIndex==COL_ID) data.get(rowIndex).id=(Integer)value;
-        if (columnIndex==COL_TITLE) data.get(rowIndex).title=(String)value;
-        if (columnIndex==COL_LOC) data.get(rowIndex).loc=(String)value;
-        if (columnIndex==COL_COMMENTS) data.get(rowIndex).comments=(String)value;
-        if (columnIndex==COL_THEME) {
+        if (columnIndex==Doc.COL_ID) data.get(rowIndex).id=(Integer)value;
+        if (columnIndex==Doc.COL_TITLE) data.get(rowIndex).title=(String)value;
+        if (columnIndex==Doc.COL_LOC) data.get(rowIndex).loc=(String)value;
+        if (columnIndex==Doc.COL_COMMENTS) data.get(rowIndex).comments=(String)value;
+        if (columnIndex==Doc.COL_THEME) {
         	if (value instanceof String) data.get(rowIndex).theme = DocTheme.getDocTheme((String)value);
         	else if (value instanceof DocTheme) data.get(rowIndex).theme = (DocTheme)value;
         }

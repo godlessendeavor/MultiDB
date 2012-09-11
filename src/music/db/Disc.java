@@ -2,12 +2,36 @@ package music.db;
 
 import java.io.*;
 import java.text.*;
-
 public class Disc implements Serializable, Comparable<Object> {
 
     /**
-	 * 
+	  NUMBER OF COLUMN FOR TABLE MUSIC
 	 */
+    public static final int COL_ID=0;
+    public static final int COL_GROUP=1;
+    public static final int COL_TITLE=2;
+    public static final int COL_STYLE=3;
+    public static final int COL_YEAR=4;
+    public static final int COL_LOC=5;
+    public static final int COL_COPY=6;
+    public static final int COL_TYPE=7;
+    public static final int COL_MARK=8;
+    public static final int COL_REVIEW=9;
+    public static final int COL_PRESENT=10;
+    public static final int COL_PATH=11;
+    
+   /**
+	  NUMBER OF COLUMN FOR TABLE NEW_DISCS
+	*/
+  public static final int COL_NID=0;
+  public static final int COL_NGROUP=1;
+  public static final int COL_NTITLE=2;
+  public static final int COL_NTYPE=3;
+  public static final int COL_NSTYLE=4;
+  public static final int COL_NYEAR=5;
+  public static final int COL_NLOC=6;
+
+	
 	private static final long serialVersionUID = 1L;
 	static public int caseCompare = 0;
     public int id;
@@ -21,12 +45,67 @@ public class Disc implements Serializable, Comparable<Object> {
     public String mark;
     public String review;
     public String present;
+    public String link; //link for info in web
     public File path;
 
     public Disc() {
     }
-    //interface comparable, para ordenar primero por t�tulo y luego por a�o
+    
+    public String[] toStringArray(){
+    	String[] ret = new String[12];
+    	ret[COL_ID]=Integer.toString(this.id);
+    	ret[COL_GROUP]=this.group;
+    	ret[COL_TITLE]=this.title;
+    	ret[COL_STYLE]=this.style;
+    	ret[COL_YEAR]=this.year;
+    	ret[COL_LOC]=this.loc;
+    	ret[COL_COPY]=this.copy;
+    	ret[COL_TYPE]=this.type;
+    	ret[COL_MARK]=this.mark;
+    	ret[COL_REVIEW]=this.review;
+    	ret[10]=this.present;
+    	ret[11]=this.path.getAbsolutePath();
+    	return ret;
+    }
+    
+    //the same as before but only for database relevant data
+    public String[] toStringArrayRel(){
+    	String[] ret = new String[10];
+    	ret[COL_ID]=Integer.toString(this.id);
+    	ret[COL_GROUP]=this.group;
+    	ret[COL_TITLE]=this.title;
+    	ret[COL_STYLE]=this.style;
+    	ret[COL_YEAR]=this.year;
+    	ret[COL_LOC]=this.loc;
+    	ret[COL_COPY]=this.copy;
+    	ret[COL_TYPE]=this.type;
+    	ret[COL_MARK]=this.mark;
+    	ret[COL_REVIEW]=this.review;
+    	return ret;
+    }
+    
+    public void setFromStringArray(String[] array){
+    	try{
+	    	this.id=Integer.parseInt(array[COL_ID]);
+	    	this.group=array[COL_GROUP];
+	        this.title=array[COL_TITLE];
+	        this.style=array[COL_STYLE];
+	        this.year=array[COL_YEAR];
+	        this.loc=array[COL_LOC];
+	        this.copy=array[COL_COPY];
+	        this.type=array[COL_TYPE];
+	        this.mark=array[COL_MARK];
+	        this.review=array[COL_REVIEW];
+	        this.present=new String("NO");
+	        this.path=new File("");
+    	}catch(NumberFormatException ex){
+    		this.reset();
+    	}
+    }
+    
+  //interface comparable, para ordenar primero por titulo y luego por anho
 
+    
     public int compareTo(Object otroDisco) {
         int valor = 0;
         Collator comparador = Collator.getInstance();
@@ -112,8 +191,26 @@ public class Disc implements Serializable, Comparable<Object> {
         }
         return (valor);
     }
+    
+    
+    public void check(){
+    	try{
+    		Integer.parseInt(this.year);
+    	}catch(Exception ex){
+    		this.year="0";
+    	}
+    }
+    
 
-    public String getCopy() {
+    public int getId() {
+		return id;
+	}
+
+	public void setId(int id) {
+		this.id = id;
+	}
+
+	public String getCopy() {
         return copy;
     }
 
@@ -200,11 +297,23 @@ public class Disc implements Serializable, Comparable<Object> {
     public void setYear(String year) {
         this.year = year;
     }
-    public void reset(){
+    public String getLink() {
+		return link;
+	}
+
+	public void setLink(String link) {
+		this.link = link;
+	}
+	
+	public String toString(){
+		return  "Id: "+this.id+" ,group: "+this.group+" ,title: "+this.title+", year: "+this.year+" ,style: "+this.style+" ,loc: "+this.loc+" ,copy: "+this.copy+" ,type: "+this.type+" ,mark: "+this.mark+" ,review: "+this.review+" ,link: "+this.link;
+	}
+
+	public void reset(){
     	this.id=0;
         this.group="";
         this.title="";
-        this.year="";
+        this.year="0";
         this.style="";
         this.loc="";
         this.type="";
@@ -212,6 +321,7 @@ public class Disc implements Serializable, Comparable<Object> {
         this.mark="";
         this.review="";
         this.present="";
+        this.link="";
         this.path=null;
     }
 }

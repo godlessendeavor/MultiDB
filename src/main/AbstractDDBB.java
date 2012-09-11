@@ -4,9 +4,14 @@ import java.sql.Connection;
 import java.sql.DriverManager;
 import java.sql.ResultSet;
 import java.sql.Statement;
+import main.Errors;
 
 public class AbstractDDBB {
 
+	public static final int port=MultiDB.port;
+    public static final String host=MultiDB.host;
+    public static final String user=MultiDB.user;
+    public static final String pass=MultiDB.pass;
     public Connection con;
     public Statement stmt;
     public String error;
@@ -20,32 +25,32 @@ public class AbstractDDBB {
     }
     ////////// METODOS BASE DE DATOS
 
-    public boolean cargaControlador() {
-        boolean flag = true;
+    public int cargaControlador() {
+        int flag = 0;
         try {
             Class.forName("com.mysql.jdbc.Driver").newInstance();
         } catch (Exception ex) {
-            System.out.println("No se pudo cargar el controlador. " + ex.toString());
-            flag = false;
+        	ex.printStackTrace();
+            return Errors.LOADING_DB_DRIVER;
         }
         return (flag);
     }
 
-    public boolean open(String url, String user, String password) {
-        boolean flag = true;
+    public int open(String url, String user, String password) {
+        int flag = 0;
         try {
             con = DriverManager.getConnection(url, user, password);
             stmt = (Statement) con.createStatement();
             //System.out.println("Conexion establecida");
         } catch (Exception ex) {
-            System.out.println("No se pudo establecer la conexion con " + ex.toString());
-            flag = false;
+        	ex.printStackTrace();
+            return Errors.OPENING_DB;
         }
         return (flag);
     }
 
-    public boolean close() {
-        boolean flag = true;
+    public int close() {
+        int flag = 0;
         try {
             if (this.rs != null) {
                 this.rs.close();
@@ -56,22 +61,22 @@ public class AbstractDDBB {
                 this.con = null;
             }
         } catch (Exception ex) {
-            flag = false;
-            System.out.println("Error al cerrar la conexion" + ex.toString());
+            //ex.printStackTrace();
+            return Errors.CLOSING_DB;
         }
         return flag;
     }
 
     /////////////////////////   CONSULTAS BD
-    public boolean select(String query) {
-        boolean flag = true;
+    public int select(String query) {
+        int flag = 0;
         //query a la base de datos y devuelve resultset
         try {
             stmt = con.createStatement();
             rs = stmt.executeQuery(query);
         } catch (Exception ex) {
-            flag = false;
-            System.out.println("Error al ejecutar el statement select");
+            //ex.printStackTrace();
+            return Errors.DB_SELECT;
         }
         return flag;
     }
@@ -84,7 +89,8 @@ public class AbstractDDBB {
             stmt = con.createStatement();
             row = stmt.executeUpdate(query);
         } catch (Exception ex) {
-            System.out.println("Error al ejecutar el statement insert");
+        	//ex.printStackTrace();
+        	return Errors.DB_INSERT;
         }
         return row;
     }
@@ -97,8 +103,8 @@ public class AbstractDDBB {
             rs.next();
             id=((Long)rs.getObject(1)).intValue();
         } catch (Exception ex) {
-            System.out.println("Error al consultar la base de datos para resolver el último ID ");
-            ex.printStackTrace();
+        	//ex.printStackTrace();
+        	return Errors.DB_INSERT;            
         }
         return id;
     }
@@ -110,7 +116,8 @@ public class AbstractDDBB {
             stmt = con.createStatement();
             row = stmt.executeUpdate(query);
         } catch (Exception ex) {
-            System.out.println("Error al ejecutar el statement delete");
+        	//ex.printStackTrace();
+        	return Errors.DB_DELETE;
         }
         return row;
     }
@@ -122,11 +129,86 @@ public class AbstractDDBB {
             stmt = con.createStatement();
             row=stmt.executeUpdate(query);
         } catch (Exception ex) {
-            System.out.println("Error al ejecutar el statement update");
+        	ex.printStackTrace();
+            return Errors.DB_UPDATE;
         }
         return row;
     }
 
+    
+    public int makeBackupCSV(String dirDest,String database,String table){
+		String myExport = "";
+		String set = "";
+		int ret;
+		try {
+			if (cargaControlador()>-1) {
+				if (open("jdbc:mysql://" + host + ":" + port+ "/" + database, user, pass)>-1) {
+					set = "set names utf8";
+					if (select(set)>-1) {
+						dirDest=dirDest.replace("\\","\\\\");
+						myExport = "select * into outfile \""+dirDest+
+						"\" fields terminated by \",\" enclosed by \"\\\"\""+
+						" escaped by \"\\\\\" lines terminated by \"\\r\\n\" from "+table+" where 1";
+						if ((ret=select(myExport))>-1) {
+							return 1;
+						} else {
+							return ret;
+						}					
+					} else {
+						return Errors.DB_SELECT;		
+					}				
+				}else return Errors.OPENING_DB;
+			}else return Errors.LOADING_DB_DRIVER;
+		} catch (Exception ex) {
+			ex.printStackTrace();
+			return Errors.DB_UNDEFINED;
+		}
+		finally{
+			close();
+		}
+	}
+	
+	public int restoreBackupCSV(String nameFile,String database,String table){
+		String myExport = "";
+		String truncate = "";
+		String set = "";
+		try {
+			if (cargaControlador()>-1) {
+				if (open("jdbc:mysql://" + host + ":" + port+ "/" + database, user, pass)>-1) {
+					truncate= "truncate table "+table;
+					set = "set names utf8";
+					if (select(set)>-1) {
+						if (delete(truncate)!=-1) {
+							nameFile=nameFile.replace("\\","\\\\");
+							myExport = "load data infile \""+nameFile+"\" into table "+table+
+							" character set 'utf8' fields terminated by \",\" enclosed by \"\\\"\""+
+							" escaped by \"\\\\\" lines terminated by \"\\n\"";
+							if (select(myExport)>-1) {
+								return 1;
+							} else {
+								return Errors.DB_SELECT;
+							}						
+						} else {
+							return Errors.DB_DELETE;
+						}					
+								
+					} else {
+						return Errors.DB_SELECT;		
+					}				
+					
+				}else return Errors.OPENING_DB;
+			}else return Errors.LOADING_DB_DRIVER;
+
+		} catch (Exception ex) {
+			ex.printStackTrace();
+			return Errors.DB_UNDEFINED;
+		}
+		finally{
+			close();
+		}
+	}
+    
+    
     public ResultSet getRs() {
         return rs;
     }

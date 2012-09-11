@@ -30,14 +30,15 @@ public class FTPManager {
 	  
 		/* destination FtpFile remote file */
 		CoFile to = new FtpFile("/"+ftpDirectory+"/"+file.getName(),ftpCl);
-
+		System.out.println(to.getAbsolutePath());
 		/* source LocalFile file*/
 		CoFile from = new LocalFile(file.getAbsolutePath());
-
+		System.out.println(from.getAbsolutePath());
 		/* uploading */
 		CoLoad.copy(to,from);
 		/* disconnect from server
 	       * this must be always run */
 		ftpCl.disconnect(); 
+		System.out.println("Exit upload");
 	}
 }

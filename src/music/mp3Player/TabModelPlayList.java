@@ -10,7 +10,6 @@ import javax.sound.sampled.AudioFileFormat;
 import javax.sound.sampled.AudioSystem;
 import javax.swing.table.AbstractTableModel;
 
-import main.exceptions.MP3FilesNotFound;
 
 /**
  *
@@ -59,42 +58,37 @@ public class TabModelPlayList extends AbstractTableModel {
         data = new ArrayList<Song>();
     }
 
-    public List<Song> searchFiles(File pathFolder,boolean addToTable,String group,String album) throws MP3FilesNotFound{
+    public List<Song> searchFiles(File pathFolder,boolean addToTable,String group,String album){
     	List<Song> songList = new LinkedList<Song>();
-    	int songsFound=0;
     	this.pathFolder=pathFolder;
     	String[] files = pathFolder.list();
-        int tam = files.length;
-        if (tam == 0) { //no files
-        } else { //for every file in this folder
-            int index=0;
-            for (int j = 0; j < tam; j++) {
-            	if (files[j].matches("(?i).*.mp3")){
-            		songsFound++;
-                    song = new Song();
-                    index=files[j].lastIndexOf(".");
-                    song.name = files[j].substring(0, index);
-                    song.time = new Long(0);
-                    song.path = new File(pathFolder.getAbsolutePath() + "\\" + files[j]);
-                    song.change=false;
-                    tagReader(song);
-                    if (song.group==null) song.group=group; 
-                    else if ((song.group.compareTo("")==0)&&(group!=null)) song.group=group;
-                    if (song.album==null) song.album=album; else
-                    if ((song.album.compareTo("")==0)&&(album!=null)) song.album=album;
-                    if (addToTable) data.add(song);
-                    songList.add(song);
-                }else{
-                	File posFolder = new File(pathFolder+"\\"+files[j]);
-                	if (posFolder.isDirectory()) searchFiles(posFolder,addToTable,group,album);
-                }
-            }	
+    	if (files!=null){ 
+	        int tam = files.length;
+	        if (tam != 0) {  //for every file in this folder
+	            int index=0;
+	            for (int j = 0; j < tam; j++) {
+	            	if (files[j].matches("(?i).*.mp3")){
+	                    song = new Song();
+	                    index=files[j].lastIndexOf(".");
+	                    song.name = files[j].substring(0, index);
+	                    song.time = new Long(0);
+	                    song.path = new File(pathFolder.getAbsolutePath() + File.separator + files[j]);
+	                    song.change=false;
+	                    tagReader(song);
+	                    if (song.group==null) song.group=group; 
+	                    else if ((song.group.compareTo("")==0)&&(group!=null)) song.group=group;
+	                    if (song.album==null) song.album=album; else
+	                    if ((song.album.compareTo("")==0)&&(album!=null)) song.album=album;
+	                    if (addToTable) data.add(song);
+	                    songList.add(song);
+	                }else{
+	                	File posFolder = new File(pathFolder+File.separator+files[j]);
+	                	if (posFolder.isDirectory()) songList.addAll(searchFiles(posFolder,addToTable,group,album));
+	                }
+	            }	
+	        }
         }
-        
-        if (songsFound==0) {
-			//System.out.println("No mp3 files found");
-			throw (new MP3FilesNotFound());
-		}
+    	this.numSongs=songList.size();
         return songList;
     }
     

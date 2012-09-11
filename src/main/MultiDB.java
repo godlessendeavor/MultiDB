@@ -20,22 +20,21 @@ import java.awt.event.MouseAdapter;
 import java.awt.event.MouseEvent;
 import java.awt.event.WindowAdapter;
 import java.awt.event.WindowEvent;
+import java.awt.image.BufferedImage;
 import java.io.BufferedReader;
 import java.io.BufferedWriter;
 import java.io.File;
-import java.io.FileInputStream;
-import java.io.FileOutputStream;
 import java.io.FileReader;
 import java.io.FileWriter;
 import java.io.IOException;
 import java.io.PrintWriter;
-import java.text.Collator;
 import java.util.ArrayList;
 import java.util.LinkedList;
 import java.util.List;
 import java.util.Random;
 import java.util.Set;
 import java.util.TreeSet;
+import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
 import javax.swing.AbstractAction;
@@ -43,7 +42,6 @@ import javax.swing.AbstractCellEditor;
 import javax.swing.BorderFactory;
 import javax.swing.BoxLayout;
 import javax.swing.DefaultCellEditor;
-import javax.swing.DefaultListCellRenderer;
 import javax.swing.ImageIcon;
 import javax.swing.JButton;
 import javax.swing.JComboBox;
@@ -68,7 +66,6 @@ import javax.swing.JTextField;
 import javax.swing.KeyStroke;
 import javax.swing.ListSelectionModel;
 import javax.swing.RowFilter;
-import javax.swing.ScrollPaneConstants;
 import javax.swing.SpinnerListModel;
 import javax.swing.SwingUtilities;
 import javax.swing.UIManager;
@@ -80,33 +77,38 @@ import javax.swing.event.ChangeListener;
 import javax.swing.event.ListSelectionEvent;
 import javax.swing.event.ListSelectionListener;
 import javax.swing.filechooser.FileSystemView;
-import javax.swing.table.DefaultTableCellRenderer;
 import javax.swing.table.TableCellEditor;
 import javax.swing.table.TableCellRenderer;
 import javax.swing.table.TableColumn;
 import javax.swing.table.TableRowSorter;
 import javax.swing.undo.UndoManager;
 
-import sun.awt.HorizBagLayout;
-import sun.awt.shell.ShellFolder;
-
-import main.exceptions.MP3FilesNotFound;
+import main.file.FileDealer;
 import main.ftp.FTPManager;
+import main.view.tables.ComboTableCellRenderer;
+import main.view.tables.DocsTableRenderer;
+import main.view.tables.MoviesTableRenderer;
+import main.view.tables.MusicTableRenderer;
+import main.view.tables.VideosTableRenderer;
 import movies.db.Movie;
-import music.db.DataBaseTable;
+import movies.web.WebMoviesInfoExtractor;
 import music.db.Disc;
 import music.db.NewDiscTabMod;
-import music.db.TabMod;
+import music.dealfiles.DealMusicFiles;
 import music.mp3Player.MP3Player;
 import music.mp3Player.PlayingEvent;
 import music.mp3Player.PlayingListener;
 import music.mp3Player.Song;
 import music.mp3Player.TabModelPlayList;
-import music.web.WebReader;
+import music.web.WebMusicInfoExtractor;
+import musicmovies.db.Video;
+import sun.awt.shell.ShellFolder;
+import web.WebReader;
+import db.CSV.CSV;
 import docs.db.Doc;
 import docs.db.DocTheme;
 
-public class MultiDB extends JFrame implements music.db.DataBaseLabels{
+public class MultiDB extends JFrame {
 
     /**
 	 * 
@@ -127,10 +129,13 @@ public class MultiDB extends JFrame implements music.db.DataBaseLabels{
     public final String LYR_PLAYER_NAME="playerLyricsMenu";
     public final String LYR_MENU_NAME="menuViewLyrics"; 
     public final int IND_MUSIC_TAB = 0;
-    public final int IND_MOVIES_TAB = 1;
-    public final int IND_DOCS_TAB = 2;
+    public final int IND_VIDEOS_TAB = 1;
+    public final int IND_MOVIES_TAB = 2;
+    public final int IND_DOCS_TAB = 3;
     public final int SAVE_REVIEW=0;
     public final int PASTE_IN_TABLE=1;
+    public final int SAVE_COMMENTS=2;
+    public final int SAVE_VIDEO_REVIEW=3;
     //VARS
     
     //STATIC VARS
@@ -154,13 +159,21 @@ public class MultiDB extends JFrame implements music.db.DataBaseLabels{
     public static String blogUser;
     public static String blogPswd;
     public static String musicUpload;
+    public static String videosUpload;
     public static String moviesUpload;
     public static String docsUpload;
+    public static String logPath=null;
     public static String musicTable="music";
+    public static String musicMoviesTable="videos";
     public static String moviesTable="movies";
     public static String docsTable="docs";
+    public static boolean isMusicInCSV=false;
+    public static boolean isMoviesInCSV=false;
+    public static boolean isDocsInCSV=false;
+    public static boolean isVideosInCSV=false;
+    public static boolean isdb=false;
     
-    
+   
     
     /////MULTIVARS
     
@@ -169,6 +182,7 @@ public class MultiDB extends JFrame implements music.db.DataBaseLabels{
     public int selectedViewRow = -1,lastSelectedViewRow = -1,selectedModelRow=-1,lastSelectedModelRow=-1;
     public int selectedViewRowPlayer = -1,selectedModelRowPlayer=-1;  
     public FTPManager ftpManager;
+    public db.CSV.CSV dbCSV;
     public List<Integer> selectedView = new LinkedList<Integer>();//selected Rows in table (View)
     public List<Integer> selectedModel = new LinkedList<Integer>();//selected Rows in table (Model)   
     public TimerThread timerThread;
@@ -176,7 +190,7 @@ public class MultiDB extends JFrame implements music.db.DataBaseLabels{
     public Clipboard sysClipboard;
     public long lastTime;
     public int currentCharPos;
-    
+    public main.Errors errors;
     
     ///n-tuplas
     public music.db.TabMod musicTabModel;
@@ -191,14 +205,19 @@ public class MultiDB extends JFrame implements music.db.DataBaseLabels{
     public docs.db.DataBaseTable docsDataBase;
     public TableRowSorter<docs.db.TabMod> docsTableSorter;
     
+    public musicmovies.db.TabMod videosTabModel;     
+    public musicmovies.db.DataBaseTable videosDataBase;
+    public TableRowSorter<musicmovies.db.TabMod> videosTableSorter;
     
+  
     //MUSIC VARS
    
     public List<Disc> disCover = new LinkedList<Disc>();
     public UndoManager undoManager = new UndoManager();  //undo/redo manager
-    public WebReader webReader;
+    public WebMusicInfoExtractor webMusicInfoExtractor;
+    public WebMoviesInfoExtractor webMoviesInfoExtractor;
     public NewDiscTabMod newDiscsTabMod;
-    public boolean backUpConnected = false,currentFrontCover = false;
+    public boolean backUpConnected = false,currentFrontCover = false,playFirstTime = true;
     public SpinnerListModel spinnerCoversM;
     public File backUpPath,lyricsFile,auxPath;
     public Dimension bigCoverDim;
@@ -207,6 +226,7 @@ public class MultiDB extends JFrame implements music.db.DataBaseLabels{
     //MAIN VIEWING ELEMENTS
     
     //common
+    public MultiDB f; //main frame
     public JMenuBar menuBar;
     //menu items
     public JMenu menuDataBase;
@@ -214,43 +234,62 @@ public class MultiDB extends JFrame implements music.db.DataBaseLabels{
     public JMenuItem menuAddItem;
     public JMenuItem menuDelItem;
     public JMenuItem menuMakeBUP;
+    public JMenuItem menuRestoreBUP;
     public JMenuItem menuAddBUDB;
     public JMenuItem menuUploadBackup;
-    public JMenu menuOpciones;
+    public JMenuItem menuUploadAllBackup;
+    public JMenuItem menuOpenCSVDB;
+    public JMenuItem menuSaveCSVDB;
+    public JMenu menuEdit;
+    public JMenuItem menuUndo;
+    public JMenuItem menuRedo;
+    public JMenuItem menuPaste;
+    public JMenuItem menuFilter;
+    public JMenu menuMusicOptions;
+    public JMenu menuMoviesOptions;
     public JMenuItem menuOpcionesCovers;
     public JMenuItem menuOpcionesGuardar;
     public JMenuItem menuOpcionesCopiarPortadas;
     public JMenuItem menuOpcionesCoverBackup;
     public JMenuItem menuCopyReviews2BUP;
-    public JMenu menuViewNewDiscsViaWeb;    
+    public JMenu menuViewNewDiscsViaWeb;  
+    public JMenuItem menuLoadGroupData; 
     public JMenuItem menuPlayRandom;
     public JMenuItem menuViaEM;
     public JMenuItem menuViaMB;
     public JTabbedPane multiPane;
-    public MultiDB f;
+    //popupmenus
     public JPopupMenu popupTable;
     public JMenuItem menuPlay;
     public JMenuItem menuViewLyrics;
-    public MusicTableRenderer coloredTableRenderer;
-    public JFileChooser fc = new JFileChooser(new NewFileSystemView());
-    
+    public JMenuItem menuLoadFilmData; 
+    public MusicTableRenderer coloredTableRenderer;    
         
     //n-tuplas
-    public JTable musicJTable,moviesJTable,docsJTable;           //main tables
-    public JScrollPane musicTableSp,moviesTableSp,docsTableSp;
+    public JTable musicJTable,moviesJTable,docsJTable,videosJTable;           //main tables
+    public JScrollPane musicTableSp,moviesTableSp,docsTableSp,videosTableSp;
+    public JSplitPane musicSplit,docsSplit,videosSplit;
         
     //music specific
     public JLabel coversView,selectCoversView,bigCoversView;  //covers labels
     public JTextArea reviewView,infoText;
     public JScrollPane spRev,splitLeft,newDiscsSp,bigCoversScroll, infoScroll;
-    public JSplitPane splitRight,mainSplit;
+    public JSplitPane splitRight;
     public ImageIcon origIcon, scaledIcon, bigIcon;
-    public JPopupMenu popupCover,popupReview;
+    public JPopupMenu popupCover,popupReview,popupVideoReview,popupComments;
     public JFrame selectCoverFrame,bigCoversFrame,infoFrame,newDiscsFrame;   
     public JSpinner spinnerCovers;
     public JButton spinnerCoversButton;
     public Image imagen;
     public JTable newDiscsTab;        //table for discographies searched in the internet
+    
+    //videos specific
+    public JTextArea videosReviewView;
+    public JScrollPane spVideosReview;
+    
+    //docs specific
+    public JTextArea docsReviewView;
+    public JScrollPane spDocsReview;
       
     //PLAYER ELEMENTS
     public MP3Player mp3Player;
@@ -303,6 +342,7 @@ public class MultiDB extends JFrame implements music.db.DataBaseLabels{
     
     public void initApi(){
     	
+    	Errors.setLogging();
     	//initializing vars
     	this.setSize(MAIN_DIM);
     	this.setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
@@ -326,22 +366,32 @@ public class MultiDB extends JFrame implements music.db.DataBaseLabels{
         
         //creating main objects
         
-        
+        dbCSV = new CSV();
         mp3Player = new MP3Player();
         //common
-        webReader = new WebReader();
+        webMusicInfoExtractor = new WebMusicInfoExtractor();
+        webMoviesInfoExtractor = new WebMoviesInfoExtractor();
         ftpManager = new FTPManager();
+        Errors.setErrors();
+        Errors.f=f;
         //n-tuplas
-        musicTabModel = new music.db.TabMod();  
-    	musicDataBase = new music.db.DataBaseTable();
-        musicDataBase.setTabModel(musicTabModel);
-        moviesTabModel = new movies.db.TabMod(); 
-    	moviesDataBase = new movies.db.DataBaseTable();
-        moviesDataBase.setTabModel(moviesTabModel);
+        musicTabModel = new music.db.TabMod();
+        videosTabModel = new musicmovies.db.TabMod();
+        moviesTabModel = new movies.db.TabMod();
         docsTabModel = new docs.db.TabMod(); 
-    	docsDataBase = new docs.db.DataBaseTable();
-        docsDataBase.setTabModel(docsTabModel);
-               
+        videosTabModel = new musicmovies.db.TabMod(); 
+        if (musicTabModel.getRowCount()>0){ //no database connected or empty 
+        	isdb=true;
+        	musicDataBase = new music.db.DataBaseTable();
+            musicDataBase.setTabModel(musicTabModel);
+            videosDataBase = new musicmovies.db.DataBaseTable();
+            videosDataBase.setTabModel(videosTabModel);
+        	moviesDataBase = new movies.db.DataBaseTable();
+            moviesDataBase.setTabModel(moviesTabModel);
+        	docsDataBase = new docs.db.DataBaseTable();
+            docsDataBase.setTabModel(docsTabModel);
+        }else isdb=false;
+        
         sysClipboard = Toolkit.getDefaultToolkit().getSystemClipboard();
         lastTime=System.currentTimeMillis();
         currentCharPos=0;
@@ -359,14 +409,13 @@ public class MultiDB extends JFrame implements music.db.DataBaseLabels{
         RelDBBUHandler relHandler = new RelDBBUHandler();
         menuRelDBBU.addActionListener(relHandler);
         menuDataBase.add(menuRelDBBU);
-        //item ADD DISC TO THE DATABASE
-        menuAddItem = new JMenuItem("Add item to the data base");
-        menuAddItem.setMnemonic('a');
-        AddItemHandler addItemHandler = new AddItemHandler();
-        menuAddItem.addActionListener(addItemHandler);
+        //item ADD SEVERAL ITEMS TO THE DATABASE
+        menuAddItem = new JMenuItem("Add items to the data base");
+        AddMItemHandler addMItemHandler = new AddMItemHandler();
+        menuAddItem.addActionListener(addMItemHandler);
         menuDataBase.add(menuAddItem);
-        //item DELETE DISC FROM DATABASE
-        menuDelItem = new JMenuItem("Delete item from data base");
+        //item DELETE ITEM FROM DATABASE
+        menuDelItem = new JMenuItem("Delete items from data base");
         menuDelItem.setMnemonic('d');
         DelItemHandler delItemHandler = new DelItemHandler();
         menuDelItem.addActionListener(delItemHandler);
@@ -383,44 +432,62 @@ public class MultiDB extends JFrame implements music.db.DataBaseLabels{
         DBBUPHandler makeBUPHandler = new DBBUPHandler();
         menuMakeBUP.addActionListener(makeBUPHandler);
         menuDataBase.add(menuMakeBUP);
+        //item RESTORE BACKUP OF DATABASE
+        menuRestoreBUP = new JMenuItem("Restore database");
+        menuRestoreBUP.setMnemonic('r');
+        RestoreDBBUPHandler restoreBUPHandler = new RestoreDBBUPHandler();
+        menuRestoreBUP.addActionListener(restoreBUPHandler);
+        menuDataBase.add(menuRestoreBUP);
         //item UPLOAD BACKUP TO WEB
-        menuUploadBackup = new JMenuItem("Upload backup to Webdatabase");
+        menuUploadBackup = new JMenuItem("Upload this backup to Webdatabase");
         menuUploadBackup.setMnemonic('u');
         UploadBUPHandler uploadBUPHandler = new UploadBUPHandler();
         menuUploadBackup.addActionListener(uploadBUPHandler);
         menuDataBase.add(menuUploadBackup);
-      /*    //item RESTORE BACKUP OF DATABASE
-        JMenuItem menuRestoreBUP = new JMenuItem("Restore backup of database");
-        menuRestoreBUP.setMnemonic('r');
-        RestoreDBBUPHandler restoreBUPHandler = new RestoreDBBUPHandler(this);
-        menuRestoreBUP.addActionListener(restoreBUPHandler);
-        menuDataBase.add(menuRestoreBUP);*/
-
+        //item UPLOAD BACKUP TO WEB
+        menuUploadAllBackup = new JMenuItem("Upload all backups to Webdatabase");
+        menuUploadAllBackup.setMnemonic('u');
+        UploadAllBUPHandler uploadAllBUPHandler = new UploadAllBUPHandler();
+        menuUploadAllBackup.addActionListener(uploadAllBUPHandler);
+        menuDataBase.add(menuUploadAllBackup);
+        //item OPEN CSV DATABASE
+        menuOpenCSVDB = new JMenuItem("Open CSV database");
+        menuOpenCSVDB.setMnemonic('u');
+        OpenCSVDBHandler openCSVDBHandler = new OpenCSVDBHandler();
+        menuOpenCSVDB.addActionListener(openCSVDBHandler);
+        menuDataBase.add(menuOpenCSVDB);
+        //item SAVE CSV DATABASE
+        menuSaveCSVDB = new JMenuItem("Save CSV database");
+        menuSaveCSVDB.setMnemonic('u');
+        SaveCSVDBHandler saveCSVDBHandler = new SaveCSVDBHandler();
+        menuSaveCSVDB.addActionListener(saveCSVDBHandler);
+        menuDataBase.add(menuSaveCSVDB);    
+        
         //menu EDIT
-        JMenu menuEdit = new JMenu("Edit ");
+        menuEdit = new JMenu("Edit ");
         menuEdit.setMnemonic('E');
-        //item UNDO
-        JMenuItem menuUndo = new JMenuItem("Undo");
+        //item UNDO   
+        menuUndo = new JMenuItem("Undo");
         menuUndo.setMnemonic('u');
         menuUndo.setAccelerator(KeyStroke.getKeyStroke('Z',Toolkit.getDefaultToolkit().getMenuShortcutKeyMask(), false));
         MenuUndoHandler menuUndoHandler = new MenuUndoHandler();
         menuUndo.addActionListener(menuUndoHandler);
         menuEdit.add(menuUndo);
         //item REDO
-        JMenuItem menuRedo = new JMenuItem("Redo");
+        menuRedo = new JMenuItem("Redo");
         menuRedo.setMnemonic('r');
         MenuRedoHandler menuRedoHandler = new MenuRedoHandler();
         menuRedo.addActionListener(menuRedoHandler);
         menuEdit.add(menuRedo);
         //item PASTE
-        JMenuItem menuPaste = new JMenuItem("Paste");
+        menuPaste = new JMenuItem("Paste");
         menuPaste.setMnemonic('v');
         MenuPasteHandler menuPasteHandler = new MenuPasteHandler();
         menuPaste.setAccelerator(KeyStroke.getKeyStroke('V',Toolkit.getDefaultToolkit().getMenuShortcutKeyMask(), false));
         menuPaste.addActionListener(menuPasteHandler);
         menuEdit.add(menuPaste);
         //item FILTER
-        JMenuItem menuFilter = new JMenuItem("Search word");
+        menuFilter = new JMenuItem("Search word");
         menuRedo.setMnemonic('f');
         menuFilter.setAccelerator(KeyStroke.getKeyStroke('F',Toolkit.getDefaultToolkit().getMenuShortcutKeyMask(), false));
         MenuFilterHandler menuFilterHandler = new MenuFilterHandler();
@@ -428,38 +495,40 @@ public class MultiDB extends JFrame implements music.db.DataBaseLabels{
         menuEdit.add(menuFilter);
         
         //MENU OPCIONES
-        menuOpciones = new JMenu("Music DB Options ");
-        menuOpciones.setMnemonic('O');
+        menuMusicOptions = new JMenu("Music DB Options ");
+        menuMusicOptions.setMnemonic('O');
         //item VER LISTA COVERS
         menuOpcionesCovers = new JMenuItem("Open found covers list");
         menuOpcionesCovers.setMnemonic('c');
         CoverHandler coverHandler = new CoverHandler();
         menuOpcionesCovers.addActionListener(coverHandler);
-        menuOpciones.add(menuOpcionesCovers);
+        menuOpcionesCovers.setEnabled(false);
+        menuMusicOptions.add(menuOpcionesCovers);
         //item GUARDAR LISTA DISCOS SIN COVER
         menuOpcionesGuardar = new JMenuItem("Save list of discs without cover");
         menuOpcionesGuardar.setMnemonic('g');
         NoCoverDiscHandler listaHandler = new NoCoverDiscHandler();
         menuOpcionesGuardar.addActionListener(listaHandler);
-        menuOpciones.add(menuOpcionesGuardar);
+        menuMusicOptions.add(menuOpcionesGuardar);
         //item COPIAR PORTADAS A DESTINO
-        menuOpcionesCopiarPortadas = new JMenuItem("Move covers to backup");
+        menuOpcionesCopiarPortadas = new JMenuItem("Move covers to backup or music folder");
         menuOpcionesCopiarPortadas.setMnemonic('p');
         MoveCoversHandler copiarPortadasHandler = new MoveCoversHandler();
         menuOpcionesCopiarPortadas.addActionListener(copiarPortadasHandler);
-        menuOpciones.add(menuOpcionesCopiarPortadas);
+        menuMusicOptions.add(menuOpcionesCopiarPortadas);
         //item COVER BACKUP
         menuOpcionesCoverBackup = new JMenuItem("Cover backup");
         menuOpcionesCoverBackup.setMnemonic('b');
         CoverBackupHandler coverBackupHandler = new CoverBackupHandler();
         menuOpcionesCoverBackup.addActionListener(coverBackupHandler);
-        menuOpciones.add(menuOpcionesCoverBackup);
+        menuOpcionesCoverBackup.setEnabled(false);
+        menuMusicOptions.add(menuOpcionesCoverBackup);
         //item COPYREVIEW2BUP
         menuCopyReviews2BUP = new JMenuItem("Copy reviews to database");
         menuCopyReviews2BUP.setMnemonic('m');
         CopyReviewsHandler copyReviewsHandler = new CopyReviewsHandler();
         menuCopyReviews2BUP.addActionListener(copyReviewsHandler);
-        menuOpciones.add(menuCopyReviews2BUP);
+        menuMusicOptions.add(menuCopyReviews2BUP);
         //item VIEWNEWDISCS
         menuViewNewDiscsViaWeb = new JMenu("Search new discs via web");
         menuViewNewDiscsViaWeb.setMnemonic('v');
@@ -471,20 +540,35 @@ public class MultiDB extends JFrame implements music.db.DataBaseLabels{
         menuViaMB = new JMenuItem("Via Musicbrainz");
         menuViaMB.addActionListener(viewNewDiscsHandlerMB);
         menuViewNewDiscsViaWeb.add(menuViaMB);
-        menuOpciones.add(menuViewNewDiscsViaWeb);
+        menuMusicOptions.add(menuViewNewDiscsViaWeb);
+        //item PLAYRANDOM
+        menuLoadGroupData = new JMenuItem("Load group data");
+        MenuLoadGroupDataHandler menuLoadGroupDataHandler = new MenuLoadGroupDataHandler();
+        menuLoadGroupData.addActionListener(menuLoadGroupDataHandler);
+        menuLoadGroupData.setMnemonic('l');
+        menuMusicOptions.add(menuLoadGroupData);
         //item PLAYRANDOM
         menuPlayRandom = new JMenuItem("Play files at random");
         menuPlayRandom.setMnemonic('p');
         PlayRandomHandler playRandomHandler = new PlayRandomHandler();
         menuPlayRandom.addActionListener(playRandomHandler);
         menuPlayRandom.setEnabled(false);
-        menuOpciones.add(menuPlayRandom);
+        menuMusicOptions.add(menuPlayRandom);
+        
+        menuMoviesOptions = new JMenu("Movies DB Options ");
+        menuMoviesOptions.setMnemonic('O');
+        //item LOAD MOVIE DATA
+        menuLoadFilmData = new JMenuItem("Load movie data");
+		MenuLoadFilmDataHandler menuLoadFilmDataHandler = new MenuLoadFilmDataHandler();
+		menuLoadFilmData.addActionListener(menuLoadFilmDataHandler);
+		menuLoadFilmData.setMnemonic('v');
+		menuMoviesOptions.add(menuLoadFilmData);
             
 
         menuBar.add(menuDataBase);
         menuBar.add(menuEdit);
-        menuBar.add(menuOpciones);
-        
+        menuBar.add(menuMusicOptions);
+        menuBar.add(menuMoviesOptions);
               
 
 ////////////////////////////////////popupmenus//////////////////////////////////
@@ -510,8 +594,7 @@ public class MultiDB extends JFrame implements music.db.DataBaseLabels{
 		menuPastePopup.addActionListener(popupMenuPasteHandler);
 		menuPastePopup.setMnemonic('v');
 		menuPastePopup.setAccelerator(KeyStroke.getKeyStroke('V',Toolkit.getDefaultToolkit().getMenuShortcutKeyMask(), false));
-	       
-
+				
 		popupTable.add(menuDefaultOrder);
 		popupTable.add(menuOrderByField);
 		popupTable.add(menuPlay);
@@ -533,6 +616,31 @@ public class MultiDB extends JFrame implements music.db.DataBaseLabels{
         
 		popupReview.add(menuSaveReview);
 		
+		popupVideoReview = new JPopupMenu();
+        JMenuItem menuSaveVideoReview = new JMenuItem("Save video review in database");
+        menuSaveVideoReview.setMnemonic('s');
+        SaveVideoReviewHandler saveVideoReviewHandler = new SaveVideoReviewHandler();
+        menuSaveVideoReview.addActionListener(saveVideoReviewHandler);
+        
+		popupVideoReview.add(menuSaveVideoReview);
+	
+		popupComments = new JPopupMenu();
+        JMenuItem menuSaveComments = new JMenuItem("Save comments in database");
+        menuSaveComments.setMnemonic('s');
+        SaveCommentsHandler saveCommentsHandler = new SaveCommentsHandler();
+        menuSaveComments.addActionListener(saveCommentsHandler);
+        
+        popupComments.add(menuSaveComments);
+		
+        menuLoadFilmData.setEnabled(false);	
+        if (!isdb){
+        	menuSaveReview.setEnabled(false);
+        	menuSaveVideoReview.setEnabled(false);
+        	menuSaveComments.setEnabled(false);
+        	menuAddBUDB.setEnabled(true);
+        	menuMakeBUP.setEnabled(false);
+        	menuRestoreBUP.setEnabled(false);
+        }
 		
 		////////////////////////////////TABLES LAYOUT\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\
 		////////////////////////////////TABLES LAYOUT\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\
@@ -542,10 +650,10 @@ public class MultiDB extends JFrame implements music.db.DataBaseLabels{
         
         musicJTable = new JTable(musicTabModel);
         musicJTable.setCellSelectionEnabled(true); //no se puede seleccionar solo una celda
-        musicJTable.setColumnSelectionAllowed(true); //no se pueden seleccionar columnas
+        musicJTable.setColumnSelectionAllowed(true); //se pueden seleccionar columnas
         musicJTable.setSelectionMode(ListSelectionModel.MULTIPLE_INTERVAL_SELECTION);
       
-        musicTableSorter = new TableRowSorter<TabMod>(musicTabModel);
+        musicTableSorter = new TableRowSorter<music.db.TabMod>(musicTabModel);
         musicJTable.setRowSorter(musicTableSorter);
         for (int i=0;i<musicTabModel.getColumnCount();i++){ 
         	musicTableSorter.setSortable(i,false); //issue with TableRowSorter, disabling sorting, using only for filtering
@@ -589,6 +697,76 @@ public class MultiDB extends JFrame implements music.db.DataBaseLabels{
         musicJTable.removeColumn(col);
         col = musicJTable.getColumn("Id");
         musicJTable.removeColumn(col);
+        
+        
+	////////////////////////////////////////videos table layout\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\
+        
+        videosJTable = new JTable(videosTabModel);
+        videosJTable.setCellSelectionEnabled(true); //no se puede seleccionar solo una celda
+        videosJTable.setColumnSelectionAllowed(true); //no se pueden seleccionar columnas
+        videosJTable.setSelectionMode(ListSelectionModel.MULTIPLE_INTERVAL_SELECTION);
+      
+        videosTableSorter = new TableRowSorter<musicmovies.db.TabMod>(videosTabModel);
+        videosJTable.setRowSorter(videosTableSorter);
+        for (int i=0;i<videosTabModel.getColumnCount();i++){ 
+        	videosTableSorter.setSortable(i,false); //issue with TableRowSorter, disabling sorting, using only for filtering
+        }
+        
+        VideosTableRenderer videosTableRenderer = new VideosTableRenderer();
+        videosJTable.setDefaultRenderer(Object.class,videosTableRenderer);
+        
+        //sizing cols
+        col = videosJTable.getColumn("groupName");
+        col.setMinWidth(130);
+        col.setPreferredWidth(130);
+        col = videosJTable.getColumn("title");
+        col.setMinWidth(180);
+        col.setPreferredWidth(180);
+        col = videosJTable.getColumn("style");
+        col.setMinWidth(120);
+        col.setPreferredWidth(120);
+        col = videosJTable.getColumn("year");
+        col.setMinWidth(40);
+        col.setPreferredWidth(40);
+        col = videosJTable.getColumn("loc");
+        col.setMinWidth(80);
+        col.setPreferredWidth(80);
+        col = videosJTable.getColumn("copy");
+        col.setMinWidth(60);
+        col.setPreferredWidth(60);
+        col = videosJTable.getColumn("type");
+        col.setMinWidth(40);
+        col.setPreferredWidth(40);
+        col = videosJTable.getColumn("mark");
+        col.setMinWidth(30);
+        col.setPreferredWidth(30);
+        //removing cols not needed
+        col = videosJTable.getColumn("Id");
+        videosJTable.removeColumn(col);
+        col = videosJTable.getColumn("review");
+        videosJTable.removeColumn(col);
+        
+    	videosReviewView = new JTextArea();
+	    Font font = new Font("Verdana", Font.BOLD, 11);
+	    videosReviewView.setFont(font);
+	    videosReviewView.setForeground(Color.BLACK);
+	    videosReviewView.setBackground(Color.CYAN);
+	    videosReviewView.setLineWrap(true);
+	    videosReviewView.setWrapStyleWord(true);
+	    
+	    //creating splits
+	    splitLeft = new JScrollPane(videosJTable);
+	    spVideosReview = new JScrollPane(videosReviewView);  
+	    //scrollbar policies
+	    spVideosReview.setHorizontalScrollBarPolicy(JScrollPane.HORIZONTAL_SCROLLBAR_NEVER);
+	    spVideosReview.setVerticalScrollBarPolicy(JScrollPane.VERTICAL_SCROLLBAR_AS_NEEDED);
+	    videosSplit = new JSplitPane(JSplitPane.HORIZONTAL_SPLIT, splitLeft,spVideosReview );
+	    videosSplit.setContinuousLayout(true);
+	    videosSplit.setOneTouchExpandable(true);
+	    videosSplit.setDividerLocation(800);
+	    videosSplit.setPreferredSize(PANE_DIM);
+	    videosTableSp = new JScrollPane(videosSplit);
+        
         
 	////////////////////////////////////////movies table layout\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\
         
@@ -653,9 +831,6 @@ public class MultiDB extends JFrame implements music.db.DataBaseLabels{
         col = docsJTable.getColumn("title");
         col.setMinWidth(500);
         col.setPreferredWidth(500);
-        col = docsJTable.getColumn("comments");
-        col.setMinWidth(350);
-        col.setPreferredWidth(350);
         col = docsJTable.getColumn("theme");
         col.setMinWidth(60);
         col.setPreferredWidth(60);
@@ -665,6 +840,8 @@ public class MultiDB extends JFrame implements music.db.DataBaseLabels{
       
         col = docsJTable.getColumn("id");
         docsJTable.removeColumn(col);
+        col = docsJTable.getColumn("comments");
+        docsJTable.removeColumn(col);
         
         //adding combobox for theme column		
 		ComboCellEditor comboCellEditor = new ComboCellEditor();
@@ -672,8 +849,29 @@ public class MultiDB extends JFrame implements music.db.DataBaseLabels{
 		ComboTableCellRenderer comboCellRenderer = new ComboTableCellRenderer();
 		docsJTable.setDefaultRenderer(DocTheme.class,comboCellRenderer);
 		
-        docsTableSp = new JScrollPane(docsJTable);  
-        
+		docsReviewView = new JTextArea();
+	    font = new Font("Verdana", Font.BOLD, 11);
+	    docsReviewView.setFont(font);
+	    docsReviewView.setForeground(Color.BLACK);
+	    docsReviewView.setBackground(Color.CYAN);
+	    docsReviewView.setLineWrap(true);
+	    docsReviewView.setWrapStyleWord(true);
+	              
+	       
+	    
+	    //creating splits
+	    splitLeft = new JScrollPane(docsJTable);
+	    spDocsReview = new JScrollPane(docsReviewView);  
+	    //scrollbar policies
+	    spDocsReview.setHorizontalScrollBarPolicy(JScrollPane.HORIZONTAL_SCROLLBAR_NEVER);
+	    spDocsReview.setVerticalScrollBarPolicy(JScrollPane.VERTICAL_SCROLLBAR_AS_NEEDED);
+	    docsSplit = new JSplitPane(JSplitPane.HORIZONTAL_SPLIT, splitLeft,spDocsReview );
+	    docsSplit.setContinuousLayout(true);
+	    docsSplit.setOneTouchExpandable(true);
+	    docsSplit.setDividerLocation(800);
+	    docsSplit.setPreferredSize(PANE_DIM);
+	    docsTableSp = new JScrollPane(docsSplit);
+		
         
        
  
@@ -685,7 +883,7 @@ public class MultiDB extends JFrame implements music.db.DataBaseLabels{
         COVERS_NOT_FOUND_MSG.setMinimumSize(COVERS_DIM);
         COVERS_NOT_NAMED_PROP_MSG.setMinimumSize(COVERS_DIM);
         reviewView = new JTextArea();
-        Font font = new Font("Verdana", Font.BOLD, 11);
+        font = new Font("Verdana", Font.BOLD, 11);
         reviewView.setFont(font);
         reviewView.setForeground(Color.BLACK);
         reviewView.setBackground(Color.CYAN);
@@ -703,18 +901,19 @@ public class MultiDB extends JFrame implements music.db.DataBaseLabels{
         splitRight.setContinuousLayout(true);
         splitRight.setOneTouchExpandable(true);
         splitRight.setDividerLocation(400);
-        mainSplit = new JSplitPane(JSplitPane.HORIZONTAL_SPLIT, splitLeft,splitRight );
-        mainSplit.setContinuousLayout(true);
-        mainSplit.setOneTouchExpandable(true);
-        mainSplit.setDividerLocation(800);
-        mainSplit.setPreferredSize(PANE_DIM);
-        musicTableSp = new JScrollPane(mainSplit);
+        musicSplit = new JSplitPane(JSplitPane.HORIZONTAL_SPLIT, splitLeft,splitRight );
+        musicSplit.setContinuousLayout(true);
+        musicSplit.setOneTouchExpandable(true);
+        musicSplit.setDividerLocation(800);
+        musicSplit.setPreferredSize(PANE_DIM);
+        musicTableSp = new JScrollPane(musicSplit);
         
 
         /////////////////////////////////adding tabs to tabbedpane\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\
         multiPane = new JTabbedPane();
-        ///being careful with the orders
+        ///being careful with the orders, they must be the same as in constants IND_MUSIC_TAB,IND_VIDEOS_TAB,IND_MOVIES_TAB,IND_DOCS_TAB
         multiPane.addTab("music",musicTableSp);
+        multiPane.addTab("music videos",videosTableSp);
         multiPane.addTab("movies",moviesTableSp);
         multiPane.addTab("documentaries",docsTableSp); 
         TabbedPaneListener tabbedPaneListener = new TabbedPaneListener();
@@ -727,9 +926,11 @@ public class MultiDB extends JFrame implements music.db.DataBaseLabels{
         scaledIcon = new ImageIcon();
         bigIcon = new ImageIcon();
         
-        musicDataBase.setReviewView(reviewView);
-        moviesDataBase.setReviewView(reviewView);
-        docsDataBase.setReviewView(reviewView);
+        if (isdb){
+	        musicDataBase.setReviewView(reviewView);
+	        moviesDataBase.setReviewView(videosReviewView);
+	        docsDataBase.setReviewView(docsReviewView);
+        }
         
         
         
@@ -778,6 +979,9 @@ public class MultiDB extends JFrame implements music.db.DataBaseLabels{
 		col = newDiscsTab.getColumn("Location");
 		col.setMinWidth(220);
 		col.setPreferredWidth(220);
+		col = newDiscsTab.getColumn("Type");
+		col.setMinWidth(80);
+		col.setPreferredWidth(80);
 		col = newDiscsTab.getColumn("Id");
 		newDiscsTab.removeColumn(col);
 		newDiscsSp = new JScrollPane(newDiscsTab);  
@@ -873,19 +1077,15 @@ public class MultiDB extends JFrame implements music.db.DataBaseLabels{
         splitPlayer.setDividerLocation(400);
         playerFrame.add(splitPlayer);
         
-        //songs table
-        
+        //songs table        
         playListTable=new JTable();
         playList = new TabModelPlayList();
         spPlay = new JScrollPane(playListTable);
         playerTableRenderer = new PlayerTableRenderer();
         playListTable.setDefaultRenderer(Object.class,playerTableRenderer);
-        playerIntFrame.add(spPlay);
-        
-        
+        playerIntFrame.add(spPlay);        
         
         //popupmenu
-        
         popupSong = new JPopupMenu();
 		JMenuItem seeLyricsMenu = new JMenuItem("View Lyrics");
 		PopupMenuViewLyricsHandler popupMenuSeeLyrics = new PopupMenuViewLyricsHandler();
@@ -927,32 +1127,78 @@ public class MultiDB extends JFrame implements music.db.DataBaseLabels{
         
         ///////////////////////////for every table/////////////////////////////////////
         //n-tuplas where needed
-        ListSelectionModel rowSM = musicJTable.getSelectionModel();
+
         //selecting row, shows review and covers in case of BackUpConnected
         SelectItemHandler selectHandler = new SelectItemHandler();
-        rowSM.addListSelectionListener(selectHandler);
-        rowSM = moviesJTable.getSelectionModel();
-        rowSM.addListSelectionListener(selectHandler);
-        rowSM = docsJTable.getSelectionModel();
-        rowSM.addListSelectionListener(selectHandler);
+        SelectColumnHandler selectColumnHandler = new SelectColumnHandler();
+        //if a row is selected and column selection changes on the same row we need another handler regarding the columnModel
+        musicJTable.getSelectionModel().addListSelectionListener(selectHandler);
+        musicJTable.getColumnModel().getSelectionModel().addListSelectionListener(selectColumnHandler);
+        moviesJTable.getSelectionModel().addListSelectionListener(selectHandler);
+        moviesJTable.getColumnModel().getSelectionModel().addListSelectionListener(selectColumnHandler);
+        docsJTable.getSelectionModel().addListSelectionListener(selectHandler);
+        docsJTable.getColumnModel().getSelectionModel().addListSelectionListener(selectColumnHandler);
+        videosJTable.getSelectionModel().addListSelectionListener(selectHandler);
+        videosJTable.getColumnModel().getSelectionModel().addListSelectionListener(selectColumnHandler);
         
         //to edit cells and save in the database
         CellEditorHandler edHandler = new CellEditorHandler();
         musicJTable.getDefaultEditor(Object.class).addCellEditorListener(edHandler);
         moviesJTable.getDefaultEditor(Object.class).addCellEditorListener(edHandler);
         docsJTable.getDefaultEditor(Object.class).addCellEditorListener(edHandler);
+        videosJTable.getDefaultEditor(Object.class).addCellEditorListener(edHandler);
         
         //popuptablelistener
         PopupTableListener popupTableListener = new PopupTableListener();
         musicJTable.addMouseListener(popupTableListener);
         moviesJTable.addMouseListener(popupTableListener);
         docsJTable.addMouseListener(popupTableListener); 
+        videosJTable.addMouseListener(popupTableListener); 
         
         //key listener to select row by letter
         TableKeyListener tableKeyListener = new TableKeyListener();
         musicJTable.addKeyListener(tableKeyListener);
         moviesJTable.addKeyListener(tableKeyListener);
         docsJTable.addKeyListener(tableKeyListener);
+        videosJTable.addKeyListener(tableKeyListener);
+   
+        //pastelisteners Ctrl+V
+        musicJTable.getInputMap().put(KeyStroke.getKeyStroke("control V"), "pasteInTable");
+        moviesJTable.getInputMap().put(KeyStroke.getKeyStroke("control V"), "pasteInTable");
+        docsJTable.getInputMap().put(KeyStroke.getKeyStroke("control V"), "pasteInTable");
+        videosJTable.getInputMap().put(KeyStroke.getKeyStroke("control V"), "pasteInTable");
+        
+        // Add the action to the component
+        AbstractActionsHandler pasteHandler = new AbstractActionsHandler(PASTE_IN_TABLE);
+        musicJTable.getActionMap().put("pasteInTable",pasteHandler);
+        moviesJTable.getActionMap().put("pasteInTable",pasteHandler);
+        docsJTable.getActionMap().put("pasteInTable",pasteHandler);
+        videosJTable.getActionMap().put("pasteInTable",pasteHandler);
+        
+        
+        ////////////////////specific handlers for docs\\\\\\\\\\\\\\\\\\\\\\\\\
+        
+        //popucommentslistener
+        PopupCommentsListener popupCommentsListener = new PopupCommentsListener();
+        docsReviewView.addMouseListener(popupCommentsListener);
+        
+        //diferent method to add keystroke to the reviewView due to the fact that the other method doesn't work if the popup isn't showed 
+        docsReviewView.getInputMap().put(KeyStroke.getKeyStroke("control S"), "saveComments");
+        AbstractActionsHandler saveCommentsKHandler = new AbstractActionsHandler(SAVE_COMMENTS);
+        // Add the action to the component
+        docsReviewView.getActionMap().put("saveComments",saveCommentsKHandler);
+        
+        ////////////////////specific handlers for videos\\\\\\\\\\\\\\\\\\\\\\\\\
+        
+        //popucommentslistener
+        PopupVideoReviewListener popupRevVideosListener = new PopupVideoReviewListener();
+        videosReviewView.addMouseListener(popupRevVideosListener);
+        
+        //diferent method to add keystroke to the reviewView due to the fact that the other method doesn't work if the popup isn't showed 
+        videosReviewView.getInputMap().put(KeyStroke.getKeyStroke("control S"), "saveVideoReview");
+        AbstractActionsHandler saveVideoRevKHandler = new AbstractActionsHandler(SAVE_VIDEO_REVIEW);
+        // Add the action to the component
+        videosReviewView.getActionMap().put("saveVideoReview",saveVideoRevKHandler);
         
         ////////////////////specific handlers for music\\\\\\\\\\\\\\\\\\\\\\\\\
 
@@ -966,20 +1212,7 @@ public class MultiDB extends JFrame implements music.db.DataBaseLabels{
         // Add the action to the component
         reviewView.getActionMap().put("saveReview",saveReviewKHandler);
         
-        
-        //pastelisteners Ctrl+V
-        musicJTable.getInputMap().put(KeyStroke.getKeyStroke("control V"), "pasteInTable");
-        moviesJTable.getInputMap().put(KeyStroke.getKeyStroke("control V"), "pasteInTable");
-        docsJTable.getInputMap().put(KeyStroke.getKeyStroke("control V"), "pasteInTable");
-        
-        // Add the action to the component
-        AbstractActionsHandler pasteHandler = new AbstractActionsHandler(PASTE_IN_TABLE);
-        musicJTable.getActionMap().put("pasteInTable",pasteHandler);
-        moviesJTable.getActionMap().put("pasteInTable",pasteHandler);
-        docsJTable.getActionMap().put("pasteInTable",pasteHandler);
-      
-        
-
+     
         /////////////////////////////covers//////////////////////////////////////////
         
         //mouselistener to change the coverview for the backcoverview
@@ -1018,154 +1251,36 @@ public class MultiDB extends JFrame implements music.db.DataBaseLabels{
         }
         
         /////////////////////////////////lyrics/////////////////////////////////////////
-        //handler to close de player when closing the window
+        //handler to close the player when closing the window
         CloseLyricsFrameHandler closeLyricsFrameHandler = new CloseLyricsFrameHandler();
         lyricsFrame.addWindowListener(closeLyricsFrameHandler);
-             
+        if (!isdb){
+        	JFileChooser fc = new JFileChooser(new NewFileSystemView());
+        	fc.setDialogTitle("DB not present, please select a CSV file for music DB");
+            fc.setFileSelectionMode(JFileChooser.FILES_ONLY);
+            int status = fc.showOpenDialog(f);
+            if (status == JFileChooser.APPROVE_OPTION){  
+   	           File file = fc.getSelectedFile();
+   	           if (file != null) {              //para todos los grupos de la carpeta
+   	        	    RetrieveCSVThread retThread = new RetrieveCSVThread();
+   	        	    retThread.setDaemon(true);
+   	        	    retThread.fileName=file.getAbsolutePath();
+   	        	    retThread.start();
+   		       	}
+            }
+        }
         this.setVisible(true);       
     }
-
- 
-    
-  
-    
-
-///////////////////////////////////////////////////////////////////////////////////
-//////////////////////ERRORS/////////////////////////////////////////////////////////////
-///////////////////////////////////////////////////////////////////////////////////
-
-	private void errorDir(String dir, JFrame f) {
-		JOptionPane.showMessageDialog(f,"El directorio especificado no es correcto: " + dir);
-	}
-
-	private void errorSint(String dir) {
-		reviewView.append("El directorio no responde a las especificaciones habituales: "+ dir + "\n");
-	}
-
-	private void errorFileNF(String dir, JFrame f) {
-		JOptionPane.showMessageDialog(f,"El fichero especificado no se ha encontrado o no es correcto: "+ dir);
-	}
 
 /////////////////////////////////////////////////////////////////////////////////////////////////////
 //////////////////////////////METODOS DE BUSQUEDA DE FICHEROS////////////////////////////////////////
 /////////////////////////////////////////////////////////////////////////////////////////////////////
-    
 
-    //METODO QUE DEVUELVE PATH DE UN DISCO DETERMINADO
-    private String buscarDisco(String nombreGrupo, String nombreDisco, String pathDisco) {
-        String resul = "";
-        File fPathDisc;
-        String currentGroup, currentDisc;
-        int posGuion = -1, longNombre = 0, group = -1, disc = -1;
-
-
-        fPathDisc = new File(pathDisco);
-        if (fPathDisc.isDirectory() == false) {
-        } else {
-            String[] grupos = fPathDisc.list();
-            Integer tam = grupos.length;
-            if (tam == 0) {
-            } else {
-
-                //para todos los grupos de la carpeta
-
-                for (int j = 0; j < tam; j++) {
-                    currentGroup = grupos[j];
-
-                    File discosGrupoF = new File(pathDisco + "\\" + nombreGrupo);
-                    if (discosGrupoF.isDirectory() == false) {
-                    } else {
-                        String[] discosGrupo = discosGrupoF.list();
-                        Integer numeroDiscos = discosGrupo.length;
-
-                        //para todos los discos de este grupo
-
-                        for (int k = 0; k < numeroDiscos; k++) {
-                            File discoF = new File(pathDisco + "\\" + nombreGrupo + "\\" + discosGrupo[k]);
-                            if (discoF.isDirectory() == false) {
-                            } else {
-                                posGuion = discosGrupo[k].indexOf("-");
-
-                                if (posGuion < 0) {
-                                } else {
-                                    longNombre = discosGrupo[k].length();
-                                    currentDisc = discosGrupo[k].substring(posGuion + 1, longNombre);
-                                    Collator comparador = Collator.getInstance();
-                                    comparador.setStrength(Collator.PRIMARY);
-                                    group = comparador.compare(currentGroup, nombreGrupo);
-                                    disc = comparador.compare(currentDisc, nombreDisco);
-                                    if ((group == 0) && (disc == 0)) {
-                                        resul = discoF.getAbsolutePath();
-                                        break;
-                                    }
-                                }
-                            }
-                        }
-                    }
-                }
-            }
-        }
-        return resul;
-    }
-
-    
-    //METODO QUE DEVUELVE EL DIRECTORIO DE UN GRUPO DETERMINADO
-    private File buscarGrupo(String nombreGrupo, File pathDisco) {
-        File resul = null;
- 
-        String currentGroup;
-        int group = -1;
-
-        if (pathDisco.isDirectory() == false) {
-            errorDir(pathDisco.toString(), f);
-        } else {
-            String[] grupos = pathDisco.list();
-            Integer tam = grupos.length;
-            if (tam == 0) {
-                errorDir(pathDisco.toString(), f);
-            } else {
-                for (int j = 0; j < tam; j++) {
-                    currentGroup = grupos[j];
-                    File discosGrupoF = new File(pathDisco + "\\" + nombreGrupo);                
-                    Collator comparador = Collator.getInstance();
-                    comparador.setStrength(Collator.PRIMARY);
-                    group = comparador.compare(currentGroup, nombreGrupo);
-                    if (group == 0) {
-                        resul = discosGrupoF.getAbsoluteFile();
-                        break;
-                    }
-                }
-            }
-        }
-        return resul;
-    }
-    
-    
-    /////////method that searches for lyrics file in music folder
-    private File searchLyricsFile(){
-    	File lyrics = null;
-      	String[] files = null;
-
- 		if (lyricsPath!=null) files=lyricsPath.list();
- 	    if (files!=null){
-	        int tam = files.length;
-	        if (tam == 0) { //no files
-	        } else { //for every file in this folder
-	            for (int j = 0; j < tam; j++) {
-	                if ((files[j].indexOf("lyrics.txt")) > -1) {
-	                	lyrics=new File(lyricsPath+"\\"+files[j]);
-	                	break;
-	                }
-	            }	
-	        }
- 	    }
-    	return lyrics;
-    }
-    
+  
     //método que procesa las variables de configuración
     public void processConfig(String fileName) {
     	String appPath = System.getProperties().getProperty("user.dir"); 
-    	File fi=new File(appPath+"\\"+fileName);
+    	File fi=new File(appPath+File.separator+fileName);
 		if (fi!=null){
  		   try{
  			   FileReader fr = new FileReader(fi);
@@ -1217,10 +1332,14 @@ public class MultiDB extends JFrame implements music.db.DataBaseLabels{
  				   		   blogPswd=param;
  				   	   }else if (cad.indexOf("<musicUpload>")>-1){
  				   		   musicUpload=param;
+ 				   	   }else if (cad.indexOf("<videosUpload>")>-1){
+ 				   		   videosUpload=param;
  				   	   }else if (cad.indexOf("<moviesUpload>")>-1){
  				   		   moviesUpload=param;
  				   	   }else if (cad.indexOf("<docsUpload>")>-1){
  				   		   docsUpload=param;
+ 				   	   }else if (cad.indexOf("<logPath>")>-1){
+ 				   		   logPath=param;
  				   	   }
  				   }
  			   }  			  
@@ -1228,91 +1347,11 @@ public class MultiDB extends JFrame implements music.db.DataBaseLabels{
  			   fr.close();
  		   }catch(Exception ex){
  			   ex.printStackTrace();
- 			   errorFileNF(fileName,f);
+ 			   Errors.showError(Errors.FILE_NOT_FOUND,"File not found: "+ fileName);
+ 			   //errorFileNF(fileName,f);
  		   }
  	    }
     }
-
-////////////////////////////////////////////////////////////////////////////////////////////////////////////
-/////////////////////////////////////METHODS TO COPY FILES//////////////////////////////////////////////////
-////////////////////////////////////////////////////////////////////////////////////////////////////////////
-
-    //copy files from one folder to another 
-    public boolean copyFiles(File fromFile, File toFile){
-        //System.out.println("recibimos los paths"+fromFile.getAbsolutePath()+" y "+toFile.getAbsolutePath());
-        File currentFile;
-        File newDir;
-        if (fromFile.isDirectory()) {
-            String [] files = fromFile.list();
-            for (int i = 0; i < files.length; i++) {
-                currentFile=new File(fromFile.getAbsolutePath()+"\\"+files[i]);
-                if (currentFile.isDirectory()){
-                    newDir = new File(toFile+"//"+currentFile.getName());
-                    if (newDir.exists()) 
-                    	{
-                    		reviewView.append("File already exists: "+newDir.getAbsolutePath()+"\n");
-                    		return true;
-                    	}
-                    else {
-                        if (!newDir.mkdir()) errorFileNF(newDir.getName(),this);
-                           else copyFiles(currentFile,newDir);
-                    }
-                }else{
-                    newDir=new File(toFile.getAbsolutePath()+"\\"+files[i]);
-                    //System.out.println("copying file "+currentFile.getAbsolutePath()+"\n into "+newDir.getAbsolutePath());
-                    fileCopy(currentFile,newDir);
-                }
-            }
-        } else {
-            newDir= new File(toFile.getAbsolutePath()+"\\"+fromFile.getName());
-            //System.out.println("(2) copying file "+fromFile.getAbsolutePath()+"\n into "+newDir.getAbsolutePath());
-            fileCopy(fromFile,newDir);
-        }
-        return false;
-    }
-
-    //copy folder and files inside folder to another folder already created
-    public boolean copyFolder(File fromFile, File toFile){
-
-        File newDir = new File(toFile+"//"+fromFile.getName());
-        if (!newDir.mkdir()){
-        	errorFileNF(newDir.getName(),this);
-        	return true;
-        }
-        else return copyFiles(fromFile,newDir);
-    }
-
-    //copy file
-    public void fileCopy(File fromFile, File toFile){
-        FileInputStream fromStream = null;
-        FileOutputStream toStream = null;
-        try {
-            fromStream = new FileInputStream(fromFile);
-            toStream = new FileOutputStream(toFile);
-            byte[] buffer = new byte[32768];
-            int bytesRead;
-
-            while ((bytesRead = fromStream.read(buffer)) != -1) {
-                toStream.write(buffer, 0, bytesRead); // write
-            }
-        } catch (IOException ex) {
-        	reviewView.append("Could not copy file "+fromFile+ " into "+toFile+"\n");
-        }
-        finally {
-            if (fromStream != null) {
-                try {
-                    fromStream.close();
-                } catch (IOException e) {}
-            }
-            if (toStream != null) {
-                try {
-                    toStream.close();
-                } catch (IOException e) {}
-            }
-        }
-    }
-  
-    
 
 
 ////////////////////////////////////////other methods////////////////////////////////////////////////////
@@ -1330,10 +1369,18 @@ public class MultiDB extends JFrame implements music.db.DataBaseLabels{
 					case IND_MUSIC_TAB:
 						musicTabModel.setValueAt(data, selectedModel.get(i), selectedModelColumn);
 						Disc newDisc=musicTabModel.getDiscAtRow(selectedModel.get(i));
-				        Disc previousDisc=musicDataBase.getDisc(newDisc.id);
+						Disc previousDisc=musicDataBase.getDisc(newDisc.id);
 				        //adding the undo/redo effect object
 				        undoManager.addEdit(new music.db.UnReUpdate(musicDataBase,newDisc,previousDisc,selectedModel.get(i)));		        
 				        musicDataBase.updateDisc(newDisc,selectedModel.get(i));	
+						break;
+					case IND_VIDEOS_TAB:
+						videosTabModel.setValueAt(data, selectedModel.get(i), selectedModelColumn);
+						Video newVid=videosTabModel.getVideoAtRow(selectedModel.get(i));
+						Video previousVid=videosDataBase.getVideo(newVid.id.intValue());
+				        //adding the undo/redo effect object
+				        undoManager.addEdit(new musicmovies.db.UnReUpdate(videosDataBase,newVid,previousVid,selectedModel.get(i)));		        
+				        videosDataBase.updateVideo(newVid,selectedModel.get(i));	
 						break;
 					case IND_MOVIES_TAB:
 						moviesTabModel.setValueAt(data, selectedModel.get(i), selectedModelColumn);
@@ -1355,9 +1402,9 @@ public class MultiDB extends JFrame implements music.db.DataBaseLabels{
 
 			}
 		} catch (UnsupportedFlavorException e) {
-			e.printStackTrace();
+			Errors.showError(Errors.GENERIC_STACK_TRACE,e.toString());
 		} catch (IOException e) {
-			e.printStackTrace();
+			Errors.showError(Errors.GENERIC_STACK_TRACE,e.toString());
 		}
     }
     
@@ -1366,17 +1413,17 @@ public class MultiDB extends JFrame implements music.db.DataBaseLabels{
         int numArchivos, numImageFiles, found, indexCover = 0;
         File pathDisc;
 
-        if (((String) musicTabModel.getValueAt(selectedModelRow, COL_PRESENT)).compareTo("YES") == 0) present = true;
+        if (((String) musicTabModel.getValueAt(selectedModelRow, Disc.COL_PRESENT)).compareTo("YES") == 0) present = true;
 
 		if (backUpConnected && present) {
-			pathDisc = (File) musicTabModel.getValueAt(selectedModelRow, COL_PATH);
+			pathDisc = (File) musicTabModel.getValueAt(selectedModelRow, Disc.COL_PATH);
 			String[] listaArchivos = pathDisc.list();
 			numArchivos = listaArchivos.length;
 			found = 0;
 			numImageFiles = 0;
 			for (int i = 0; i < numArchivos; i++) {
 				listaArchivos[i] = listaArchivos[i].toLowerCase();
-				if (((listaArchivos[i].indexOf(".jpg") > -1) || (listaArchivos[i].indexOf(".gif")) > -1)) {
+				if (((listaArchivos[i].indexOf(".jpg") > -1) || (listaArchivos[i].indexOf(".gif") > -1)|| (listaArchivos[i].indexOf(".png")) > -1)) {
 					numImageFiles++;// covers found!!
 					if (listaArchivos[i].indexOf(type) > -1) {
 						found = 1;// front cover found!!
@@ -1388,7 +1435,7 @@ public class MultiDB extends JFrame implements music.db.DataBaseLabels{
 			}
 			if (found == 1) {
 				if (type.compareTo("front") == 0) currentFrontCover = true;
-				putImage(coversView,pathDisc + "\\" + listaArchivos[indexCover]);
+				putImage(coversView,pathDisc + File.separator + listaArchivos[indexCover]);
 				splitRight.setTopComponent(coversView);
 			} else if (found == 2) {
 				splitRight.setTopComponent(COVERS_NOT_NAMED_PROP_MSG);
@@ -1396,14 +1443,14 @@ public class MultiDB extends JFrame implements music.db.DataBaseLabels{
 				List<String> imageFiles = new LinkedList<String>();
 				int currentImage = 0;
 				for (int i = 0; i < numArchivos; i++) {
-					if (((listaArchivos[i].indexOf(".jpg") > -1) || (listaArchivos[i].indexOf(".gif")) > -1)) {
+					if (((listaArchivos[i].indexOf(".jpg") > -1) || (listaArchivos[i].indexOf(".gif") > -1) || (listaArchivos[i].indexOf(".png")) > -1)){
 						imageFiles.add(listaArchivos[i]);
 						currentImage++;
 					}
 				}
 
 				spinnerCoversM.setList(imageFiles);
-				putImage(coversView,pathDisc + "\\" + imageFiles.get(0));
+				putImage(coversView,pathDisc + File.separator + imageFiles.get(0));
 				selectCoverFrame.getContentPane().add(coversView);
 				selectCoverFrame.setVisible(true);
 
@@ -1419,27 +1466,46 @@ public class MultiDB extends JFrame implements music.db.DataBaseLabels{
 	}
 //METHOD TO SHOW AN IMAGEFILE IN COVERSVIEW
     public void putImage(JLabel labelFrom,String file) {
-        origIcon = new ImageIcon(file);
+    	PutImage putImageThread = new PutImage();
+    	putImageThread.file=file;
+    	putImageThread.label=labelFrom;
+    	putImageThread.start();
+        /*origIcon = new ImageIcon(file);
         imagen = origIcon.getImage();
         imagen = imagen.getScaledInstance(400, 400, Image.SCALE_FAST);
         scaledIcon.setImage(imagen);
         labelFrom.setIcon(scaledIcon);
-        labelFrom.repaint();
+        labelFrom.repaint();*/
     }
 
 //method to save current review in the database
     public void saveCurrentReview(){
     	String review = reviewView.getText();
     	review=review.replace("\"","\\\"");
-    	musicTabModel.setValueAt(review,selectedModelRow,COL_REVIEW);
+    	musicTabModel.setValueAt(review,selectedModelRow,Disc.COL_REVIEW);
     	musicDataBase.updateReviewOnly(musicTabModel.getDiscAtRow(selectedModelRow));
+    }
+    
+    public void saveCurrentVideoReview(){
+    	String review = videosReviewView.getText();
+    	review=review.replace("\"","\\\"");
+    	videosTabModel.setValueAt(review,selectedModelRow,Disc.COL_REVIEW);
+    	videosDataBase.updateReviewOnly(videosTabModel.getVideoAtRow(selectedModelRow));
+    }
+    
+  //method to save current commments in the database
+    public void saveCurrentComments(){
+    	String comments = docsReviewView.getText();
+    	comments=comments.replace("\"","\\\"");
+    	docsTabModel.setValueAt(comments,selectedModelRow,Doc.COL_COMMENTS);
+    	docsDataBase.updateCommentsOnly(docsTabModel.getDocAtRow(selectedModelRow));
     }
 
 //method to save current lyrics in a file  
     public void saveCurrentLyrics(){
     	File fileToWrite;
 		if (lyricsFile==null){    	
-			fileToWrite=new File (lyricsPath.getAbsolutePath()+"\\lyrics.txt");
+			fileToWrite=new File (lyricsPath.getAbsolutePath()+File.separator+"lyrics.txt");
 			try{
 				fileToWrite.createNewFile();
 			}catch(IOException ex){
@@ -1455,7 +1521,7 @@ public class MultiDB extends JFrame implements music.db.DataBaseLabels{
 			fw.close();
 			JOptionPane.showMessageDialog(lyricsFrame, "File saved successfully");
 		}catch(Exception ex){
-			ex.printStackTrace();
+			Errors.showError(Errors.COPYING_IOERROR,ex.toString());
 		}
     	
     }
@@ -1467,6 +1533,9 @@ public class MultiDB extends JFrame implements music.db.DataBaseLabels{
     		switch(multiPane.getSelectedIndex()){
 			case IND_MUSIC_TAB:
 				selectedModel.add(new Integer(musicJTable.convertRowIndexToModel(selectedView.get(i))));
+				break;
+			case IND_VIDEOS_TAB:
+				selectedModel.add(new Integer(videosJTable.convertRowIndexToModel(selectedView.get(i))));
 				break;
 			case IND_MOVIES_TAB:
 				selectedModel.add(new Integer(moviesJTable.convertRowIndexToModel(selectedView.get(i))));
@@ -1482,14 +1551,14 @@ public class MultiDB extends JFrame implements music.db.DataBaseLabels{
    public void managePlayListTable(){
 	   ////managing layout
        try{
-       	TableColumn c = playListTable.getColumn("t");
-       	playListTable.removeColumn(c);
-       	c = playListTable.getColumn("p");
-       	playListTable.removeColumn(c);
-       	c = playListTable.getColumn("change");
-       	playListTable.removeColumn(c);
-       	c = playListTable.getColumn("currentSong");
-       	playListTable.removeColumn(c);
+	       TableColumn c = playListTable.getColumn("t");
+	       	playListTable.removeColumn(c);
+	       	c = playListTable.getColumn("p");
+	       	playListTable.removeColumn(c);
+	       	c = playListTable.getColumn("change");
+	       	playListTable.removeColumn(c);
+	       	c = playListTable.getColumn("currentSong");
+	       	playListTable.removeColumn(c);
            c = playListTable.getColumn("File name");
            c.setMinWidth(180);
            c.setPreferredWidth(180);
@@ -1511,10 +1580,9 @@ public class MultiDB extends JFrame implements music.db.DataBaseLabels{
            c.setMinWidth(30);
            c.setPreferredWidth(30);
        	
-       }catch(IllegalArgumentException ex)
-       {
-       //	System.out.println("Error pintando tabla de reproducción!!");
-       	//ex.printStackTrace();
+       }catch(Exception ex){
+            Errors.showError(Errors.GENERIC_STACK_TRACE,"Error managing playlist table "+ex.getMessage());
+            ex.printStackTrace();
        }
        
    }
@@ -1537,153 +1605,196 @@ public class MultiDB extends JFrame implements music.db.DataBaseLabels{
     	   saveCurrentReview();
        }
    } //FIN HANDLER SAVEREVIEW
+   
+   private class SaveVideoReviewHandler implements ActionListener {
+
+       public void actionPerformed(ActionEvent event) {
+    	   saveCurrentVideoReview();
+       }
+   } //FIN HANDLER SAVEREVIEW
+   
+   private class SaveCommentsHandler implements ActionListener {
+
+       public void actionPerformed(ActionEvent event) {
+    	   saveCurrentComments();
+       }
+   } //FIN HANDLER SAVEREVIEW
+
 
 
   private class DelItemHandler implements ActionListener {
 
        public void actionPerformed(ActionEvent evento) {
+    	   Disc disc;
+    	   Movie movie;
+    	   Doc doc;
+    	   Video vid;
            if (selectedModelRow>-1) {
-        	   switch(multiPane.getSelectedIndex()){
-   					case IND_MUSIC_TAB:
-   		        	   Disc disc=musicTabModel.getDiscAtRow(selectedModelRow);
-   		               undoManager.addEdit(new music.db.UnReDelete(musicDataBase,disc,musicTabModel));
-   		        	   musicDataBase.deleteDisc(selectedModelRow);
-   					break;
-   					case IND_MOVIES_TAB:
-   						Movie movie=moviesTabModel.getMovieAtRow(selectedModelRow);
-   						undoManager.addEdit(new movies.db.UnReDelete(moviesDataBase,movie,moviesTabModel));
-   		        	    moviesDataBase.deleteMovie(selectedModelRow);
-   					break;	
-   					case IND_DOCS_TAB:
-   						Doc doc=docsTabModel.getDocAtRow(selectedModelRow);
-   						undoManager.addEdit(new docs.db.UnReDelete(docsDataBase,doc,docsTabModel));
-   		        	    docsDataBase.deleteDoc(selectedModelRow);
-   					break;	
-       			}
+        	   int size = selectedModel.size();
+        	   for (int row=0;row < size;row++){
+	        	   switch(multiPane.getSelectedIndex()){
+	   					case IND_MUSIC_TAB:	
+	   		        	    disc=musicTabModel.getDiscAtRow(selectedModel.get(0));
+	   		                undoManager.addEdit(new music.db.UnReDelete(musicDataBase,disc,musicTabModel));
+	   		                if (isdb){
+	   		                	musicDataBase.deleteDisc(selectedModelRow);
+	   		                }else{
+	   		                	musicTabModel.deleteDisc(selectedModelRow);
+	   		                }
+	   					break;
+	   					case IND_VIDEOS_TAB:	
+	   		        	    vid=videosTabModel.getVideoAtRow(selectedModel.get(0));
+	   		                undoManager.addEdit(new musicmovies.db.UnReDelete(videosDataBase,vid,videosTabModel));
+	   		                if (isdb){
+	   		                	videosDataBase.deleteVideo(selectedModelRow);
+	   		                }else{
+	   		                	videosTabModel.deleteVideo(selectedModelRow);
+	   		                }
+	   					break;
+	   					case IND_MOVIES_TAB:
+	   						movie=moviesTabModel.getMovieAtRow(selectedModel.get(0));
+	   						undoManager.addEdit(new movies.db.UnReDelete(moviesDataBase,movie,moviesTabModel));
+	   						if (isdb){
+	   							moviesDataBase.deleteMovie(selectedModelRow);
+	   		                }else{
+	   		                	moviesTabModel.deleteMovie(selectedModelRow);
+	   		                }
+	   						
+	   					break;	
+	   					case IND_DOCS_TAB:
+	   						doc=docsTabModel.getDocAtRow(selectedModel.get(0));
+	   						undoManager.addEdit(new docs.db.UnReDelete(docsDataBase,doc,docsTabModel));
+	   						if (isdb){
+	   							docsDataBase.deleteDoc(selectedModelRow);
+	   		                }else{
+	   		                	docsTabModel.deleteDoc(selectedModelRow);
+	   		                }
+	   		        	    
+	   					break;	
+	       			}
+        	   }
            }
-           else reviewView.append("Please select an item\n");
+           else JOptionPane.showMessageDialog(f,"Please select an item\n");
        }
    } //FIN HANDLER DELITEM
 
-  private class AddItemHandler implements ActionListener {
-	   
+ 
+  
+  private class AddMItemHandler implements ActionListener {
+	  private Boolean number;
+	  private Integer num;
+	  private String snum;
+	  
       public void actionPerformed(ActionEvent evento) {
-    	  switch(multiPane.getSelectedIndex()){
-			case IND_MUSIC_TAB:
-				Disc disc = new Disc();
-		        disc.reset();
-		        disc.year="0";
-		        musicDataBase.insertNewDisc(disc);
-				break;
-			case IND_MOVIES_TAB:
-				Movie movie = new Movie();
-				movie.reset();
-				movie.year="0";
-		        moviesDataBase.insertNewMovie(movie);
-				break;
-			case IND_DOCS_TAB:
-				Doc doc = new Doc();
-				doc.reset();
-		        docsDataBase.insertNewDoc(doc);
-				break;	
-  		}          
+    	  number=false;
+    	  while (!number){
+          	snum = JOptionPane.showInputDialog("Please insert the number of items to add");
+          	try{
+          		num=Integer.valueOf(snum);
+          		number=true;
+          	}catch(NumberFormatException ex){	 
+          		if (snum==null) break;
+          		JOptionPane.showMessageDialog(f,"Must be an integer");
+          	}
+      	  }
+    	  if (snum!=null){
+	    	  String loc = JOptionPane.showInputDialog("Please insert the name of Copy/Loc field for database");
+	    	  if (loc!=null){
+		    	  switch(multiPane.getSelectedIndex()){
+					case IND_MUSIC_TAB:
+						Disc disc; 
+				        for (int i=1;i<=num;i++){
+				        	disc = new Disc();
+					        disc.reset();
+					        disc.copy=loc;
+					        if (isdb){
+					        	musicDataBase.insertNewDisc(disc);
+					        }else{
+					        	 int row = musicTabModel.addDisc(disc);
+					        	 musicTabModel.setValueAt("?", row, Disc.COL_PRESENT);
+					        	 musicTabModel.setValueAt(disc.path, row, Disc.COL_PATH);
+					        }
+					
+				        }
+						break;
+					case IND_VIDEOS_TAB:
+						Video vid; 
+				        for (int i=1;i<=num;i++){
+				        	vid = new Video();
+					        vid.reset();
+					        vid.copy=loc;
+					        if (isdb){
+					        	videosDataBase.insertNewVideo(vid);
+					        }else{
+					        	videosTabModel.addVideo(vid);
+					        }
+					
+				        }
+						break;
+					case IND_MOVIES_TAB:
+						Movie movie; 
+				        for (int i=1;i<=num;i++){
+				        	movie = new Movie();
+							movie.reset();
+							movie.loc=loc;
+							if (isdb){
+								moviesDataBase.insertNewMovie(movie);
+						    }else{
+						      	moviesTabModel.addMovie(movie);
+						    }
+				        	
+				        }
+						break;
+					case IND_DOCS_TAB:
+						Doc doc; 
+				        for (int i=1;i<=num;i++){
+				        	doc = new Doc();
+							doc.reset();
+							doc.loc=loc;
+				        	if (isdb){
+					        	docsDataBase.insertNewDoc(doc);
+						    }else{
+						      	docsTabModel.addDoc(doc);
+						    }
+				        }
+						break;	
+		  		}          
+	    	  }
+    	  }
       }
-  } //FIN HANDLER ADDDISC
+  } //FIN HANDLER ADDDITEMS
+  
   
    private class RelDBBUHandler implements ActionListener {
-
-       int posGuion = -1, longNombre = -1, numberFiles = 0;
-       String[] files;
       
        public void actionPerformed(ActionEvent evento) {
+    	   JFileChooser fc = new JFileChooser(new NewFileSystemView());
            fc.setFileSelectionMode(JFileChooser.DIRECTORIES_ONLY);
            int status = fc.showOpenDialog(f);
            if (status == JFileChooser.APPROVE_OPTION){  
 	           backUpPath = fc.getSelectedFile();
 	    	   if (backUpPath.isDirectory() == false) {
-	    		   errorDir(backUpPath.toString(), f);
+	    		   Errors.errorDir(backUpPath.toString());
 	    	   } else {
 	           String[] grupos = backUpPath.list();
 	           Integer tam = grupos.length;
 	           if (tam == 0) {
-	               errorDir(backUpPath.toString(), f);
+	               Errors.errorDir(backUpPath.toString());
 	           } else{              //para todos los grupos de la carpeta
-	               for (int j = 0; j < tam; j++) {
-	                   String nombreGrupo = grupos[j];
-	
-	                   File discosGrupoF = new File(backUpPath + "\\" + nombreGrupo);
-	                   if (discosGrupoF.isDirectory() == false) {
-	                   	errorSint(backUpPath + "\\" + nombreGrupo);
-	                   } else {
-	                       String[] discosGrupo = discosGrupoF.list();
-	                       Integer numeroDiscos = discosGrupo.length;
-	
-	                       //para todos los discos de este grupo
-	
-	                       for (int k = 0; k < numeroDiscos; k++) {
-	                           File discoF = new File(backUpPath + "\\" + nombreGrupo + "\\" + discosGrupo[k]);
-	                           if (discoF.isDirectory() == false) {
-	                           } else {
-	                               posGuion = discosGrupo[k].indexOf("-");
-	
-	                               if (posGuion < 0) {
-	                                   errorSint(backUpPath + "\\" + nombreGrupo + "\\" + discosGrupo[k]);
-	                               } else {
-	                                   Disc disco = new Disc();
-	                                   String anho = discosGrupo[k].substring(0, posGuion);
-	                                   anho = anho.trim();
-	                                   try {
-	                                       //Long anhoLong = Long.decode(anho);
-	                                       longNombre = discosGrupo[k].length();
-	                                       String nombreDisco = discosGrupo[k].substring(posGuion + 1, longNombre);
-	                                       //creamos nuevo disco con los datos leidos
-	                                       disco.title = nombreDisco.trim();
-	                                       disco.group = nombreGrupo;
-	                                       disco.year = anho;
-	                                       disco.path = discoF;
-	                                       //OPCIONAL!!
-	                                       //busqueda de carpetas llamadas cover para avisar que las portadas estan ahi
-	                                       files = discoF.list();
-	                                       numberFiles = files.length;
-	                                       for (int i = 0; i < numberFiles; i++) {
-	                                           File fileArchivo = new File(backUpPath + "//" + nombreGrupo + "//" + discosGrupo[k] + "//" + files[i]);
-	                                           if (fileArchivo.isDirectory()) {
-	                                               files[i] = files[i].toLowerCase();
-	
-	                                               if (files[i].indexOf("cover") > -1) {
-	                                                   disCover.add(disco);
-	                                               }
-	                                           }
-	                                       }
-	                                       int pos;
-	                                       if((pos=musicTabModel.searchDisc(disco.group,disco.title))!=-1){
-	                                           musicTabModel.setValueAt("YES",pos,COL_PRESENT);
-	                                           musicTabModel.setValueAt(disco.path, pos,COL_PATH);
-	                                       }else{
-	                                           reviewView.append("Disc not found in Database:"+nombreGrupo+"::"+discosGrupo[k]+"\n");
-	                                       }
-	                                       backUpConnected=true;
-	                                       menuPlay.setEnabled(true);
-	                                       menuPlayRandom.setEnabled(true);
-	                                       menuViewLyrics.setEnabled(true);
-	                                   } catch (NumberFormatException e) {
-	                                       errorSint(backUpPath + "\\" + nombreGrupo + "\\" + discosGrupo[k]);
-	                                   }
-		
-		                             }
-		                          }
-		                       }
-		                   }
-		               }
-		           }
-		       }
+	        	    RelateDBBUPThread relThread = new RelateDBBUPThread();
+	        	    relThread.setDaemon(true);
+	        	    relThread.start();
+		       	}
+	    	   }
            }
        }
    } //FIN HANDLER RELDBBU
+   
 
    private class AddBUDBHandler implements ActionListener {
 
        public void actionPerformed(ActionEvent evento) {
+    	   JFileChooser fc = new JFileChooser(new NewFileSystemView());
            fc.setFileSelectionMode(JFileChooser.DIRECTORIES_ONLY);
            fc.setDialogTitle("Path for music files");
            int status = fc.showOpenDialog(f);
@@ -1692,12 +1803,12 @@ public class MultiDB extends JFrame implements music.db.DataBaseLabels{
 	           reviewView.setText("");
 	
 	           if (auxPath.isDirectory() == false) {
-	               errorDir(auxPath.getAbsolutePath(), f);
+	               Errors.errorDir(auxPath.getAbsolutePath());
 	           } else {
 	               String[] grupos = auxPath.list();
 	               Integer tam = grupos.length;
 	               if (tam == 0) {
-	                   errorDir(auxPath.getAbsolutePath(), f);
+	                   Errors.errorDir(auxPath.getAbsolutePath());
 	               } else {
 	            	   CopyThread copyThread = new CopyThread();
 	            	   copyThread.path=auxPath.getAbsolutePath();
@@ -1713,83 +1824,196 @@ public class MultiDB extends JFrame implements music.db.DataBaseLabels{
 
     private class DBBUPHandler implements ActionListener {
 
-       public void actionPerformed(ActionEvent evento) {           
-           fc.setFileSelectionMode(JFileChooser.DIRECTORIES_ONLY);
+       public void actionPerformed(ActionEvent evento) {  
+    	   JFileChooser fc = new JFileChooser(new NewFileSystemView());
+           //fc.setFileSelectionMode(JFileChooser.);
            fc.setDialogTitle("Path for Backup destination");
            int status = fc.showOpenDialog(f);
            if (status == JFileChooser.APPROVE_OPTION){  
         	   auxPath = fc.getSelectedFile();
-        	   if (musicDataBase.makeBackup(auxPath.getAbsolutePath())) JOptionPane.showMessageDialog(f, "File created succesfully: "+auxPath.getAbsolutePath());
+        	   int ret=0;
+        	   switch(multiPane.getSelectedIndex()){
+    	   		case IND_MUSIC_TAB:
+    	   			ret=musicDataBase.makeBackup(auxPath.getAbsolutePath());
+    	   			break;
+    	   		case IND_VIDEOS_TAB:
+    	   			ret=videosDataBase.makeBackup(auxPath.getAbsolutePath());
+    	   			break;
+    	   		case IND_MOVIES_TAB:
+    	   			ret=moviesDataBase.makeBackup(auxPath.getAbsolutePath());
+    	   			break;
+    	   		case IND_DOCS_TAB:
+    	   			ret=docsDataBase.makeBackup(auxPath.getAbsolutePath());
+    	   			break;	
+        	   }
+        	   if (ret>-1) JOptionPane.showMessageDialog(f, "File created succesfully: "+auxPath.getAbsolutePath());
+        	   else Errors.showError(ret);
            }
        }
    }  //FIN HANDLER DBBUP
     
     
+    public int uploadBUP(int db,File fbup){
+    	
+  	   	int ret=0;
+     	switch(db){
+     		case IND_MUSIC_TAB:
+     			ret=musicDataBase.makeBackup(fbup.getAbsolutePath());
+     			break;
+     		case IND_VIDEOS_TAB:
+     			ret=videosDataBase.makeBackup(fbup.getAbsolutePath());
+     			break;
+     		case IND_MOVIES_TAB:
+     			ret=moviesDataBase.makeBackup(fbup.getAbsolutePath());
+     			break;
+     	   	case IND_DOCS_TAB:
+     	   		ret=docsDataBase.makeBackup(fbup.getAbsolutePath());
+     	   		break;	
+     	}
+     	if (ret>-1) {
+     	     try{         	            
+     	     	ftpManager.upload(fbup);
+     	      	ret = 0;
+           	    switch(db){
+          			case IND_MUSIC_TAB:
+         				ret=WebReader.uploadBackup(fbup.getName(),musicUpload);
+           				break;
+           			case IND_VIDEOS_TAB:
+           				ret=WebReader.uploadBackup(fbup.getName(),videosUpload);
+           				break;
+           			case IND_MOVIES_TAB:
+           				ret=WebReader.uploadBackup(fbup.getName(),moviesUpload);
+           				break;
+           			case IND_DOCS_TAB:
+           				ret=WebReader.uploadBackup(fbup.getName(),docsUpload);
+           				break;	
+           	    }
+     	        }catch(IOException e){
+     	        	Errors.showError(Errors.UPLOADING_BUP,e.toString());
+     	        }
+     	        fbup.delete();
+     	        
+     		}else Errors.showError(ret);         		
+        return ret;
+    }
+    
     private class UploadBUPHandler implements ActionListener {
 
-        public void actionPerformed(ActionEvent evento) {           
-            fc.setFileSelectionMode(JFileChooser.DIRECTORIES_ONLY);
+        public void actionPerformed(ActionEvent evento) {  
+        	JFileChooser fc = new JFileChooser(new NewFileSystemView());
+            fc.setFileSelectionMode(JFileChooser.FILES_ONLY);
             fc.setDialogTitle("Path for Backup destination");
             int status = fc.showOpenDialog(f);
             if (status == JFileChooser.APPROVE_OPTION){  
-         	   auxPath = fc.getSelectedFile();
-         	   boolean ret=false;
-         	   switch(multiPane.getSelectedIndex()){
-         	   		case IND_MUSIC_TAB:
-         	   			ret=musicDataBase.makeBackupCSV(auxPath.getAbsolutePath());
-         	   			break;
-         	   		case IND_MOVIES_TAB:
-         	   			ret=moviesDataBase.makeBackupCSV(auxPath.getAbsolutePath());
-         	   			break;
-         	   		case IND_DOCS_TAB:
-         	   			ret=docsDataBase.makeBackupCSV(auxPath.getAbsolutePath());
-         	   			break;	
-         	   }
-         	   if (ret) {
-         		   	File fbup=new File(auxPath.getAbsolutePath()+"\\"+DataBaseTable.nameCSV);
-         	        try{         	            
-         	        	ftpManager.upload(fbup);
-         	        	ret = false;
-                  	    switch(multiPane.getSelectedIndex()){
-            	   			case IND_MUSIC_TAB:
-            	   				ret=webReader.uploadBackup(DataBaseTable.nameCSV,musicUpload);
-            	   				break;
-            	   			case IND_MOVIES_TAB:
-            	   				ret=webReader.uploadBackup(DataBaseTable.nameCSV,moviesUpload);
-            	   				break;
-            	   			case IND_DOCS_TAB:
-            	   				ret=webReader.uploadBackup(DataBaseTable.nameCSV,docsUpload);
-            	   				break;	
-                  	    }
-         	        	if (ret){
-         	        		JOptionPane.showMessageDialog(f, "Backup Upload succesful");
-         	        	}else JOptionPane.showMessageDialog(f, "Couldn't Insert data once backup loaded");
-         	        }catch(IOException e){
-         	        	e.printStackTrace();
-         	        	JOptionPane.showMessageDialog(f, "Couldn't upload Backup");
-         	        }
-         	        fbup.delete();
-         	        
-         		}else JOptionPane.showMessageDialog(f, "Couln't create Backup");         		
+         	   File fbup = fc.getSelectedFile();
+         	   int ret=uploadBUP(multiPane.getSelectedIndex(),fbup);
+	           if (ret==0){
+	        	   JOptionPane.showMessageDialog(f, "Backup Upload succesful");
+	           }else Errors.showError(ret);
+            }
+        }
+    }  //FIN HANDLER UPLPOADBUP
+    
+    
+    private class UploadAllBUPHandler implements ActionListener {
+
+        public void actionPerformed(ActionEvent evento) {  
+        	
+        	JFileChooser fc = new JFileChooser(new NewFileSystemView());
+            fc.setFileSelectionMode(JFileChooser.FILES_ONLY);
+            fc.setDialogTitle("Path for Backup destination");
+            int status = fc.showOpenDialog(f);
+            if (status == JFileChooser.APPROVE_OPTION){  
+               ProgressBarWindow pw = new ProgressBarWindow();
+               pw.setFrameSize(pw.dimRelate);
+               pw.startProgBar(4);
+         	   File fbup = fc.getSelectedFile();
+         	   int ret=uploadBUP(IND_MUSIC_TAB,fbup);
+         	   pw.setPer(1, "Database Music");
+         	   if (ret!=0) Errors.showError(ret,"Music DB");
+         	   uploadBUP(IND_MOVIES_TAB,fbup);
+         	   pw.setPer(2, "Database Movies");
+         	   if (ret!=0) Errors.showError(ret,"Movies DB");
+         	   uploadBUP(IND_VIDEOS_TAB,fbup);
+         	   pw.setPer(3, "Database Videos");
+         	   if (ret!=0) Errors.showError(ret,"Videos DB");
+         	   uploadBUP(IND_DOCS_TAB,fbup);
+         	   pw.setPer(4, "Database Docs");
+         	   if (ret!=0) Errors.showError(ret,"Docs DB");
+        	   JOptionPane.showMessageDialog(f, "Done");
             }
         }
     }  //FIN HANDLER UPLPOADBUP
 
- /*private class RestoreDBBUPHandler implements ActionListener {
+ private class RestoreDBBUPHandler implements ActionListener {
 
        File fileIn;
 
      public void actionPerformed(ActionEvent evento) {
 
-         JFileChooser fc = new JFileChooser();
+         JFileChooser fc = new JFileChooser(new NewFileSystemView());
          int op = fc.showOpenDialog(f);
          if (op == JFileChooser.APPROVE_OPTION) {
              fileIn = fc.getSelectedFile();
+             int ret=0;
+	      	   switch(multiPane.getSelectedIndex()){
+	  	   		case IND_MUSIC_TAB:
+	  	   			ret=musicDataBase.restoreBackup(fileIn.getAbsolutePath());
+	  	   			break;
+		  	   	case IND_VIDEOS_TAB:
+	  	   			ret=videosDataBase.restoreBackup(fileIn.getAbsolutePath());
+  	   			break;
+	  	   		case IND_MOVIES_TAB:
+	  	   			ret=moviesDataBase.restoreBackup(fileIn.getAbsolutePath());
+	  	   			break;
+	  	   		case IND_DOCS_TAB:
+	  	   			ret=docsDataBase.restoreBackup(fileIn.getAbsolutePath());
+	  	   			break;	
+	      	   }
+	      	   if (ret>-1) JOptionPane.showMessageDialog(f, "File restored succesfully: "+fileIn.getAbsolutePath());
+	      	   else Errors.showError(ret);
          }
-         if (dataBase.restore(fileIn)) JOptionPane.showMessageDialog(f, "Table recovered succesfully");
      }
    }  //FIN HANDLER DBRESTORE
-*/
+ 
+ private class OpenCSVDBHandler implements ActionListener {
+	   
+     public void actionPerformed(ActionEvent evento) {
+  	   JFileChooser fc = new JFileChooser(new NewFileSystemView());
+         fc.setFileSelectionMode(JFileChooser.FILES_ONLY);
+         int status = fc.showOpenDialog(f);
+         if (status == JFileChooser.APPROVE_OPTION){  
+	           File file = fc.getSelectedFile();
+	           if (file != null) {             
+	        	    RetrieveCSVThread retThread = new RetrieveCSVThread();
+	        	    retThread.setDaemon(true);
+	        	    retThread.fileName=file.getAbsolutePath();
+	        	    retThread.start();
+		       	}
+         }
+     }
+ } //FIN HANDLER OPENCSVHANDLER  
+ 
+ private class SaveCSVDBHandler implements ActionListener {
+	   
+     public void actionPerformed(ActionEvent evento) {
+  	   JFileChooser fc = new JFileChooser(new NewFileSystemView());
+         fc.setFileSelectionMode(JFileChooser.FILES_ONLY);
+         int status = fc.showOpenDialog(f);
+         if (status == JFileChooser.APPROVE_OPTION){  
+	           File file = fc.getSelectedFile();
+	           if (file != null) {             
+	        	    StoreCSVThread storeThread = new  StoreCSVThread();
+	        	    storeThread.setDaemon(true);
+	        	    storeThread.fileName=file.getAbsolutePath();
+	        	    storeThread.start();
+		       	}
+         }
+     }
+ } //FIN HANDLER SAVECSVHANDLER  
+ 
+
+
 ///////////////////////////////////////////////MENU EDIT HANDLERS\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\
 ///////////////////////////////////////////////MENU EDIT HANDLERS\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\
     
@@ -1818,25 +2042,29 @@ public class MultiDB extends JFrame implements music.db.DataBaseLabels{
 		@Override
 		public void actionPerformed(ActionEvent arg0) {
 			String word = JOptionPane.showInputDialog(f,"Write the word you want to filter");
-			switch(multiPane.getSelectedIndex()){
-  	   		case IND_MUSIC_TAB:
-  	   			musicTableSorter.setRowFilter(RowFilter.regexFilter("(?i)"+word));
-  	   			break;
-  	   		case IND_MOVIES_TAB:
-  	   			moviesTableSorter.setRowFilter(RowFilter.regexFilter("(?i)"+word));
-  	   			break;
-  	   		case IND_DOCS_TAB:
-  	   			docsTableSorter.setRowFilter(RowFilter.regexFilter("(?i)"+word));
-  	   			break;	
-			}
-			
+			if (word!=null){
+				switch(multiPane.getSelectedIndex()){
+	  	   		case IND_MUSIC_TAB:
+	  	   			musicTableSorter.setRowFilter(RowFilter.regexFilter("(?i)"+word));
+	  	   			break;
+	  	   		case IND_VIDEOS_TAB:
+		   			videosTableSorter.setRowFilter(RowFilter.regexFilter("(?i)"+word));
+		   			break;
+	  	   		case IND_MOVIES_TAB:
+	  	   			moviesTableSorter.setRowFilter(RowFilter.regexFilter("(?i)"+word));
+	  	   			break;
+	  	   		case IND_DOCS_TAB:
+	  	   			docsTableSorter.setRowFilter(RowFilter.regexFilter("(?i)"+word));
+	  	   			break;	
+				}
+			}			
 		}
 	}//END OF FILTER HANDLER
   
   private class MenuPasteHandler implements ActionListener {
 
 		@Override
-		public void actionPerformed(ActionEvent arg0) {			
+		public void actionPerformed(ActionEvent arg0) {	
 			multiPasteInTable();
 		}
 	}//END OF PASTE HANDLER
@@ -1856,10 +2084,10 @@ public class MultiDB extends JFrame implements music.db.DataBaseLabels{
            disc=musicTabModel.getDiscAtRow(selectedModelRow);
            archivo = (String) spinnerCovers.getValue();
            rutaArch = disc.path.getAbsolutePath();
-           file = new File(rutaArch + "//" + archivo);
+           file = new File(rutaArch + File.separator + archivo);
            if (file.canWrite()) {
                if (currentFrontCover) type="front"; else type="back";
-               if (file.renameTo(new File(rutaArch + "//" + disc.group + " - " + disc.title + " - " + type+".jpg"))) {
+               if (file.renameTo(new File(rutaArch + File.separator + disc.group + " - " + disc.title + " - " + type+".jpg"))) {
                    JOptionPane.showMessageDialog(selectCoverFrame, "File renamed succesfully");
                } else {
                    JOptionPane.showMessageDialog(selectCoverFrame, "Could not rename file");
@@ -1875,81 +2103,83 @@ public class MultiDB extends JFrame implements music.db.DataBaseLabels{
 
        int posGuion = -1, longNombre = -1, numberFiles = 0, found = 0;
        String[] files;
+       String sep = File.separator;
 
        public void actionPerformed(ActionEvent evento) {
 
-          
+    	   JFileChooser fc = new JFileChooser(new NewFileSystemView());
            fc.setFileSelectionMode(JFileChooser.DIRECTORIES_ONLY);
            fc.setDialogTitle("Path for music files");
            int status = fc.showOpenDialog(f);
            if (status == JFileChooser.APPROVE_OPTION){  
 	           auxPath = fc.getSelectedFile();
 	           String name = JOptionPane.showInputDialog(f, "File name for text with list without cover");
-	           
-	           try {
-	               FileWriter fout = new FileWriter(name + ".txt");
-	               BufferedWriter buffer = new BufferedWriter(fout);
-	               PrintWriter printer = new PrintWriter(buffer);
-	
-	               if (auxPath.isDirectory() == false) {
-	                   errorDir(auxPath.getAbsolutePath(), f);
-	               } else {
-	                   String[] grupos = auxPath.list();
-	                   Integer tam = grupos.length;
-	                   if (tam == 0) {
-	                       errorDir(auxPath.getAbsolutePath(), f);
-	                   } else {
-	
-	                       //para todos los grupos de la carpeta
-	                       for (int j = 0; j < tam; j++) {
-	                           String nombreGrupo = grupos[j];
-	
-	                           File discosGrupoF = new File(auxPath.getAbsolutePath() + "\\" + nombreGrupo);
-	                           if (discosGrupoF.isDirectory() == false) {
-	                               errorSint(auxPath.getAbsolutePath() + "\\" + nombreGrupo);
-	                           } else {
-	                               String[] discosGrupo = discosGrupoF.list();
-	                               Integer numeroDiscos = discosGrupo.length;
-	
-	                               //para todos los discos de este grupo
-	
-	                               for (int k = 0; k < numeroDiscos; k++) {
-	                                   File discoF = new File(auxPath.getAbsolutePath() + "\\" + nombreGrupo + "\\" + discosGrupo[k]);
-	                                   if (discoF.isDirectory() == false) {
-	                                       errorSint(auxPath.getAbsolutePath() + "\\" + nombreGrupo + "\\" + discosGrupo[k]);
-	                                   } else {
-	                                       posGuion = discosGrupo[k].indexOf("-");
-	
-	                                       if (posGuion < 0) {
-	                                           errorSint(auxPath.getAbsolutePath() + "\\" + nombreGrupo + "\\" + discosGrupo[k]);
-	                                       } else {
-	                                           longNombre = discosGrupo[k].length();
-	                                           String nombreDisco = discosGrupo[k].substring(posGuion + 1, longNombre);
-	                                           files = discoF.list();
-	                                           numberFiles = files.length;
-	                                           found = 0;
-	                                           for (int i = 0; i < numberFiles; i++) {
-	                                               files[i] = files[i].toLowerCase();
-	                                               if ((((files[i].indexOf(".jpg") > -1) || (files[i].indexOf(".gif")) > -1)) && (files[i].indexOf("front") > -1)) {
-	                                                   found = 1;
-	                                                   break;
-	                                               }
-	                                           }
-	                                           if (found == 0) {
-	                                               printer.println(nombreGrupo + " - " + nombreDisco);
-	                                           }
-	                                       }
-	                                   }
-	                               }
-	                           }
-	                       }
-	                   }
-	               }
-	               printer.close();
-	               buffer.close();
-	               fout.close();
-	           } catch (IOException e) {
-	               JOptionPane.showMessageDialog(f, "Cannot write in file");
+	           if (name!=null){
+		           try {
+		               FileWriter fout = new FileWriter(name + ".txt");
+		               BufferedWriter buffer = new BufferedWriter(fout);
+		               PrintWriter printer = new PrintWriter(buffer);
+		
+		               if (auxPath.isDirectory() == false) {
+		                   Errors.errorDir(auxPath.getAbsolutePath());
+		               } else {
+		                   String[] grupos = auxPath.list();
+		                   Integer tam = grupos.length;
+		                   if (tam == 0) {
+		                       Errors.errorDir(auxPath.getAbsolutePath());
+		                   } else {
+		
+		                       //para todos los grupos de la carpeta
+		                       for (int j = 0; j < tam; j++) {
+		                           String nombreGrupo = grupos[j];
+		
+		                           File discosGrupoF = new File(auxPath.getAbsolutePath() + sep + nombreGrupo);
+		                           if (discosGrupoF.isDirectory() == false) {
+		                               Errors.errorSint(auxPath.getAbsolutePath() + sep + nombreGrupo);
+		                           } else {
+		                               String[] discosGrupo = discosGrupoF.list();
+		                               Integer numeroDiscos = discosGrupo.length;
+		
+		                               //para todos los discos de este grupo
+		
+		                               for (int k = 0; k < numeroDiscos; k++) {
+		                                   File discoF = new File(auxPath.getAbsolutePath() + sep + nombreGrupo + sep + discosGrupo[k]);
+		                                   if (discoF.isDirectory() == false) {
+		                                       Errors.errorSint(auxPath.getAbsolutePath() + sep+ nombreGrupo + sep + discosGrupo[k]);
+		                                   } else {
+		                                       posGuion = discosGrupo[k].indexOf("-");
+		
+		                                       if (posGuion < 0) {
+		                                           Errors.errorSint(auxPath.getAbsolutePath() + sep + nombreGrupo + sep + discosGrupo[k]);
+		                                       } else {
+		                                           longNombre = discosGrupo[k].length();
+		                                           String nombreDisco = discosGrupo[k].substring(posGuion + 1, longNombre);
+		                                           files = discoF.list();
+		                                           numberFiles = files.length;
+		                                           found = 0;
+		                                           for (int i = 0; i < numberFiles; i++) {
+		                                               files[i] = files[i].toLowerCase();
+		                                               if ((((files[i].indexOf(".jpg") > -1) || (files[i].indexOf(".gif")) > -1)) && (files[i].indexOf("front") > -1)) {
+		                                                   found = 1;
+		                                                   break;
+		                                               }
+		                                           }
+		                                           if (found == 0) {
+		                                               printer.println(nombreGrupo + " - " + nombreDisco);
+		                                           }
+		                                       }
+		                                   }
+		                               }
+		                           }
+		                       }
+		                   }
+		               }
+		               printer.close();
+		               buffer.close();
+		               fout.close();
+		           } catch (IOException e) {
+		               Errors.showError(Errors.COPYING_IOERROR,"Error writing to no found cover file");
+		           }
 	           }
            }
        }
@@ -1966,7 +2196,7 @@ public class MultiDB extends JFrame implements music.db.DataBaseLabels{
 
        public void actionPerformed(ActionEvent evento) {
            if (disCover.size() == 0) {
-               JOptionPane.showMessageDialog(f, "No ha sido cargada una lista de covers");
+               JOptionPane.showMessageDialog(f, "No cover list loaded");
            } else {
                numCovers = disCover.size();
                listaCover = new String[numCovers][2];
@@ -1987,9 +2217,11 @@ public class MultiDB extends JFrame implements music.db.DataBaseLabels{
        int posGuion1 = -1, posGuion2 = -1;
        String[] portadas;
        String dirCovers, dirDisc, nombreGrupo, nombreDisco, pathDisc;
+       String sep=File.separator;
 
        public void actionPerformed(ActionEvent evento) {
 
+    	   JFileChooser fc = new JFileChooser(new NewFileSystemView());
     	   fc.setFileSelectionMode(JFileChooser.DIRECTORIES_ONLY);
            fc.setDialogTitle("Path for music files");
            int status = fc.showOpenDialog(f);
@@ -2004,39 +2236,41 @@ public class MultiDB extends JFrame implements music.db.DataBaseLabels{
 		           dirCovers=auxPath.getAbsolutePath();		           
 		           
 		           if (auxPath.isDirectory() == false) {
-		               errorDir(dirCovers, f);
+		               Errors.errorDir(dirCovers);
 		           } else {
 		               portadas = auxPath.list();
 		               int tam = portadas.length;
 		               if (tam == 0) {
-		                   errorDir(dirCovers, f);
+		                   Errors.errorDir(dirCovers);
 		               } else { //para todas las portadas
 		                   for (int i = 0; i < tam; i++) {
-		                       File currentCover = new File(dirCovers + "\\" + portadas[i]);
+		                       File currentCover = new File(dirCovers + sep + portadas[i]);
+		                       //portadas[i]=portadas[i].substring(portadas[i].lastIndexOf("."));
 		                       posGuion1 = portadas[i].indexOf("-");
 		                       if (posGuion1 < 0) {
-		                           errorSint(dirCovers + "\\" + portadas[i]);
+		                           Errors.errorSint(dirCovers + sep + portadas[i]);
 		                       } else {
 		                           nombreGrupo = portadas[i].substring(0, posGuion1);
 		                           nombreGrupo = nombreGrupo.trim();
-		                           posGuion2 = portadas[i].lastIndexOf("-");
-		                           if (posGuion1 >= posGuion2) {
-		                               errorSint(dirCovers + "\\" + portadas[i]);
+		                           String left = portadas[i].substring(posGuion1+1);
+		                           posGuion2 = left.indexOf("-");
+		                           if (posGuion2 < 0) {
+		                               Errors.errorSint(dirCovers + sep + portadas[i]);
 		                           } else {
-		                               nombreDisco = portadas[i].substring(posGuion1 + 1, posGuion2);
+		                        	   nombreDisco = left.substring(0,posGuion2);
 		                               nombreDisco = nombreDisco.trim();
-		                               pathDisc = buscarDisco(nombreGrupo, nombreDisco, dirDisc);
+		                               pathDisc = DealMusicFiles.buscarDisco(nombreGrupo, nombreDisco, dirDisc);
 		                               if (pathDisc.compareTo("") != 0) {
 		                                   if (currentCover.canWrite()) {
-		                                       if (currentCover.renameTo(new File(pathDisc + "//" + portadas[i]))) {
+		                                       if (currentCover.renameTo(new File(pathDisc + sep + portadas[i]))) {
 		                                           reviewView.append("File moved succesfully: " + portadas[i]+"\n");
 		                                       } else {
-		                                           reviewView.append("Can write but not rename file: " + portadas[i]+ "to "+pathDisc + "//" + portadas[i]+"\n");
+		                                           reviewView.append("Can write but not rename file: " + portadas[i]+ "to "+pathDisc + sep + portadas[i]+"\n");
 		                                       }
 		                                   } else {
 		                                       reviewView.append("Could not rename file: " + portadas[i]+"\n");
 		                                   }
-		                               }else reviewView.append(nombreGrupo+"/"+nombreDisco+" not found on folder "+dirDisc+"\n");
+		                               }else reviewView.append(nombreGrupo+"//"+nombreDisco+" not found on folder "+dirDisc+"\n");
 		                           }
 		                       }
 		
@@ -2053,10 +2287,11 @@ public class MultiDB extends JFrame implements music.db.DataBaseLabels{
 
        int tam = 0, posGuion;
        String dirDest, dirDisc;
-
+       String sep=File.separator;
 
        public void actionPerformed(ActionEvent evento) {
 
+    	   JFileChooser fc = new JFileChooser(new NewFileSystemView());
            fc.setFileSelectionMode(JFileChooser.DIRECTORIES_ONLY);
            fc.setDialogTitle("Path for backup destination");
            int status = fc.showOpenDialog(f);
@@ -2072,30 +2307,30 @@ public class MultiDB extends JFrame implements music.db.DataBaseLabels{
 		           
 		        
 		           if (auxPath.isDirectory() == false) {
-		               errorDir(dirDisc, f);
+		               Errors.errorDir(dirDisc);
 		           } else {
 		
 		               String[] grupos = auxPath.list();
 		               tam = grupos.length;
 		               if (tam == 0) {
-		                   errorDir(dirDisc, f);
+		                   Errors.errorDir(dirDisc);
 		               } else { //para todos los grupos de la carpeta
 		                   for (int j = 0; j < tam; j++) {
 		                       String nombreGrupo = grupos[j];
-		                       File discosGrupoF = new File(dirDisc + "\\" + nombreGrupo);
+		                       File discosGrupoF = new File(dirDisc + sep + nombreGrupo);
 		                       if (discosGrupoF.isDirectory() == false) {
-		                           errorSint(dirDisc + "\\" + nombreGrupo);
+		                           Errors.errorSint(dirDisc + sep + nombreGrupo);
 		                       } else {
 		                           String[] discosGrupo = discosGrupoF.list();
 		                           int numeroDiscos = discosGrupo.length; //para todos los discos de este grupo
 		                           for (int k = 0; k < numeroDiscos; k++) {
-		                               File discoF = new File(dirDisc + "\\" + nombreGrupo + "\\" + discosGrupo[k]);
+		                               File discoF = new File(dirDisc + sep + nombreGrupo + sep + discosGrupo[k]);
 		                               if (discoF.isDirectory() == false) {
-		                                   errorSint(dirDisc + "\\" + nombreGrupo + "\\" + discosGrupo[k]);
+		                                   Errors.errorSint(dirDisc + sep + nombreGrupo + sep + discosGrupo[k]);
 		                               } else {
 		                                   posGuion = discosGrupo[k].indexOf("-");
 		                                   if (posGuion < 0) {
-		                                       errorSint(dirDisc + "\\" + nombreGrupo + "\\" + discosGrupo[k]);
+		                                       Errors.errorSint(dirDisc + sep + nombreGrupo + sep + discosGrupo[k]);
 		                                   } else {
 		                                       String[] listaArchivos = discoF.list();
 		                                       int numArchivos = listaArchivos.length;
@@ -2106,12 +2341,12 @@ public class MultiDB extends JFrame implements music.db.DataBaseLabels{
 		                                                   //front cover found!!
 		                                                   try {
 		                                                       //copiamos portada a directorio destino
-		                                                       File fsrc = new File(dirDisc + "\\" + nombreGrupo + "\\" + discosGrupo[k] + "\\" + listaArchivos[i]);
-		                                                       File fdest = new File(dirDest + "\\" + nombreGrupo + " - " + discosGrupo[k] + " - front.jpg");
-		                                                       fileCopy(fsrc,fdest);
+		                                                       File fsrc = new File(dirDisc + sep + nombreGrupo + sep + discosGrupo[k] + sep + listaArchivos[i]);
+		                                                       File fdest = new File(dirDest + sep + nombreGrupo + " - " + discosGrupo[k] + " - front.jpg");
+		                                                       FileDealer.fileCopy(fsrc,fdest);
 		                                                       
 		                                                   } catch (Exception e) {
-		                                                       errorSint(dirDisc + "\\" + nombreGrupo + "\\" + discosGrupo[k]);
+		                                                       Errors.errorSint(dirDisc + sep + nombreGrupo + sep + discosGrupo[k]);
 		                                                   }
 		                                                   break;
 		                                               } else {
@@ -2146,6 +2381,7 @@ public class MultiDB extends JFrame implements music.db.DataBaseLabels{
        @Override
        public void actionPerformed(ActionEvent evento) {
 
+    	   JFileChooser fc = new JFileChooser(new NewFileSystemView());
            fc.setFileSelectionMode(JFileChooser.DIRECTORIES_ONLY);
            fc.setDialogTitle("Path for review files");
            int status = fc.showOpenDialog(f);
@@ -2154,26 +2390,26 @@ public class MultiDB extends JFrame implements music.db.DataBaseLabels{
 	           dirReviews=auxPath.getAbsolutePath();
 	
 	           if (auxPath.isDirectory() == false) {
-	               errorDir(dirReviews, f);
+	               Errors.errorDir(dirReviews);
 	           } else {
 	               reviews = auxPath.list();
 	               int tam = reviews.length;
 	               if (tam == 0) {
-	                   errorDir(dirReviews, f);
-	               } else { //para todas las portadas
+	                   Errors.errorDir(dirReviews);
+	               } else { //para todas las reviews
 	                   for (int i = 0; i < tam; i++) {
 	                	   //System.out.println(i);
 	                	   if (reviews[i].indexOf(".txt") > -1){
-		                       currentReview = new File(dirReviews + "\\" + reviews[i]);
+		                       currentReview = new File(dirReviews + File.separator + reviews[i]);
 		                       posGuion1 = reviews[i].indexOf("-");
 		                       if (posGuion1 < 0) {
-		                           errorSint(dirReviews + "\\" + reviews[i]);
+		                           Errors.errorSint(dirReviews + File.separator + reviews[i]);
 		                       } else {
 		                           nombreGrupo = reviews[i].substring(0, posGuion1);
 		                           nombreGrupo = nombreGrupo.trim();
 		                           posGuion2 = reviews[i].lastIndexOf("-");
 		                           if (posGuion1 >= posGuion2) {
-		                               errorSint(dirReviews + "\\" + reviews[i]);
+		                               Errors.errorSint(dirReviews + File.separator + reviews[i]);
 		                           } else {
 		                               nombreDisco = reviews[i].substring(posGuion1 + 1, posGuion2);
 		                               nombreDisco = nombreDisco.trim();
@@ -2191,15 +2427,16 @@ public class MultiDB extends JFrame implements music.db.DataBaseLabels{
 		                        		   fr.close();
 		                        		   Disc disc= new Disc();
 			                        	   disc=musicDataBase.getDiscByDG(nombreGrupo,nombreDisco);
-			                        	   row = musicTabModel.searchDisc(disc.id);
-			                        	   review=review.replace("\"","\\\"");
-			                        	   disc.review=review;
-			                        	   disc.mark=nota;
-			                        	   if (disc.id!=0) musicDataBase.updateDisc(disc, row);
-			                        	   else reviewView.append("Failed to save review "+nombreGrupo+ " "+nombreDisco+"\n");
+			                        	   if (disc!=null){
+				                        	   row = musicTabModel.searchDisc(disc.id);
+				                        	   review=review.replace("\"","\\\"");
+				                        	   disc.review=review;
+				                        	   disc.mark=nota;
+				                        	   if (disc.id!=0) musicDataBase.updateDisc(disc, row);
+				                        	   else Errors.writeError(Errors.SAVING_REVIEW,"Failed to save review "+nombreGrupo+ " "+nombreDisco+"\n");
+			                        	   }
 		                        		}catch(Exception ex){
-		                        		   ex.printStackTrace();
-		                        		   reviewView.append("Failed to save review "+nombreGrupo+ " "+nombreDisco+"\n");
+		                        		   Errors.writeError(Errors.SAVING_REVIEW,"Failed to save review "+nombreGrupo+ " "+nombreDisco+"\n"+ex.toString());
 		                        	   }
 		                           }
 		                       }
@@ -2215,13 +2452,15 @@ public class MultiDB extends JFrame implements music.db.DataBaseLabels{
    private class ViewNewDiscsHandler implements ActionListener {
 	   
 	private Look4NewDiscsThread lookThread;
+	private String web;
 	
 	ViewNewDiscsHandler(String web){
-		   lookThread = new Look4NewDiscsThread();
-		   lookThread.web=web;
+		   this.web=web;
 	   }
 	@Override
-	public void actionPerformed(ActionEvent arg0) {
+	public void actionPerformed(ActionEvent arg0) { 
+		lookThread = new Look4NewDiscsThread();
+		lookThread.web=this.web;
 		lookThread.start();
 	}
    
@@ -2261,6 +2500,10 @@ public class MultiDB extends JFrame implements music.db.DataBaseLabels{
 	  	   		Disc.caseCompare=0;
 	            musicTabModel.sort();         
   	   			break;
+  	   		case IND_VIDEOS_TAB:
+	  	   		Video.caseCompare=0;
+	            videosTabModel.sort();         
+  	   			break;
   	   		case IND_MOVIES_TAB:
   	   			Movie.caseCompare=0;
   	   			moviesTabModel.sort(); 
@@ -2282,6 +2525,10 @@ public class MultiDB extends JFrame implements music.db.DataBaseLabels{
   	            Disc.caseCompare=selectedModelColumn;
   	            musicTabModel.sort();       
   	   			break;
+  	   		case IND_VIDEOS_TAB:
+	            Video.caseCompare=selectedModelColumn;
+	            videosTabModel.sort();       
+	   			break;
   	   		case IND_MOVIES_TAB:
   	   			Movie.caseCompare=selectedModelColumn;
 	            moviesTabModel.sort(); 
@@ -2299,29 +2546,29 @@ public class MultiDB extends JFrame implements music.db.DataBaseLabels{
 
        File pathDisc;
         public void actionPerformed(ActionEvent e) {
-            try {
-            	
-                pathDisc = (File) musicTabModel.getValueAt(selectedModelRow,COL_PATH);
-                playList.removeAllRows();
-                playList.numSongs=0;
-                playList.searchFiles(pathDisc,true,(String)musicTabModel.getValueAt(selectedModelRow,COL_GROUP),(String)musicTabModel.getValueAt(selectedModelRow,COL_TITLE));
-                playListTable.setModel(playList);
-                //handler to play the song selected wit doubleclick on list
-                PlayThisSongHandler playThisSongHandler = new PlayThisSongHandler();
-                playListTable.addMouseListener(playThisSongHandler);   
-                
-                managePlayListTable();
-                
-                mp3Player.playList(playList);
-                timerThread = new TimerThread();
-                timerThread.setDaemon(true);
-                timerThread.start();
-                playerFrame.setVisible(true);
-                int divLoc=Math.min(400, playListTable.getHeight()+ pauseResumeButton.getHeight()+stopButton.getHeight()+songSlider.getHeight()+songInformation.getHeight()+60);
-                splitPlayer.setDividerLocation(divLoc);
-
-            } catch (MP3FilesNotFound ex) {
-                reviewView.append("Cannot find playable files\n");
+             pathDisc = (File) musicTabModel.getValueAt(selectedModelRow,Disc.COL_PATH);
+             playList.removeAllRows();
+             playList.numSongs=0;
+             playList.searchFiles(pathDisc,true,(String)musicTabModel.getValueAt(selectedModelRow,Disc.COL_GROUP),(String)musicTabModel.getValueAt(selectedModelRow,Disc.COL_TITLE));
+             if (playList.numSongs!=0){
+	             playListTable.setModel(playList);
+	             //handler to play the song selected wit doubleclick on list
+	             PlayThisSongHandler playThisSongHandler = new PlayThisSongHandler();
+	             playListTable.addMouseListener(playThisSongHandler); 
+	             if (playFirstTime) {
+	             	playFirstTime=false;
+	              	managePlayListTable();
+	             }
+	             mp3Player.playList(playList);
+	             timerThread = new TimerThread();
+	             timerThread.setDaemon(true);
+	
+	             timerThread.start();
+	             playerFrame.setVisible(true);
+	             int divLoc=Math.min(400, playListTable.getHeight()+ pauseResumeButton.getHeight()+stopButton.getHeight()+songSlider.getHeight()+songInformation.getHeight()+60);
+	             splitPlayer.setDividerLocation(divLoc);
+            } else {
+                JOptionPane.showMessageDialog(f,"Cannot find playable files\n");
             }
         }
     } //Playing disc
@@ -2329,28 +2576,36 @@ public class MultiDB extends JFrame implements music.db.DataBaseLabels{
    private class PlayRandomHandler implements ActionListener{
 
        private Double mark=-1.0;
+       private int select=JOptionPane.OK_OPTION;
 
         public void actionPerformed(ActionEvent e) {
             	mp3Player.randomPlay=true;
             	while ((mark<=0)||(mark>=10)){
 	            	String sMark = JOptionPane.showInputDialog("Please insert the minimum mark of discs which to play");
 	            	try{
-	            		mark=Double.valueOf(sMark).doubleValue();
-	            	}catch(NumberFormatException ex){	            		
-	            	}
-	            	if ((mark<=0)||(mark>=10)) JOptionPane.showMessageDialog(f,"Mark must be between 0 and 10");
+	            		if (sMark!=null){
+		            		mark=Double.valueOf(sMark).doubleValue();
+		            		if ((mark<=0)||(mark>=10)) JOptionPane.showMessageDialog(f,"Mark must be between 0 and 10");
+	            		} else break;
+	            	}catch(NumberFormatException ex){
+	            		if (mark==null) break;
+	            		JOptionPane.showMessageDialog(f,"Mark must be between 0 and 10");
+	            	}	            	
             	}
-	            Object[] options = {"Yes, please","No way!"};
-	            int select = JOptionPane.showOptionDialog(f,	"Would you like to seek in favourites songs?","Question",JOptionPane.YES_NO_OPTION,JOptionPane.QUESTION_MESSAGE,
-	            		null,     //do not use a custom Icon
-	            		options,  //the titles of buttons
-	            		options[0]); //default button title
-	            if (select!=JOptionPane.CLOSED_OPTION){
-	            	randomPlayThread = new RandomPlayThread();
-	            	if (select==JOptionPane.OK_OPTION) randomPlayThread.fav=true;
-	            	else randomPlayThread.fav=false;
-	            	randomPlayThread.mark=mark;
-	            	randomPlayThread.start();
+            	if ((mark!=null)&&(mark>=0)){
+		            Object[] options = {"Yes, please","No way!"};
+		            select = JOptionPane.showOptionDialog(f,"Would you like to seek in favourites songs?","Question",JOptionPane.YES_NO_OPTION,JOptionPane.QUESTION_MESSAGE,
+		            		null,     //do not use a custom Icon
+		            		options,  //the titles of buttons
+		            		options[0]); //default button title
+		            if (select!=JOptionPane.CLOSED_OPTION){
+		            	randomPlayThread = new RandomPlayThread();
+		            	if (select==JOptionPane.OK_OPTION) randomPlayThread.fav=true;
+		            	else randomPlayThread.fav=false;
+		            	randomPlayThread.mark=mark;
+		            	mark=-1.0;
+		            	randomPlayThread.start();
+		            }
 	            }            	
         }
     } //Playing disc
@@ -2376,7 +2631,7 @@ public class MultiDB extends JFrame implements music.db.DataBaseLabels{
     	    	lyricsGroup=musicTabModel.getDiscAtRow(selectedModelRow).group;
     	    	lyricsAlbum=musicTabModel.getDiscAtRow(selectedModelRow).title; 	    	
     	    }
-    	   if ((lyricsFile=searchLyricsFile())!=null){
+    	   if ((lyricsFile=DealMusicFiles.searchLyricsFile(lyricsPath))!=null){
     		   try{
     			   FileReader fr = new FileReader(lyricsFile);
     			   BufferedReader bf = new BufferedReader(fr);
@@ -2389,11 +2644,27 @@ public class MultiDB extends JFrame implements music.db.DataBaseLabels{
     			   bf.close();
     			   fr.close();
     		   }catch(Exception ex){
-    			   ex.printStackTrace();
+    			   Errors.showError(Errors.WRITING_IOERROR,"File: "+ lyricsFile);
     		   }
     	   }
     	   lyricsView.setCaretPosition(0); //to place the scroll on the top
     	   lyricsFrame.setVisible(true);
+       }
+   }
+   
+   private class MenuLoadFilmDataHandler implements ActionListener{
+	   
+	   public void actionPerformed(ActionEvent e) {
+    	   GetFilmDataThread getFilmDataThread = new GetFilmDataThread();
+	       getFilmDataThread.start();
+       }
+   }
+   
+   private class MenuLoadGroupDataHandler implements ActionListener{
+	   
+	   public void actionPerformed(ActionEvent e) {
+    	   GetGroupDataThread getGroupDataThread = new GetGroupDataThread();
+	       getGroupDataThread.start();
        }
    }
    
@@ -2436,8 +2707,8 @@ public class MultiDB extends JFrame implements music.db.DataBaseLabels{
        public void stateChanged(ChangeEvent e) {
            JSpinner spinner = (JSpinner) e.getSource();
            String nameFile = (String) spinner.getValue();
-           pathDisco=(File)musicTabModel.getValueAt(selectedModelRow,COL_PATH);
-           putImage(coversView,pathDisco + "\\" + nameFile);
+           pathDisco=(File)musicTabModel.getValueAt(selectedModelRow,Disc.COL_PATH);
+           putImage(coversView,pathDisco + File.separator + nameFile);
        }
    } //FIN HANDLER VIEW COVERS
    
@@ -2450,9 +2721,17 @@ public class MultiDB extends JFrame implements music.db.DataBaseLabels{
  	   			Disc newDisc=musicTabModel.getDiscAtRow(selectedModelRow);
  	   			Disc previousDisc=musicDataBase.getDisc(newDisc.id);
  	   			//adding the undo/redo effect object
+ 	   			if (!newDisc.review.contains("\\\""))	newDisc.review=newDisc.review.replace("\"","\\\"");
  	   			undoManager.addEdit(new music.db.UnReUpdate(musicDataBase,newDisc,previousDisc,selectedModelRow));
  	   			musicDataBase.updateDisc(newDisc,selectedModelRow);       
  	   			break;
+ 	   		case IND_VIDEOS_TAB:
+	   			Video newVid=videosTabModel.getVideoAtRow(selectedModelRow);
+	   			Video previousVid=videosDataBase.getVideo(newVid.id.intValue());
+	   			//adding the undo/redo effect object
+	   			undoManager.addEdit(new musicmovies.db.UnReUpdate(videosDataBase,newVid,previousVid,selectedModelRow));
+	   			videosDataBase.updateVideo(newVid,selectedModelRow);
+	   			break;		
  	   		case IND_MOVIES_TAB:
  	   			Movie newMovie=moviesTabModel.getMovieAtRow(selectedModelRow);
  	   			Movie previousMovie=moviesDataBase.getMovie(newMovie.id);
@@ -2536,9 +2815,8 @@ public class MultiDB extends JFrame implements music.db.DataBaseLabels{
    private class SelectItemHandler implements ListSelectionListener {
 
        public void valueChanged(ListSelectionEvent e) {
-
           if(e.getValueIsAdjusting()){return;} //to avoid double triggering when deselecting/selecting cells
-
+    
            ListSelectionModel lsm = (ListSelectionModel) e.getSource();
            if (!lsm.isSelectionEmpty()){
                selectedViewRow = lsm.getMinSelectionIndex();       
@@ -2546,34 +2824,78 @@ public class MultiDB extends JFrame implements music.db.DataBaseLabels{
                
                JTable currentTable=null;
                switch(multiPane.getSelectedIndex()){
-               	case IND_MUSIC_TAB:
-    	   			currentTable=musicJTable;
-    	   			break;
-    	   		case IND_MOVIES_TAB:
-    	   			currentTable=moviesJTable;
-    	   			break;
-    	   		case IND_DOCS_TAB:
-    	   			currentTable=docsJTable;
-    	   			break;
+	               	case IND_MUSIC_TAB:
+	    	   			currentTable=musicJTable;
+	    	   			break;
+	               	case IND_VIDEOS_TAB:
+	    	   			currentTable=videosJTable;
+	    	   			break;
+	    	   		case IND_MOVIES_TAB:
+	    	   			currentTable=moviesJTable;
+	    	   			break;
+	    	   		case IND_DOCS_TAB:
+	    	   			currentTable=docsJTable;
+	    	   			break;
    				}
                selectedViewColumn = currentTable.getSelectedColumn();
                selectedView.clear();
+               selectedModel.clear();
 	   		   selectedModelRow = currentTable.convertRowIndexToModel(selectedViewRow);
 	   		   lastSelectedModelRow = currentTable.convertRowIndexToModel(lastSelectedViewRow);
 	   		   selectedModelColumn = currentTable.convertColumnIndexToModel(selectedViewColumn);
-               
-             //only way to find wich rows are selected in multiple selection mode (for a DefaultListSelectionModel)
+             //only way to find out which rows are selected in multiple selection mode (for a DefaultListSelectionModel)
+	   		   
                for (int i = selectedViewRow; i <= lastSelectedViewRow; i++) { 
                    if (lsm.isSelectedIndex(i)) {
-                	   selectedView.add(new Integer(i)); 
+                	   selectedView.add(new Integer(i));
+                	   selectedModel.add(currentTable.convertRowIndexToModel(new Integer(i)));
                    }
                }
                if (multiPane.getSelectedIndex()==IND_MUSIC_TAB){
-            	   String review=(String)musicTabModel.getValueAt(selectedModelRow, COL_REVIEW);
+            	   String review=(String)musicTabModel.getValueAt(selectedModelRow, Disc.COL_REVIEW);
             	   review=review.replace("\\\"","\"");
             	   reviewView.setText(review);
-            	   showCover("front");
+            	   if (backUpConnected) showCover("front");
                }
+               if (multiPane.getSelectedIndex()==IND_VIDEOS_TAB){
+            	   String comment=(String)videosTabModel.getValueAt(selectedModelRow, Video.COL_REVIEW);
+            	   comment=comment.replace("\\\"","\"");
+            	   videosReviewView.setText(comment);
+               }
+               if (multiPane.getSelectedIndex()==IND_DOCS_TAB){
+            	   String comment=(String)docsTabModel.getValueAt(selectedModelRow, Doc.COL_COMMENTS);
+            	   comment=comment.replace("\\\"","\"");
+            	   docsReviewView.setText(comment);
+               }
+           }   
+       }      
+   } //FIN HANDLER SELECCION DE DISCO
+   
+   
+   private class SelectColumnHandler implements ListSelectionListener {
+
+       public void valueChanged(ListSelectionEvent e) {
+          if(e.getValueIsAdjusting()){return;} //to avoid double triggering when deselecting/selecting cells
+    
+           ListSelectionModel lsm = (ListSelectionModel) e.getSource();
+           if (!lsm.isSelectionEmpty()){
+               JTable currentTable=null;
+               switch(multiPane.getSelectedIndex()){
+	               	case IND_MUSIC_TAB:
+	    	   			currentTable=musicJTable;
+	    	   			break;
+	               	case IND_VIDEOS_TAB:
+	    	   			currentTable=videosJTable;
+	    	   			break;
+	    	   		case IND_MOVIES_TAB:
+	    	   			currentTable=moviesJTable;
+	    	   			break;
+	    	   		case IND_DOCS_TAB:
+	    	   			currentTable=docsJTable;
+	    	   			break;
+   				}
+               selectedViewColumn = currentTable.getSelectedColumn();
+	   		   selectedModelColumn = currentTable.convertColumnIndexToModel(selectedViewColumn);
            }   
        }      
    } //FIN HANDLER SELECCION DE DISCO
@@ -2609,6 +2931,14 @@ public class MultiDB extends JFrame implements music.db.DataBaseLabels{
 						int row = musicTabModel.searchFirstElementWithLetter(letter,selectedModelColumn,currentCharPos,startingRow);
 						if (selectedViewColumn < 0) selectedViewColumn = 0;
 						if (row>-1) musicJTable.changeSelection(musicJTable.convertRowIndexToView(row),selectedViewColumn, false, false);
+	    		   	}
+	   	   			break;
+	   	   		case IND_VIDEOS_TAB:
+		   	   		if (videosJTable.getCellEditor()!=null) {
+	    		   		videosJTable.getCellEditor().cancelCellEditing();
+						int row = videosTabModel.searchFirstElementWithLetter(letter,selectedModelColumn,currentCharPos,startingRow);
+						if (selectedViewColumn < 0) selectedViewColumn = 0;
+						if (row>-1) videosJTable.changeSelection(videosJTable.convertRowIndexToView(row),selectedViewColumn, false, false);
 	    		   	}
 	   	   			break;
 	   	   		case IND_MOVIES_TAB:
@@ -2660,29 +2990,28 @@ public class MultiDB extends JFrame implements music.db.DataBaseLabels{
 		
 		switch(((JTabbedPane)e.getSource()).getSelectedIndex()){
 				case IND_MUSIC_TAB:
-					menuOpciones.setEnabled(true);
+					menuMusicOptions.setEnabled(true);
 	   	   			menuRelDBBU.setEnabled(true);
 	   	   			menuAddBUDB.setEnabled(true);
+	   	   			menuLoadFilmData.setEnabled(false);	
 	   	   			if (backUpConnected) menuPlay.setEnabled(true);
 	   	   		    if (backUpConnected) menuViewLyrics.setEnabled(true);
 	   	   		    if (backUpConnected) menuPlayRandom.setEnabled(true);
+	   	   		    if (backUpConnected) menuOpcionesCoverBackup.setEnabled(true);
+	   	   		    if (backUpConnected) menuOpcionesCovers.setEnabled(true);
 	   	   			break;
 	   	   		case IND_MOVIES_TAB:
-	   	   			menuOpciones.setEnabled(false);
+	   	   			menuLoadFilmData.setEnabled(true);	
+	   	   			break;
+	   	   		default:
+	   	   			menuMusicOptions.setEnabled(false);
 	   	   			menuRelDBBU.setEnabled(false);
 	   	   			menuAddBUDB.setEnabled(false);
 	   	   			menuPlay.setEnabled(false);
 	   	   			menuViewLyrics.setEnabled(false);
 	   	   		    menuPlayRandom.setEnabled(false);
+	   	   		    menuLoadFilmData.setEnabled(false);	
 	   	   			break;
-	   	   		case IND_DOCS_TAB:
-	   	   			menuOpciones.setEnabled(false);
-	   	   			menuRelDBBU.setEnabled(false);
-	   	   			menuAddBUDB.setEnabled(false);
-	   	   			menuPlay.setEnabled(false);
-	   	   			menuViewLyrics.setEnabled(false);
-	   	   			menuPlayRandom.setEnabled(false);
-	   	   			break;	
 	  			}
 	}
 	   
@@ -2705,7 +3034,12 @@ public class MultiDB extends JFrame implements music.db.DataBaseLabels{
 					break;
 				case SAVE_REVIEW:     //SAVE REVIEW
 					saveCurrentReview();
-					break;					
+					break;
+				case SAVE_VIDEO_REVIEW:     //SAVE VIDEO REVIEW
+					saveCurrentVideoReview();
+					break;
+				case SAVE_COMMENTS:   //SAVE COMMENTS
+					saveCurrentComments();
 				default:
 					break;							
 			}			
@@ -2724,15 +3058,18 @@ public class MultiDB extends JFrame implements music.db.DataBaseLabels{
                Point p = e.getPoint();// get the coordinates of the mouse click
                JTable currentTable = null;
                switch(multiPane.getSelectedIndex()){
-	   	   		case IND_MUSIC_TAB:
-	   	   			currentTable=musicJTable;
-	   	   			break;
-	   	   		case IND_MOVIES_TAB:
-	   	   			currentTable=moviesJTable;
-	   	   			break;
-	   	   		case IND_DOCS_TAB:
-	   	   			currentTable=docsJTable;
-	   	   			break;	
+		   	   		case IND_MUSIC_TAB:
+		   	   			currentTable=musicJTable;
+		   	   			break;
+			   	   	case IND_VIDEOS_TAB:
+		   	   			currentTable=videosJTable;
+		   	   			break;
+		   	   		case IND_MOVIES_TAB:
+		   	   			currentTable=moviesJTable;
+		   	   			break;
+		   	   		case IND_DOCS_TAB:
+		   	   			currentTable=docsJTable;
+		   	   			break;	
 	  			}
                 selectedViewRow = currentTable.rowAtPoint(p);
   	   			selectedModelRow = currentTable.convertRowIndexToModel(selectedViewRow);
@@ -2760,6 +3097,26 @@ public class MultiDB extends JFrame implements music.db.DataBaseLabels{
       }
   }
    
+   ////////////////////////////////review popup////////////////////////////////
+   private class PopupVideoReviewListener extends MouseAdapter{
+       @Override
+      public void mousePressed(MouseEvent e) {
+    	   if (SwingUtilities.isRightMouseButton(e)){
+          	popupVideoReview.show(e.getComponent(),e.getX(), e.getY());         	
+          }
+      }
+  }
+   
+  ////////////////////////////////comments popup////////////////////////////////
+   private class PopupCommentsListener extends MouseAdapter{
+       @Override
+      public void mousePressed(MouseEvent e) {
+    	   if (SwingUtilities.isRightMouseButton(e)){
+          	popupComments.show(e.getComponent(),e.getX(), e.getY());         	
+          }
+      }
+  }
+   
    //this class shows the popup for showing the cover in big frame, it also changes the cover to front and back
    private class ChangeCoverListener extends MouseAdapter{
        @Override
@@ -2767,10 +3124,10 @@ public class MultiDB extends JFrame implements music.db.DataBaseLabels{
           if (SwingUtilities.isLeftMouseButton(e)) {
              if (currentFrontCover) {
                  currentFrontCover=false;
-                 showCover("back");
+                 if (backUpConnected) showCover("back");
              }
              else {
-                 showCover("front");
+            	 if (backUpConnected) showCover("front");
              }           
           } else if (SwingUtilities.isRightMouseButton(e)){
           	popupCover.show(e.getComponent(),e.getX(), e.getY());         	
@@ -2895,7 +3252,8 @@ public class MultiDB extends JFrame implements music.db.DataBaseLabels{
    }//END OF PLAYINGTIME HANDLER
    
    private class SongSliderHandler extends MouseAdapter {
-		@Override
+		private Dimension dim = new Dimension(0,0);
+	   @Override
 		public void mousePressed(MouseEvent arg0) {
 			timerThread.paused=true;
 		}
@@ -2903,7 +3261,12 @@ public class MultiDB extends JFrame implements music.db.DataBaseLabels{
 		@Override
 		public void mouseReleased(MouseEvent arg0) {
 			timerThread.paused=false;
-			mp3Player.jump(songSlider.getValue());
+			
+			int width=((JSlider)arg0.getSource()).getSize(dim).width;
+			int point = arg0.getX()*((JSlider)arg0.getSource()).getMaximum()/width;
+			if (point > ((JSlider)arg0.getSource()).getMaximum()) point = ((JSlider)arg0.getSource()).getMaximum();
+			if (point < 0) point=0;
+			mp3Player.jump(point);
 		}
 	}
    
@@ -2925,224 +3288,8 @@ public class MultiDB extends JFrame implements music.db.DataBaseLabels{
 //////////////////////////////////////END OF HANDLERS/////////////////////////////////////////////////////////////// 
    
    
-   ////////////////////////////////////////////////////////////////////////////////////////////////
-   ////////////////////////////////TABLECELLRENDERER\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\
-   ////////////////////////////////////////////////////////////////////////////////////////////////
-
-   
-   public class MusicTableRenderer extends JLabel implements TableCellRenderer {
-	   
-	private static final long serialVersionUID = 1L;
-
-	public MusicTableRenderer() {
-		super();
-	}
-
-	public MusicTableRenderer(String arg0) {
-		super(arg0);
-	}
-
-	@Override
-	public Component getTableCellRendererComponent(JTable table, Object value,
-			boolean isSelected, boolean isFocused, int row, int col) {
-		
-		Font font;		
-		int modelCol=table.convertColumnIndexToModel(col);
-		
-		switch (modelCol){
-			case music.db.DataBaseLabels.COL_GROUP:
-				this.setBackground(Color.CYAN);
-				font= new Font("Arial",Font.BOLD,12);
-				break;
-			case music.db.DataBaseLabels.COL_TITLE:
-				this.setBackground(Color.YELLOW);
-				font= new Font("Lucida Console",Font.BOLD,11);
-				break;
-			case music.db.DataBaseLabels.COL_YEAR:
-				this.setBackground(Color.getHSBColor(50,36,1215));
-				font= new Font("Arial",Font.BOLD,11);
-				break;	
-			case music.db.DataBaseLabels.COL_STYLE:
-				this.setBackground(Color.GREEN);
-				font= new Font("Century Gothic",Font.PLAIN,11);
-				break;	
-			case music.db.DataBaseLabels.COL_LOC:
-				this.setBackground(Color.PINK);
-				font= new Font("Book Antiqua",Font.PLAIN,11);
-				break;		
-			case music.db.DataBaseLabels.COL_COPY:
-				this.setBackground(Color.ORANGE);
-				font= new Font("Arial",Font.BOLD,11);
-				break;		
-			case music.db.DataBaseLabels.COL_TYPE:
-				this.setBackground(Color.LIGHT_GRAY);
-				font= new Font("Arial",Font.PLAIN,11);
-				break;	
-			case music.db.DataBaseLabels.COL_MARK:
-				this.setBackground(Color.RED);
-				font= new Font("Arial",Font.PLAIN,11);
-				break;	
-			case music.db.DataBaseLabels.COL_PRESENT:
-				this.setBackground(Color.MAGENTA);
-				font= new Font("Arial",Font.BOLD,11);
-				break;		
-			default:
-				this.setBackground(Color.getHSBColor(50,147,1635));
-				font= new Font("Garamond",Font.BOLD,13);
-				break;
-		}
-		this.setFont(font);
-		this.setOpaque(true);
-		if (isSelected){
-			Border loweredBevel = BorderFactory.createLoweredBevelBorder();
-			this.setBorder(loweredBevel); 
-			this.setBackground(Color.getHSBColor(50,147,1635));
-		}
-		else this.setBorder(BorderFactory.createEmptyBorder());
-		if (value!=null) this.setText(value.toString());
-		return this;
-	} 
-	   
-   }
-   
-   public class MoviesTableRenderer extends JLabel implements TableCellRenderer {
-
-		   
-		private static final long serialVersionUID = 1L;
-
-		public MoviesTableRenderer() {
-			super();
-		}
-
-		public MoviesTableRenderer(String arg0) {
-			super(arg0);
-		}
-
-		@Override
-		public Component getTableCellRendererComponent(JTable table, Object value,
-				boolean isSelected, boolean isFocused, int row, int col) {
-			
-			Font font;			
-			int modelCol=table.convertColumnIndexToModel(col);
-
-			switch (modelCol){
-				case movies.db.DataBaseLabels.COL_TITLE:
-					this.setBackground(Color.YELLOW);
-					font= new Font("Lucida Console",Font.BOLD,11);
-					break;
-				case movies.db.DataBaseLabels.COL_DIR:
-					this.setBackground(Color.GREEN);
-					font= new Font("Century Gothic",Font.PLAIN,11);
-					break;	
-				case movies.db.DataBaseLabels.COL_YEAR:
-					this.setBackground(Color.ORANGE);
-					font= new Font("Tahoma",Font.BOLD,11);
-					break;	
-				case movies.db.DataBaseLabels.COL_LOC:
-					this.setBackground(Color.PINK);
-					font= new Font("Book Antiqua",Font.PLAIN,11);
-					break;		
-				case movies.db.DataBaseLabels.COL_OTHER:
-					this.setBackground(Color.RED);
-					font= new Font("Arial",Font.PLAIN,11);
-					break;	
-				case movies.db.DataBaseLabels.COL_PRESENT:
-					this.setBackground(Color.MAGENTA);
-					font= new Font("Arial",Font.BOLD,11);
-					break;		
-				default:
-					font= new Font("Garamond",Font.BOLD,13);
-					break;
-			}
-			this.setFont(font);
-			this.setOpaque(true);
-			if (isSelected){
-				Border loweredBevel = BorderFactory.createLoweredBevelBorder();
-				this.setBorder(loweredBevel); 
-				this.setBackground(Color.getHSBColor(50,147,1635));
-			}
-			else this.setBorder(BorderFactory.createEmptyBorder());
-			this.setText((String)value);
-			return this;
-		} 
-   }
-   
-   
-   
-   public class DocsTableRenderer extends JLabel implements TableCellRenderer {
-
-		private static final long serialVersionUID = 1L;
-
-		public DocsTableRenderer() {
-			super();
-		}
-
-		public DocsTableRenderer(String arg0) {
-			super(arg0);
-		}
-
-		@Override
-		public Component getTableCellRendererComponent(JTable table, Object value,
-				boolean isSelected, boolean isFocused, int row, int col) {
-			
-			Font font;
-			int modelCol=table.convertColumnIndexToModel(col);
-
-			switch (modelCol){
-				case docs.db.DataBaseLabels.COL_TITLE:
-					this.setBackground(Color.YELLOW);
-					font= new Font("Lucida Console",Font.BOLD,11);
-					break;
-				case docs.db.DataBaseLabels.COL_LOC:
-					this.setBackground(Color.PINK);
-					font= new Font("Book Antiqua",Font.PLAIN,11);
-					break;		
-				case docs.db.DataBaseLabels.COL_COMMENTS:
-					this.setBackground(Color.GREEN);
-					font= new Font("Century Gothic",Font.PLAIN,11);
-					break;	
-				default:
-					font= new Font("Garamond",Font.BOLD,13);
-					break;
-			}
-			this.setFont(font);
-			this.setOpaque(true);
-			if (isSelected){
-				Border loweredBevel = BorderFactory.createLoweredBevelBorder();
-				this.setBorder(loweredBevel); 
-				this.setBackground(Color.getHSBColor(50,147,1635));
-			}
-			else this.setBorder(BorderFactory.createEmptyBorder());
-			this.setText((String)value);
-			return this;
-		} 
-  }
-   
-  public class ComboTableCellRenderer implements TableCellRenderer {
-	   DefaultListCellRenderer listRenderer = new DefaultListCellRenderer();
-	   DefaultTableCellRenderer tableRenderer = new DefaultTableCellRenderer();
-
-	 
-	   public Component getTableCellRendererComponent(JTable table, Object value, boolean isSelected,boolean hasFocus, int row, int column) {
-	     
-		 tableRenderer = (DefaultTableCellRenderer) tableRenderer.getTableCellRendererComponent(table,value, isSelected, hasFocus, row, column);
-	     Font font= new Font("Tahoma",Font.BOLD,11);
-	     tableRenderer.setBackground(Color.ORANGE);
-	     tableRenderer.setFont(font);
-	     tableRenderer.setOpaque(true);	     
-		 if (isSelected){
-			Border loweredBevel = BorderFactory.createLoweredBevelBorder();
-			tableRenderer.setBorder(loweredBevel); 
-			tableRenderer.setBackground(Color.getHSBColor(50,147,1635));
-		 }else tableRenderer.setBorder(BorderFactory.createEmptyBorder());
-		 tableRenderer.setText((DocTheme.getStringTheme((DocTheme)value)));
-	     return tableRenderer;
-	   }
-	 }
-
-   
    public class PlayerTableRenderer extends JLabel implements TableCellRenderer {
-   
+	   
 		private static final long serialVersionUID = 1L;
 
 		public PlayerTableRenderer() {
@@ -3183,12 +3330,180 @@ public class MultiDB extends JFrame implements music.db.DataBaseLabels{
 		} 
 		   
 	   }
-
+   
+   
    
    /////////////////////////////THREADS\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\
    /////////////////////////////THREADS\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\   
    /////////////////////////////THREADS\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\
    
+   
+  //RELATE DATABASE BACKUP/////////////////////////////////////////////////////////////////////////
+   public class RelateDBBUPThread extends Thread {
+	   int posGuion = -1, longNombre = -1, numberFiles = 0;
+       String[] files;
+       String discsNF = "";
+       String sep = File.separator;
+       
+		public RelateDBBUPThread() {
+			super();
+		}
+
+		@Override
+		public void run() {
+     	   String[] grupos = backUpPath.list();
+           Integer tam = grupos.length;
+           ProgressBarWindow pw = new ProgressBarWindow();
+           pw.setFrameSize(pw.dimRelate);
+           pw.startProgBar(tam);
+           for (int j = 0; j < tam; j++) {
+               String nombreGrupo = grupos[j];
+        	   pw.setPer(j+1, "Loking for titles of "+nombreGrupo);
+               infoText.setText("Loking for titles of "+nombreGrupo);
+               File discosGrupoF = new File(backUpPath + sep + nombreGrupo);               
+               if (discosGrupoF.isDirectory() == false) {
+               	   Errors.errorSint(backUpPath + sep + nombreGrupo);
+               } else {
+                   String[] discosGrupo = discosGrupoF.list();
+                   Integer numeroDiscos = discosGrupo.length;
+
+                   //para todos los discos de este grupo
+
+                   for (int k = 0; k < numeroDiscos; k++) {
+                       File discoF = new File(backUpPath + sep + nombreGrupo +sep + discosGrupo[k]);
+                       if (discoF.isDirectory() == false) {
+                       } else {
+                           posGuion = discosGrupo[k].indexOf("-");
+
+                           if (posGuion < 0) {
+                               Errors.errorSint(backUpPath + sep + nombreGrupo + sep + discosGrupo[k]);
+                           } else {
+                               Disc disco = new Disc();
+                               String anho = discosGrupo[k].substring(0, posGuion);
+                               anho = anho.trim();
+                               try {
+                                   //Long anhoLong = Long.decode(anho);
+                                   longNombre = discosGrupo[k].length();
+                                   String nombreDisco = discosGrupo[k].substring(posGuion + 1, longNombre);
+                                   //creamos nuevo disco con los datos leidos
+                                   disco.title = nombreDisco.trim();
+                                   disco.group = nombreGrupo;
+                                   disco.year = anho;
+                                   disco.path = discoF;
+                                   //OPCIONAL!!
+                                   //busqueda de carpetas llamadas cover para avisar que las portadas estan ahi
+                                   /*files = discoF.list();
+                                   numberFiles = files.length;
+                                   for (int i = 0; i < numberFiles; i++) {
+                                       File fileArchivo = new File(backUpPath + sep + nombreGrupo + sep + discosGrupo[k] + "//" + files[i]);
+                                       if (fileArchivo.isDirectory()) {
+                                           files[i] = files[i].toLowerCase();
+
+                                           if (files[i].indexOf("cover") > -1) {
+                                               disCover.add(disco);
+                                           }
+                                       }
+                                   }*/
+                                   int pos;
+                                   if((pos=musicTabModel.searchDisc(disco.group,disco.title))!=-1){
+                                       musicTabModel.setValueAt("YES",pos,Disc.COL_PRESENT);
+                                       musicTabModel.setValueAt(disco.path, pos,Disc.COL_PATH);
+                                   }else{
+                                       //reviewView.append("Disc not found in Database:"+nombreGrupo+"::"+discosGrupo[k]+"\n");
+                                       discsNF=discsNF+"Disc not found in Database:"+nombreGrupo+"::"+discosGrupo[k]+"\n";
+                                   }
+                                   backUpConnected=true;
+                                   menuPlay.setEnabled(true);
+                                   menuPlayRandom.setEnabled(true);
+                                   menuViewLyrics.setEnabled(true);
+                                   menuOpcionesCovers.setEnabled(true);
+                                   menuOpcionesCopiarPortadas.setEnabled(true);
+                                   menuOpcionesCoverBackup.setEnabled(true);
+                                   
+                               } catch (NumberFormatException e) {
+                                   Errors.errorSint(backUpPath + sep + nombreGrupo + sep + discosGrupo[k]);
+                               }
+
+                             }
+                          }
+                       }
+                   infoText.setText(discsNF);
+                   }
+               }
+      	   infoFrame.setVisible(true);
+		}		
+  }
+   
+   //RETRIEVE CSV DATABASE/////////////////////////////////////////////////////////////////////////  
+   public class RetrieveCSVThread extends Thread {
+	   String fileName;
+       
+		public RetrieveCSVThread() {
+			super();
+		}
+
+		@Override
+		public void run() {
+			switch(multiPane.getSelectedIndex()){
+	   	   		case IND_MUSIC_TAB:
+	   	   			musicTabModel.setAllDataString(dbCSV.readFile(fileName,music.db.DataBaseTable.columns));
+	   	   			isMusicInCSV=true;
+	   	   			break;
+	   	   		case IND_VIDEOS_TAB:
+		   	   		videosTabModel.setAllDataString(dbCSV.readFile(fileName,musicmovies.db.DataBaseTable.columns));
+	   	   			isVideosInCSV=true;
+	   	   			break;
+	   	   		case IND_MOVIES_TAB:
+		   	   		moviesTabModel.setAllDataString(dbCSV.readFile(fileName,movies.db.DataBaseTable.columns));
+	   	   			isMoviesInCSV=true;
+	   	   			break;
+	   	   		case IND_DOCS_TAB:
+		   	   		docsTabModel.setAllDataString(dbCSV.readFile(fileName,docs.db.DataBaseTable.columns));
+	   	   			isDocsInCSV=true;
+	   	   			break;	
+			}
+
+	   		isdb=false;
+        }	
+  }
+   
+   //STORE CSV DATABASE/////////////////////////////////////////////////////////////////////////  
+   public class StoreCSVThread extends Thread {
+	   String fileName;
+       
+		public StoreCSVThread() {
+			super();
+		}
+
+		@Override
+		public void run() {
+			int ret=0;
+			switch(multiPane.getSelectedIndex()){
+	   	   		case IND_MUSIC_TAB:
+	   	   			ret=musicTabModel.saveToCSV(fileName);
+	   	   			isMusicInCSV=true;
+	   	   			break;
+		   	   	case IND_VIDEOS_TAB:
+	   	   			ret=videosTabModel.saveToCSV(fileName);
+	   	   			isVideosInCSV=true;
+	   	   			break;
+	   	   		case IND_MOVIES_TAB:
+		   	   		ret=moviesTabModel.saveToCSV(fileName);
+	   	   			isMoviesInCSV=true;
+	   	   			break;
+	   	   		case IND_DOCS_TAB:
+		   	   		ret=docsTabModel.saveToCSV(fileName);
+	   	   			isDocsInCSV=true;
+	   	   			break;	
+			}
+			if (ret>-1) JOptionPane.showMessageDialog(f, "File created succesfully: "+fileName);
+     	    else Errors.showError(ret);
+        }
+		
+  }
+   
+   
+   //TIMER/////////////////////////////////////////////////////////////////////////    
    public class TimerThread extends Thread {
 
 	   public boolean closed = false;
@@ -3227,7 +3542,7 @@ public class MultiDB extends JFrame implements music.db.DataBaseLabels{
 					} while (!closed);
 				}
 			} catch (Exception e) {
-				e.printStackTrace();
+				Errors.showError(Errors.GENERIC_STACK_TRACE,e.toString());
 			}
 		}
 
@@ -3242,6 +3557,7 @@ public class MultiDB extends JFrame implements music.db.DataBaseLabels{
        }*/
    }
   
+   //COPY FOLDERS TO BACKUP/////////////////////////////////////////////////////////////////////////  
    public class CopyThread extends Thread {
 
 	   public boolean end = false;
@@ -3251,6 +3567,7 @@ public class MultiDB extends JFrame implements music.db.DataBaseLabels{
        int posGuion = -1, longNombre = -1;
        String[] files;
        File currentDisc;
+       String sep = File.separator; 
        boolean exists;
 
 		public CopyThread() {
@@ -3260,30 +3577,30 @@ public class MultiDB extends JFrame implements music.db.DataBaseLabels{
 		@Override
 		public void run() {
 
-			 infoFrame.setVisible(true);
-       
+			 ProgressBarWindow pw = new ProgressBarWindow();
+	         pw.setFrameSize(pw.dimRelate);
+	         pw.startProgBar(size-1);
+     
 			 for (int j = 0; j < size; j++) {
                  String nombreGrupo = folders[j];
-
-                 File discosGrupoF = new File(path + "\\" + nombreGrupo);
+                 pw.setPer(j, "Adding discs of "+nombreGrupo);
+                 File discosGrupoF = new File(path + sep + nombreGrupo);
                  if (discosGrupoF.isDirectory() == false) {
-                      errorSint(path + "\\" + nombreGrupo);
+                      Errors.errorSint(path + sep + nombreGrupo);
                  } else {
                      String[] discosGrupo = discosGrupoF.list();
                      Integer numeroDiscos = discosGrupo.length;
-                     File groupBUpPath=buscarGrupo(nombreGrupo,backUpPath);
+                     File groupBUpPath=DealMusicFiles.buscarGrupo(nombreGrupo,backUpPath);
                      exists=false;
                      if (groupBUpPath!=null){
                         //group folder already exists in backup
-                         exists=copyFiles(discosGrupoF.getAbsoluteFile(),groupBUpPath.getAbsoluteFile());
+                         exists=FileDealer.copyFiles(discosGrupoF.getAbsoluteFile(),groupBUpPath.getAbsoluteFile());
                          if (!exists){
-                        	 infoText.setText("Added folder "+discosGrupoF.getAbsolutePath()+" to "+groupBUpPath.getAbsolutePath()+"\n");
                         	 reviewView.append("Added folder "+discosGrupoF.getAbsolutePath()+" to "+groupBUpPath.getAbsolutePath()+"\n");
                          }
                      }else {
-                         exists=copyFolder(discosGrupoF.getAbsoluteFile(),backUpPath.getAbsoluteFile());
+                         exists=FileDealer.copyFolder(discosGrupoF.getAbsoluteFile(),backUpPath.getAbsoluteFile());
                          if (!exists){
-                        	 infoText.setText("Added folder "+discosGrupoF.getAbsolutePath()+" to "+backUpPath.getAbsolutePath()+"\n");
                         	 reviewView.append("Added folder "+discosGrupoF.getAbsolutePath()+" to "+backUpPath.getAbsolutePath()+"\n");
                          }
                      }
@@ -3292,12 +3609,12 @@ public class MultiDB extends JFrame implements music.db.DataBaseLabels{
 
                      if (!exists) {
 							for (int k = 0; k < numeroDiscos; k++) {
-								currentDisc = new File(path + "\\"+ nombreGrupo + "\\"+ discosGrupo[k]);
-								if (currentDisc.isDirectory() == false) {errorSint(currentDisc.getAbsolutePath());
+								currentDisc = new File(path + sep+ nombreGrupo + sep+ discosGrupo[k]);
+								if (currentDisc.isDirectory() == false) {Errors.errorSint(currentDisc.getAbsolutePath());
 								} else {
 									posGuion = discosGrupo[k].indexOf("-");
 									if (posGuion < 0) {
-										errorSint(currentDisc.getAbsolutePath());
+										Errors.errorSint(currentDisc.getAbsolutePath());
 									} else {
 										Disc disco = new Disc();
 										String anho = discosGrupo[k].substring(0, posGuion);
@@ -3320,7 +3637,7 @@ public class MultiDB extends JFrame implements music.db.DataBaseLabels{
 											// anhadimos el disco tanto al backup como a la base de datos
 											musicDataBase.insertNewDisc(disco);
 										} catch (NumberFormatException e) {
-											errorSint(currentDisc.getAbsolutePath());
+											Errors.errorSint(currentDisc.getAbsolutePath());
 										}
 									}
 								}
@@ -3329,18 +3646,20 @@ public class MultiDB extends JFrame implements music.db.DataBaseLabels{
 					}
              }
 			 JOptionPane.showMessageDialog(f, "Files copied successfully");
-			 infoFrame.dispose();
 		}
    }
-   
+  
+   //NEW DISCS OF GROUPS/////////////////////////////////////////////////////////////////////////  
    public class Look4NewDiscsThread extends Thread {
 
 	   public String web="webEM";
 	   public String groupName;	   
-	   private Disc discDB=new Disc(),discWeb=new Disc();
+	   private Disc discDB=new Disc();
+	   private Disc discWeb=new Disc();
 	   private boolean found;
 	   private ArrayList<Disc> discListWeb = new ArrayList<Disc>(),discListDB = new ArrayList<Disc>();
 	   private ArrayList<Disc> finalList = new ArrayList<Disc>();
+	   private ArrayList<Integer> indexes = new ArrayList<Integer>();
 	   private Set<String> groupList= new TreeSet<String>(String.CASE_INSENSITIVE_ORDER);
 	   private int already=0;  //number of discs already in db
 	   
@@ -3357,9 +3676,15 @@ public class MultiDB extends JFrame implements music.db.DataBaseLabels{
 			finalList.clear();
 			infoText.setText("");
 			
-			for (int i=0;i<selectedModel.size();i++){				
-				groupName=musicTabModel.getDiscAtRow(selectedModel.get(i)).group;
-
+			indexes.addAll(selectedModel);
+			ProgressBarWindow pw = new ProgressBarWindow();
+	        pw.setFrameSize(pw.dimRelate);
+	        pw.startProgBar(indexes.size());
+     
+			
+			for (int i=0;i<indexes.size();i++){
+				groupName=musicTabModel.getDiscAtRow(indexes.get(i)).group;
+				pw.setPer(i+1, "Looking for info of "+groupName);
 				if (!groupList.contains(groupName)){
 					groupList.add(groupName);
 					discListDB.clear();
@@ -3367,7 +3692,7 @@ public class MultiDB extends JFrame implements music.db.DataBaseLabels{
 					infoFrame.setSize(500, 400);
 					infoFrame.setVisible(true);						
 					infoText.append("Looking for new discs of "+groupName+"\n");
-					discListWeb=webReader.getGroupInfo(groupName,web);
+					discListWeb=webMusicInfoExtractor.getGroupInfo(groupName,web, musicTabModel.getDiscAtRow(indexes.get(i)).loc,musicTabModel.getDiscAtRow(indexes.get(i)).style);
 					if ((discListWeb!=null)&&(discListWeb.size()!=0)){
 						already=0;
 						for (int indWeb=0;indWeb<discListWeb.size();indWeb++){
@@ -3395,12 +3720,14 @@ public class MultiDB extends JFrame implements music.db.DataBaseLabels{
 			newDiscsTabMod.setData(finalList);
 			if (finalList.size()>0) {
 				newDiscsFrame.setSize(700,finalList.size()*18+60);
+				newDiscsFrame.setMaximumSize(new Dimension(700,1000));
 				newDiscsFrame.setVisible(true);
 			} else infoText.append("No new discs found\n");
-			infoText.append("Done!");		
+			infoText.append("Done!");	
 		}
    	}
 
+   //GET LYRICS/////////////////////////////////////////////////////////////////////////  
    public class GetLyricsThread extends Thread {
 	   
 		public GetLyricsThread() {
@@ -3409,13 +3736,119 @@ public class MultiDB extends JFrame implements music.db.DataBaseLabels{
 
 		@Override
 		public void run() {
-			lyricsView.setText(webReader.getLyricsOfDisc(lyricsGroup,lyricsAlbum));	
+			lyricsView.setText(webMusicInfoExtractor.getLyricsOfDisc(lyricsGroup,lyricsAlbum,"webEM"));	
 		}
    }
    
+   //GET FILM DATA/////////////////////////////////////////////////////////////////////////  
+   public class GetFilmDataThread extends Thread {
+	   
+	   private String title;
+	   private Movie newmovie=null, currentmovie=null;
+	   
+	   public GetFilmDataThread() {
+			super();
+		}
+
+		@Override
+		public void run() {
+			
+			ProgressBarWindow pw = new ProgressBarWindow();
+	        pw.setFrameSize(pw.dimRelate);
+	        pw.startProgBar(selectedModel.size());
+			
+			for (int i=0;i<selectedModel.size();i++){
+		    	title = moviesTabModel.getMovieAtRow(selectedModel.get(i)).title;  
+		    	newmovie=webMoviesInfoExtractor.getMovieInfo(title);
+		    	pw.setPer(i+1, "Looking for info of "+title);
+				if (newmovie==null) Errors.showError(Errors.MOVIE_NOT_FOUND);
+				else{
+					currentmovie=moviesTabModel.getMovieAtRow(selectedModel.get(i));
+					currentmovie.setDirector(newmovie.getDirector());
+					currentmovie.setYear(newmovie.getYear());
+					moviesDataBase.updateMovie(currentmovie, selectedModel.get(i));
+				}
+	    	}
+			
+		
+		}
+   }
+   
+   //GET GROUP DATA/////////////////////////////////////////////////////////////////////////  
+   public class GetGroupDataThread extends Thread {
+	   
+	   private Disc newdisc=null, currentdisc=null;
+	   private ArrayList<Disc> discList;
+	   private LevenshteinDistance dist;
+	   
+	   public GetGroupDataThread() {
+			super();
+		}
+
+		@Override
+		public void run() {
+			
+			ProgressBarWindow pw = new ProgressBarWindow();
+	        pw.setFrameSize(pw.dimRelate);
+	        pw.startProgBar(selectedModel.size());
+	        dist=new LevenshteinDistance();
+	        dist.setThreshold(LevenshteinDistance.MED_THRESHOLD);
+			
+			for (int i=0;i<selectedModel.size();i++){
+				currentdisc = musicTabModel.getDiscAtRow(selectedModel.get(i));  
+		    	discList=webMusicInfoExtractor.getGroupInfo(currentdisc.group,"webEM",currentdisc.loc,currentdisc.style);
+		    	pw.setPer(i+1, "Looking for info of "+currentdisc.group);
+		    	
+		    	if ((discList==null)||(discList.size()==0)) Errors.showError(Errors.GROUP_NOT_FOUND);
+				else{
+					for (int indWeb=0;indWeb<discList.size();indWeb++){
+						//System.out.println(discList.get(disc).title);
+						if (dist.compare(currentdisc.title,discList.get(indWeb).title)){
+							newdisc=discList.get(indWeb);
+							currentdisc.setStyle(newdisc.getStyle());
+							currentdisc.setLoc(newdisc.getLoc());
+							if (newdisc.getType().compareTo("Full-length")==0) currentdisc.setType("LP");
+							else currentdisc.setType(newdisc.getType());
+							musicDataBase.updateDisc(currentdisc, selectedModel.get(i));
+							break;
+						}									
+						
+					}
+				}
+			}
+	
+		}
+   }
+   
+   
+   //PUT IMAGE/////////////////////////////////////////////////////////////////////////  
+   public class PutImage extends Thread {
+	   
+	    public JLabel label;
+	    public String file;
+		BufferedImage img = null;
+		BufferedImage scaled = new BufferedImage(COVERS_DIM.width,COVERS_DIM.height,BufferedImage.SCALE_FAST);
+	    
+		public PutImage() {
+			super();
+		}
+
+		@Override
+		public void run() {
+			 origIcon = new ImageIcon(file);
+		     imagen = origIcon.getImage();
+		     Image image = imagen.getScaledInstance(400, 400, Image.SCALE_FAST);
+		     scaledIcon.setImage(image);
+		     label.setIcon(scaledIcon);
+		     label.repaint();
+		}
+  }
+   
+   //RANDOM PLAY/////////////////////////////////////////////////////////////////////////  
    public class RandomPlayThread extends Thread {
 	   
        public boolean fav;
+       public Double mark=0.0;
        private File pathDisc;
        private Random rand = new Random();
        private int randomDisc=0,randomSong=0;
@@ -3423,8 +3856,8 @@ public class MultiDB extends JFrame implements music.db.DataBaseLabels{
        private List<Integer> favSongs = new LinkedList<Integer>();
        private List<Song> songsInPath = new LinkedList<Song>();
        private Song currentSong;
-       public Double mark=0.0;
        private String currentGroup, currentAlbum;
+       private int numSongs=0;
 	   
 		public RandomPlayThread() {
 			super();
@@ -3434,34 +3867,50 @@ public class MultiDB extends JFrame implements music.db.DataBaseLabels{
 		public void run() {
 
 			selectedDiscs=getListOfDiscsByMark(mark);
+			/*System.out.println(selectedDiscs.size());
         	
+		    for(int j=0;j<selectedDiscs.size();j++){
+	            	playList.removeAllRows();
+	                playList.numSongs=0;
+	                currentGroup=(String)musicTabModel.getValueAt(selectedDiscs.get(j),Video.COL_GROUP);
+                    currentAlbum=(String)musicTabModel.getValueAt(selectedDiscs.get(j),Video.COL_TITLE);
+                    pathDisc = (File) musicTabModel.getValueAt(selectedDiscs.get(j),Disc.COL_PATH);
+                    try {
+                    	songsInPath=playList.searchFiles(pathDisc,false,currentGroup,currentAlbum);
+                    } catch (MP3FilesNotFound ex) {
+                    	System.out.println(currentGroup+ " "+currentAlbum);
+	                }
+	            } */
+			
+			
             do{
             	playList.removeAllRows();
-                playList.numSongs=0;
+            	this.numSongs=0;
             	do {
             		randomDisc=rand.nextInt(selectedDiscs.size());
             		favSongs.clear();
-            		pathDisc = (File) musicTabModel.getValueAt(selectedDiscs.get(randomDisc),COL_PATH);
-            		try {
-            			 songsInPath.clear();
-                         currentGroup=(String)musicTabModel.getValueAt(selectedDiscs.get(randomDisc),COL_GROUP);
-                         currentAlbum=(String)musicTabModel.getValueAt(selectedDiscs.get(randomDisc),COL_TITLE);
-                         songsInPath=playList.searchFiles(pathDisc,false,currentGroup,currentAlbum);
-                         if (!fav){
-	                         randomSong=rand.nextInt(songsInPath.size());
-	                         currentSong=songsInPath.get(randomSong);
-	                         playList.addSong(currentSong);
-	                     }else{
-	                    	 seekFavSongs(randomDisc,songsInPath);
-	                    	 if (favSongs.size()>0){
-		                    	 randomSong=rand.nextInt(favSongs.size());
-		                         currentSong=songsInPath.get(favSongs.get(randomSong));
-		                         playList.addSong(currentSong);
-	                    	 }
-	                     }
-            		} catch (MP3FilesNotFound ex) {
-                 }
-            	}while(playList.numSongs<10);
+            		pathDisc = (File) musicTabModel.getValueAt(selectedDiscs.get(randomDisc),Disc.COL_PATH);
+            		songsInPath.clear();
+                    currentGroup=(String)musicTabModel.getValueAt(selectedDiscs.get(randomDisc),Video.COL_GROUP);
+                    currentAlbum=(String)musicTabModel.getValueAt(selectedDiscs.get(randomDisc),Video.COL_TITLE);
+                    songsInPath=playList.searchFiles(pathDisc,false,currentGroup,currentAlbum);
+                    if (songsInPath.size()!=0){
+	                     if (!fav){
+		                      randomSong=rand.nextInt(songsInPath.size());
+		                      currentSong=songsInPath.get(randomSong);
+		                      playList.addSong(currentSong);
+		                      this.numSongs++;
+		                 }else{
+		                  	 seekFavSongs(randomDisc,songsInPath);
+		                   	 if (favSongs.size()>0){
+			                   	 randomSong=rand.nextInt(favSongs.size());
+			                     currentSong=songsInPath.get(favSongs.get(randomSong));
+			                     playList.addSong(currentSong);
+			                     this.numSongs++;
+		                   	 }
+		                 }
+                    }
+            	}while(this.numSongs<10);
                 
                
                 playListTable.setModel(playList);
@@ -3469,7 +3918,10 @@ public class MultiDB extends JFrame implements music.db.DataBaseLabels{
                 PlayThisSongHandler playThisSongHandler = new PlayThisSongHandler();
                 playListTable.addMouseListener(playThisSongHandler);   
                 
-                managePlayListTable();               
+                if (playFirstTime) {
+                	playFirstTime=false;
+                	managePlayListTable();               
+                }
                 
                 mp3Player.playList(playList);
                 timerThread = new TimerThread();
@@ -3491,12 +3943,12 @@ public class MultiDB extends JFrame implements music.db.DataBaseLabels{
 		}
 		
 		 //method to return indexes of discs which mark is over than provided
-		   public List<Integer> getListOfDiscsByMark(Double mark){
+		public List<Integer> getListOfDiscsByMark(Double mark){
 			   List<Integer> list = new LinkedList<Integer>();
 			   Double currentMark=new Double(0.0);
 			   String sMark=new String("");
 			   for(int currentIndex=0;currentIndex<musicTabModel.getRowCount();currentIndex++){
-				   sMark=(String)musicTabModel.getValueAt(currentIndex, COL_MARK);
+				   sMark=(String)musicTabModel.getValueAt(currentIndex, Disc.COL_MARK);
 				   try{
 					   currentMark=Double.parseDouble(sMark);
 					   if (currentMark>=mark) list.add(currentIndex);
@@ -3505,31 +3957,45 @@ public class MultiDB extends JFrame implements music.db.DataBaseLabels{
 				   }
 			   }
 			   return list;	   
-		   }
+		}
 		
 		public void seekFavSongs(int index,List<Song> songList){
 			String rev=musicTabModel.getDiscAtRow(selectedDiscs.get(index)).review;
 			String currFav="";
 			boolean added;
+			LevenshteinDistance dist = new LevenshteinDistance();
+			dist.setThreshold(LevenshteinDistance.MED_THRESHOLD);
 			
-			while (rev.indexOf("\"") > -1) {
+			//////////WITH NO REGEX/////////////////
+			/*while (rev.indexOf("\"") > -1) {
 				rev = rev.substring(rev.indexOf("\"")+"\"".length(),rev.length());
 				if (rev.indexOf("\"")>-1) {
 					currFav= rev.substring(0,rev.indexOf("\""));
 					rev = rev.substring(rev.indexOf("\"")+"\"".length(),rev.length());
-				}
+				}*/
+			
+			
+			Pattern pattern = Pattern.compile("\"[^\"]*?\"");
+			Matcher matcher = pattern.matcher(rev);			
+			
+			while (matcher.find()){
+				currFav=matcher.group();
+				currFav=currFav.substring(1,currFav.length()-1);//removing double quotes
+				
 				for (int ind=0;ind<songList.size();ind++){
-					//System.out.println("rpobando "+currFav);
+					//System.out.println("probando "+currFav);
 					added=false;
-					if (songList.get(ind).name!=null){						
-						if ((Pattern.compile(Pattern.quote(currFav), Pattern.CASE_INSENSITIVE).matcher(songList.get(ind).name).find())){
+					if (songList.get(ind).name!=null){		
+						if (dist.compare(currFav, songList.get(ind).name)){
+						//if ((Pattern.compile(Pattern.quote(currFav), Pattern.CASE_INSENSITIVE).matcher(songList.get(ind).name).find())){
 							favSongs.add(ind);
 							added=true;
 							break;
 						}
 					}
 					if (!added){
-						if (songList.get(ind).tagTitle!=null){							
+						if (dist.compare(currFav, songList.get(ind).tagTitle)){
+						//if (songList.get(ind).tagTitle!=null){							
 							if (Pattern.compile(Pattern.quote(currFav), Pattern.CASE_INSENSITIVE).matcher(songList.get(ind).tagTitle).find()){
 								favSongs.add(ind);
 								break;
