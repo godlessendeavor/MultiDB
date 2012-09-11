@@ -2,7 +2,6 @@
 <classpath>
 	<classpathentry kind="src" path="src"/>
 	<classpathentry kind="con" path="org.eclipse.jdt.launching.JRE_CONTAINER"/>
-	<classpathentry kind="lib" path="C:/Users/thrasher/git/MultiDB/CLASSPATH/commons-lang-2.4.jar"/>
 	<classpathentry kind="lib" path="C:/Users/thrasher/git/MultiDB/CLASSPATH/EaSynthLookAndFeel.jar"/>
 	<classpathentry kind="lib" path="C:/Users/thrasher/git/MultiDB/CLASSPATH/htmllexer.jar"/>
 	<classpathentry kind="lib" path="C:/Users/thrasher/git/MultiDB/CLASSPATH/htmlparser.jar"/>
@@ -15,5 +14,15 @@
 	<classpathentry kind="lib" path="C:/Users/thrasher/git/MultiDB/CLASSPATH/spiffy-with_source-all-0.05.jar"/>
 	<classpathentry kind="lib" path="C:/Users/thrasher/git/MultiDB/CLASSPATH/SuperCSV-1.52.jar"/>
 	<classpathentry kind="lib" path="C:/Users/thrasher/git/MultiDB/CLASSPATH/tritonus_share.jar"/>
+	<classpathentry kind="lib" path="C:/Users/thrasher/git/MultiDB/CLASSPATH/Apache/commons-codec-1.6.jar"/>
+	<classpathentry kind="lib" path="C:/Users/thrasher/git/MultiDB/CLASSPATH/Apache/commons-lang-2.4.jar"/>
+	<classpathentry kind="lib" path="C:/Users/thrasher/git/MultiDB/CLASSPATH/Apache/commons-logging-1.1.1.jar"/>
+	<classpathentry kind="lib" path="C:/Users/thrasher/git/MultiDB/CLASSPATH/Apache/fluent-hc-4.2.1.jar"/>
+	<classpathentry kind="lib" path="C:/Users/thrasher/git/MultiDB/CLASSPATH/Apache/httpclient-4.2.1.jar"/>
+	<classpathentry kind="lib" path="C:/Users/thrasher/git/MultiDB/CLASSPATH/Apache/httpclient-cache-4.2.1.jar"/>
+	<classpathentry kind="lib" path="C:/Users/thrasher/git/MultiDB/CLASSPATH/Apache/httpcore-4.2.1.jar"/>
+	<classpathentry kind="lib" path="C:/Users/thrasher/git/MultiDB/CLASSPATH/Apache/httpcore-ab-4.2.1.jar"/>
+	<classpathentry kind="lib" path="C:/Users/thrasher/git/MultiDB/CLASSPATH/Apache/httpcore-nio-4.2.1.jar"/>
+	<classpathentry kind="lib" path="C:/Users/thrasher/git/MultiDB/CLASSPATH/Apache/httpmime-4.2.1.jar"/>
 	<classpathentry kind="output" path="build/classes"/>
 </classpath>
