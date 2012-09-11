@@ -43,11 +43,22 @@ public abstract class Errors {
     //ERROR SAVING REVIEW
     public static final Integer SAVING_REVIEW=-18;
     
-    //ERROR FOR PRINTING STACKTRACE
-    public static final Integer GENERIC_STACK_TRACE = -19;
     
+    //WEB ERRORS
+    public static final Integer WEB_NOT_FOUND=-19;
+    public static final Integer WEB_MALF_URL=-20;
+    
+    //IMAGE ERRORS
+    public static final Integer IMAGE_NOT_SAVED=-21;
+   
     //FORMAT ERRORS
-    public static final Integer NEGATIVE_NUMBER=-20;
+    public static final Integer NEGATIVE_NUMBER=-22;
+
+    //NULL ERRORS
+    public static final Integer VAR_NULL=-23;
+    
+    //ERROR FOR PRINTING STACKTRACE
+    public static final Integer GENERIC_STACK_TRACE = -24;
     
 	//Strings for definition of errors
     public static final String SEE_LOG = "See log for details";
@@ -72,8 +83,12 @@ public abstract class Errors {
     	map.put(COPYING_IOERROR,"Error copying file, IOError");
     	map.put(WRITING_IOERROR,"Error writing to file, IOError");
     	map.put(SAVING_REVIEW,"Error saving review");
-    	map.put(GENERIC_STACK_TRACE,"Error, see log for details");
-    	map.put(NEGATIVE_NUMBER,"Cannot work with negative numbers");    	
+    	map.put(NEGATIVE_NUMBER,"Cannot work with negative numbers"); 
+    	map.put(WEB_NOT_FOUND,"Error retrieving web, web not found");
+    	map.put(WEB_MALF_URL,"Error retrieving web, url malform error");
+    	map.put(IMAGE_NOT_SAVED,"Couldn't save image");   
+    	map.put(VAR_NULL,"Error with some var null");
+    	map.put(GENERIC_STACK_TRACE,"Error, see log for details"); 	
     }
     
     //without logging message
