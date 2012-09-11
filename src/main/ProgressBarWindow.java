@@ -13,11 +13,7 @@ import javax.swing.JScrollPane;
  
 public class ProgressBarWindow{
  
-    /**
-	 * 
-	 */
-	private static final long serialVersionUID = 1L;
-	public final Dimension dimRelate = new Dimension(300,120);
+    public final Dimension dimRelate = new Dimension(300,120);
 	private JFrame frame;
 	private JProgressBar progressBar;
     private JLabel infoLabel;

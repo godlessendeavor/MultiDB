@@ -1,5 +1,8 @@
 package main;
 
+import image.ImageDealer;
+import image.MultiDBImage;
+
 import java.awt.Color;
 import java.awt.Component;
 import java.awt.Dimension;
@@ -20,7 +23,6 @@ import java.awt.event.MouseAdapter;
 import java.awt.event.MouseEvent;
 import java.awt.event.WindowAdapter;
 import java.awt.event.WindowEvent;
-import java.awt.image.BufferedImage;
 import java.io.BufferedReader;
 import java.io.BufferedWriter;
 import java.io.File;
@@ -46,7 +48,6 @@ import javax.swing.ImageIcon;
 import javax.swing.JButton;
 import javax.swing.JComboBox;
 import javax.swing.JDialog;
-import javax.swing.JFileChooser;
 import javax.swing.JFrame;
 import javax.swing.JInternalFrame;
 import javax.swing.JLabel;
@@ -76,7 +77,6 @@ import javax.swing.event.ChangeEvent;
 import javax.swing.event.ChangeListener;
 import javax.swing.event.ListSelectionEvent;
 import javax.swing.event.ListSelectionListener;
-import javax.swing.filechooser.FileSystemView;
 import javax.swing.table.TableCellEditor;
 import javax.swing.table.TableCellRenderer;
 import javax.swing.table.TableColumn;
@@ -102,7 +102,6 @@ import music.mp3Player.Song;
 import music.mp3Player.TabModelPlayList;
 import music.web.WebMusicInfoExtractor;
 import musicmovies.db.Video;
-import sun.awt.shell.ShellFolder;
 import web.WebReader;
 import db.CSV.CSV;
 import docs.db.Doc;
@@ -222,6 +221,8 @@ public class MultiDB extends JFrame {
     public File backUpPath,lyricsFile,auxPath;
     public Dimension bigCoverDim;
 
+    //IMAGE ELEMENTS
+    public MultiDBImage multiIm = new MultiDBImage();
 
     //MAIN VIEWING ELEMENTS
     
@@ -589,6 +590,9 @@ public class MultiDB extends JFrame {
 		menuViewLyrics.addActionListener(popupMenuViewLyrics);	
 		menuViewLyrics.setEnabled(false);
 		menuViewLyrics.setName(LYR_MENU_NAME);
+		JMenuItem menuDownloadCover = new JMenuItem("Download cover");
+		PopupMenuDownloadCover popupMenuDownloadCover = new PopupMenuDownloadCover();
+		menuDownloadCover.addActionListener(popupMenuDownloadCover);
 		JMenuItem menuPastePopup = new JMenuItem("Paste");
 		PopupMenuPasteHandler popupMenuPasteHandler = new PopupMenuPasteHandler();
 		menuPastePopup.addActionListener(popupMenuPasteHandler);
@@ -600,7 +604,8 @@ public class MultiDB extends JFrame {
 		popupTable.add(menuPlay);
 		popupTable.add(menuPastePopup);
 		popupTable.add(menuViewLyrics);
-
+		popupTable.add(menuDownloadCover);	
+		
 		popupCover = new JPopupMenu();
 		JMenuItem menuViewBigCover = new JMenuItem("View cover in bigger frame");
 		PopupMenuShowBigCoverHandler showBigCoverHandler = new PopupMenuShowBigCoverHandler();
@@ -1255,19 +1260,13 @@ public class MultiDB extends JFrame {
         CloseLyricsFrameHandler closeLyricsFrameHandler = new CloseLyricsFrameHandler();
         lyricsFrame.addWindowListener(closeLyricsFrameHandler);
         if (!isdb){
-        	JFileChooser fc = new JFileChooser(new NewFileSystemView());
-        	fc.setDialogTitle("DB not present, please select a CSV file for music DB");
-            fc.setFileSelectionMode(JFileChooser.FILES_ONLY);
-            int status = fc.showOpenDialog(f);
-            if (status == JFileChooser.APPROVE_OPTION){  
-   	           File file = fc.getSelectedFile();
-   	           if (file != null) {              //para todos los grupos de la carpeta
-   	        	    RetrieveCSVThread retThread = new RetrieveCSVThread();
-   	        	    retThread.setDaemon(true);
-   	        	    retThread.fileName=file.getAbsolutePath();
-   	        	    retThread.start();
-   		       	}
-            }
+        	File file=FileDealer.selectFile(f,"Please select file for music database");
+   	        if (file != null) {              //para todos los grupos de la carpeta
+   	            RetrieveCSVThread retThread = new RetrieveCSVThread();
+   	            retThread.setDaemon(true);
+   	            retThread.fileName=file.getAbsolutePath();
+   	            retThread.start();
+   		    }
         }
         this.setVisible(true);       
     }
@@ -1410,7 +1409,8 @@ public class MultiDB extends JFrame {
     
     public void showCover(String type){
         boolean present=false;
-        int numArchivos, numImageFiles, found, indexCover = 0;
+        int numArchivos,found, indexCover = 0;
+        //int numImageFiles;
         File pathDisc;
 
         if (((String) musicTabModel.getValueAt(selectedModelRow, Disc.COL_PRESENT)).compareTo("YES") == 0) present = true;
@@ -1420,11 +1420,11 @@ public class MultiDB extends JFrame {
 			String[] listaArchivos = pathDisc.list();
 			numArchivos = listaArchivos.length;
 			found = 0;
-			numImageFiles = 0;
+			//numImageFiles = 0;
 			for (int i = 0; i < numArchivos; i++) {
 				listaArchivos[i] = listaArchivos[i].toLowerCase();
 				if (((listaArchivos[i].indexOf(".jpg") > -1) || (listaArchivos[i].indexOf(".gif") > -1)|| (listaArchivos[i].indexOf(".png")) > -1)) {
-					numImageFiles++;// covers found!!
+					//numImageFiles++;// covers found!!
 					if (listaArchivos[i].indexOf(type) > -1) {
 						found = 1;// front cover found!!
 						indexCover = i;
@@ -1435,22 +1435,23 @@ public class MultiDB extends JFrame {
 			}
 			if (found == 1) {
 				if (type.compareTo("front") == 0) currentFrontCover = true;
-				putImage(coversView,pathDisc + File.separator + listaArchivos[indexCover]);
+				multiIm.putImage(coversView, MultiDBImage.FILE_TYPE, pathDisc + File.separator + listaArchivos[indexCover]);
 				splitRight.setTopComponent(coversView);
 			} else if (found == 2) {
 				splitRight.setTopComponent(COVERS_NOT_NAMED_PROP_MSG);
 
 				List<String> imageFiles = new LinkedList<String>();
-				int currentImage = 0;
+				//int currentImage = 0;
 				for (int i = 0; i < numArchivos; i++) {
 					if (((listaArchivos[i].indexOf(".jpg") > -1) || (listaArchivos[i].indexOf(".gif") > -1) || (listaArchivos[i].indexOf(".png")) > -1)){
 						imageFiles.add(listaArchivos[i]);
-						currentImage++;
+						//currentImage++;
 					}
 				}
 
 				spinnerCoversM.setList(imageFiles);
-				putImage(coversView,pathDisc + File.separator + imageFiles.get(0));
+				multiIm.putImage(coversView, MultiDBImage.FILE_TYPE, pathDisc + File.separator +imageFiles.get(0));
+			
 				selectCoverFrame.getContentPane().add(coversView);
 				selectCoverFrame.setVisible(true);
 
@@ -1464,20 +1465,7 @@ public class MultiDB extends JFrame {
 		}
 		System.gc();
 	}
-//METHOD TO SHOW AN IMAGEFILE IN COVERSVIEW
-    public void putImage(JLabel labelFrom,String file) {
-    	PutImage putImageThread = new PutImage();
-    	putImageThread.file=file;
-    	putImageThread.label=labelFrom;
-    	putImageThread.start();
-        /*origIcon = new ImageIcon(file);
-        imagen = origIcon.getImage();
-        imagen = imagen.getScaledInstance(400, 400, Image.SCALE_FAST);
-        scaledIcon.setImage(imagen);
-        labelFrom.setIcon(scaledIcon);
-        labelFrom.repaint();*/
-    }
-
+    
 //method to save current review in the database
     public void saveCurrentReview(){
     	String review = reviewView.getText();
@@ -1588,7 +1576,51 @@ public class MultiDB extends JFrame {
    }
    
   
-    
+   
+   public int uploadBUP(int db,File fbup){
+   	
+ 	   	int ret=0;
+    	switch(db){
+    		case IND_MUSIC_TAB:
+    			ret=musicDataBase.makeBackup(fbup.getAbsolutePath());
+    			break;
+    		case IND_VIDEOS_TAB:
+    			ret=videosDataBase.makeBackup(fbup.getAbsolutePath());
+    			break;
+    		case IND_MOVIES_TAB:
+    			ret=moviesDataBase.makeBackup(fbup.getAbsolutePath());
+    			break;
+    	   	case IND_DOCS_TAB:
+    	   		ret=docsDataBase.makeBackup(fbup.getAbsolutePath());
+    	   		break;	
+    	}
+    	if (ret>-1) {
+    	     try{         	            
+    	     	ftpManager.upload(fbup);
+    	      	ret = 0;
+          	    switch(db){
+         			case IND_MUSIC_TAB:
+        				ret=WebReader.uploadBackup(fbup.getName(),musicUpload);
+          				break;
+          			case IND_VIDEOS_TAB:
+          				ret=WebReader.uploadBackup(fbup.getName(),videosUpload);
+          				break;
+          			case IND_MOVIES_TAB:
+          				ret=WebReader.uploadBackup(fbup.getName(),moviesUpload);
+          				break;
+          			case IND_DOCS_TAB:
+          				ret=WebReader.uploadBackup(fbup.getName(),docsUpload);
+          				break;	
+          	    }
+    	        }catch(IOException e){
+    	        	Errors.showError(Errors.UPLOADING_BUP,e.toString());
+    	        }
+    	        fbup.delete();
+    	        
+    		}else Errors.showError(ret);         		
+       return ret;
+   }
+   
 
     ///////////////////////////////////HANDLERS///////////////////////////////////////////
     ///////////////////////////////////HANDLERS///////////////////////////////////////////
@@ -1768,14 +1800,10 @@ public class MultiDB extends JFrame {
    private class RelDBBUHandler implements ActionListener {
       
        public void actionPerformed(ActionEvent evento) {
-    	   JFileChooser fc = new JFileChooser(new NewFileSystemView());
-           fc.setFileSelectionMode(JFileChooser.DIRECTORIES_ONLY);
-           int status = fc.showOpenDialog(f);
-           if (status == JFileChooser.APPROVE_OPTION){  
-	           backUpPath = fc.getSelectedFile();
-	    	   if (backUpPath.isDirectory() == false) {
-	    		   Errors.errorDir(backUpPath.toString());
-	    	   } else {
+    	   backUpPath=FileDealer.selectPath(f,"Select path for music");
+	    	if (backUpPath==null) {
+	    	   Errors.showError(Errors.FILE_NOT_FOUND,"Not a directory");
+	       } else {
 	           String[] grupos = backUpPath.list();
 	           Integer tam = grupos.length;
 	           if (tam == 0) {
@@ -1785,8 +1813,7 @@ public class MultiDB extends JFrame {
 	        	    relThread.setDaemon(true);
 	        	    relThread.start();
 		       	}
-	    	   }
-           }
+	       }
        }
    } //FIN HANDLER RELDBBU
    
@@ -1794,29 +1821,22 @@ public class MultiDB extends JFrame {
    private class AddBUDBHandler implements ActionListener {
 
        public void actionPerformed(ActionEvent evento) {
-    	   JFileChooser fc = new JFileChooser(new NewFileSystemView());
-           fc.setFileSelectionMode(JFileChooser.DIRECTORIES_ONLY);
-           fc.setDialogTitle("Path for music files");
-           int status = fc.showOpenDialog(f);
-           if (status == JFileChooser.APPROVE_OPTION){  
-	           auxPath = fc.getSelectedFile();
-	           reviewView.setText("");
-	
-	           if (auxPath.isDirectory() == false) {
-	               Errors.errorDir(auxPath.getAbsolutePath());
-	           } else {
-	               String[] grupos = auxPath.list();
-	               Integer tam = grupos.length;
-	               if (tam == 0) {
-	                   Errors.errorDir(auxPath.getAbsolutePath());
-	               } else {
-	            	   CopyThread copyThread = new CopyThread();
-	            	   copyThread.path=auxPath.getAbsolutePath();
-	            	   copyThread.folders=grupos;
-	            	   copyThread.size=tam;
-	            	   copyThread.start();
-	               }
-	           }
+    	   backUpPath=FileDealer.selectPath(f,"Path for Backup");
+    	   reviewView.setText("");
+    	   if (auxPath==null) {
+	    	   Errors.showError(Errors.FILE_NOT_FOUND,"Not a directory");
+	       } else {
+	            String[] grupos = auxPath.list();
+	            Integer tam = grupos.length;
+	            if (tam == 0) {
+	                Errors.errorDir(auxPath.getAbsolutePath());
+	            } else {
+	            	CopyThread copyThread = new CopyThread();
+	            	copyThread.path=auxPath.getAbsolutePath();
+	                copyThread.folders=grupos;
+	                copyThread.size=tam;
+	                copyThread.start();
+	            }
            }
        }
    } //FIN HANDLER ADDBUDB
@@ -1825,12 +1845,8 @@ public class MultiDB extends JFrame {
     private class DBBUPHandler implements ActionListener {
 
        public void actionPerformed(ActionEvent evento) {  
-    	   JFileChooser fc = new JFileChooser(new NewFileSystemView());
-           //fc.setFileSelectionMode(JFileChooser.);
-           fc.setDialogTitle("Path for Backup destination");
-           int status = fc.showOpenDialog(f);
-           if (status == JFileChooser.APPROVE_OPTION){  
-        	   auxPath = fc.getSelectedFile();
+    	   File auxPath=FileDealer.selectPath(f, "Path for Backup destination");
+    	   if (auxPath!=null){
         	   int ret=0;
         	   switch(multiPane.getSelectedIndex()){
     	   		case IND_MUSIC_TAB:
@@ -1848,69 +1864,21 @@ public class MultiDB extends JFrame {
         	   }
         	   if (ret>-1) JOptionPane.showMessageDialog(f, "File created succesfully: "+auxPath.getAbsolutePath());
         	   else Errors.showError(ret);
-           }
+    	   }else Errors.showError(Errors.FILE_NOT_FOUND);
        }
    }  //FIN HANDLER DBBUP
     
-    
-    public int uploadBUP(int db,File fbup){
-    	
-  	   	int ret=0;
-     	switch(db){
-     		case IND_MUSIC_TAB:
-     			ret=musicDataBase.makeBackup(fbup.getAbsolutePath());
-     			break;
-     		case IND_VIDEOS_TAB:
-     			ret=videosDataBase.makeBackup(fbup.getAbsolutePath());
-     			break;
-     		case IND_MOVIES_TAB:
-     			ret=moviesDataBase.makeBackup(fbup.getAbsolutePath());
-     			break;
-     	   	case IND_DOCS_TAB:
-     	   		ret=docsDataBase.makeBackup(fbup.getAbsolutePath());
-     	   		break;	
-     	}
-     	if (ret>-1) {
-     	     try{         	            
-     	     	ftpManager.upload(fbup);
-     	      	ret = 0;
-           	    switch(db){
-          			case IND_MUSIC_TAB:
-         				ret=WebReader.uploadBackup(fbup.getName(),musicUpload);
-           				break;
-           			case IND_VIDEOS_TAB:
-           				ret=WebReader.uploadBackup(fbup.getName(),videosUpload);
-           				break;
-           			case IND_MOVIES_TAB:
-           				ret=WebReader.uploadBackup(fbup.getName(),moviesUpload);
-           				break;
-           			case IND_DOCS_TAB:
-           				ret=WebReader.uploadBackup(fbup.getName(),docsUpload);
-           				break;	
-           	    }
-     	        }catch(IOException e){
-     	        	Errors.showError(Errors.UPLOADING_BUP,e.toString());
-     	        }
-     	        fbup.delete();
-     	        
-     		}else Errors.showError(ret);         		
-        return ret;
-    }
-    
+  
     private class UploadBUPHandler implements ActionListener {
 
         public void actionPerformed(ActionEvent evento) {  
-        	JFileChooser fc = new JFileChooser(new NewFileSystemView());
-            fc.setFileSelectionMode(JFileChooser.FILES_ONLY);
-            fc.setDialogTitle("Path for Backup destination");
-            int status = fc.showOpenDialog(f);
-            if (status == JFileChooser.APPROVE_OPTION){  
-         	   File fbup = fc.getSelectedFile();
+        	File fbup=FileDealer.selectFile(f, "Backup file to upload");
+      	    if (fbup!=null){
          	   int ret=uploadBUP(multiPane.getSelectedIndex(),fbup);
 	           if (ret==0){
 	        	   JOptionPane.showMessageDialog(f, "Backup Upload succesful");
 	           }else Errors.showError(ret);
-            }
+            }else Errors.showError(Errors.FILE_NOT_FOUND);
         }
     }  //FIN HANDLER UPLPOADBUP
     
@@ -1919,15 +1887,11 @@ public class MultiDB extends JFrame {
 
         public void actionPerformed(ActionEvent evento) {  
         	
-        	JFileChooser fc = new JFileChooser(new NewFileSystemView());
-            fc.setFileSelectionMode(JFileChooser.FILES_ONLY);
-            fc.setDialogTitle("Path for Backup destination");
-            int status = fc.showOpenDialog(f);
-            if (status == JFileChooser.APPROVE_OPTION){  
+        	File fbup=FileDealer.selectFile(f, "Backup file to upload");
+      	    if (fbup!=null){  
                ProgressBarWindow pw = new ProgressBarWindow();
                pw.setFrameSize(pw.dimRelate);
                pw.startProgBar(4);
-         	   File fbup = fc.getSelectedFile();
          	   int ret=uploadBUP(IND_MUSIC_TAB,fbup);
          	   pw.setPer(1, "Database Music");
          	   if (ret!=0) Errors.showError(ret,"Music DB");
@@ -1941,7 +1905,7 @@ public class MultiDB extends JFrame {
          	   pw.setPer(4, "Database Docs");
          	   if (ret!=0) Errors.showError(ret,"Docs DB");
         	   JOptionPane.showMessageDialog(f, "Done");
-            }
+            }else Errors.showError(Errors.FILE_NOT_FOUND);
         }
     }  //FIN HANDLER UPLPOADBUP
 
@@ -1951,10 +1915,8 @@ public class MultiDB extends JFrame {
 
      public void actionPerformed(ActionEvent evento) {
 
-         JFileChooser fc = new JFileChooser(new NewFileSystemView());
-         int op = fc.showOpenDialog(f);
-         if (op == JFileChooser.APPROVE_OPTION) {
-             fileIn = fc.getSelectedFile();
+    	 fileIn=FileDealer.selectPath(f, "Backup file to upload");
+   	     if (fileIn!=null){
              int ret=0;
 	      	   switch(multiPane.getSelectedIndex()){
 	  	   		case IND_MUSIC_TAB:
@@ -1972,43 +1934,33 @@ public class MultiDB extends JFrame {
 	      	   }
 	      	   if (ret>-1) JOptionPane.showMessageDialog(f, "File restored succesfully: "+fileIn.getAbsolutePath());
 	      	   else Errors.showError(ret);
-         }
+         }else Errors.showError(Errors.FILE_NOT_FOUND);
      }
    }  //FIN HANDLER DBRESTORE
  
  private class OpenCSVDBHandler implements ActionListener {
 	   
      public void actionPerformed(ActionEvent evento) {
-  	   JFileChooser fc = new JFileChooser(new NewFileSystemView());
-         fc.setFileSelectionMode(JFileChooser.FILES_ONLY);
-         int status = fc.showOpenDialog(f);
-         if (status == JFileChooser.APPROVE_OPTION){  
-	           File file = fc.getSelectedFile();
-	           if (file != null) {             
-	        	    RetrieveCSVThread retThread = new RetrieveCSVThread();
-	        	    retThread.setDaemon(true);
-	        	    retThread.fileName=file.getAbsolutePath();
-	        	    retThread.start();
-		       	}
-         }
+    	 File file=FileDealer.selectFile(f,"Please select CSV file to open");
+	     if (file != null) {            
+	        RetrieveCSVThread retThread = new RetrieveCSVThread();
+	        retThread.setDaemon(true);
+	        retThread.fileName=file.getAbsolutePath();
+	        retThread.start();
+		 }else Errors.showError(Errors.FILE_NOT_FOUND);
      }
  } //FIN HANDLER OPENCSVHANDLER  
  
  private class SaveCSVDBHandler implements ActionListener {
 	   
      public void actionPerformed(ActionEvent evento) {
-  	   JFileChooser fc = new JFileChooser(new NewFileSystemView());
-         fc.setFileSelectionMode(JFileChooser.FILES_ONLY);
-         int status = fc.showOpenDialog(f);
-         if (status == JFileChooser.APPROVE_OPTION){  
-	           File file = fc.getSelectedFile();
-	           if (file != null) {             
-	        	    StoreCSVThread storeThread = new  StoreCSVThread();
-	        	    storeThread.setDaemon(true);
-	        	    storeThread.fileName=file.getAbsolutePath();
-	        	    storeThread.start();
-		       	}
-         }
+    	 File file=FileDealer.selectFile(f,"Please select CSV file to save");
+	     if (file != null) {             
+	         StoreCSVThread storeThread = new  StoreCSVThread();
+	         storeThread.setDaemon(true);
+	         storeThread.fileName=file.getAbsolutePath();
+	         storeThread.start();
+         }else Errors.showError(Errors.FILE_NOT_FOUND);
      }
  } //FIN HANDLER SAVECSVHANDLER  
  
@@ -2107,12 +2059,8 @@ public class MultiDB extends JFrame {
 
        public void actionPerformed(ActionEvent evento) {
 
-    	   JFileChooser fc = new JFileChooser(new NewFileSystemView());
-           fc.setFileSelectionMode(JFileChooser.DIRECTORIES_ONLY);
-           fc.setDialogTitle("Path for music files");
-           int status = fc.showOpenDialog(f);
-           if (status == JFileChooser.APPROVE_OPTION){  
-	           auxPath = fc.getSelectedFile();
+    	   auxPath=FileDealer.selectPath(f, "Path for music files");
+    	   if (auxPath!=null){
 	           String name = JOptionPane.showInputDialog(f, "File name for text with list without cover");
 	           if (name!=null){
 		           try {
@@ -2191,8 +2139,6 @@ public class MultiDB extends JFrame {
        String[][] listaCover;
        int numCovers = 0;
 
-       private CoverHandler() {
-       }
 
        public void actionPerformed(ActionEvent evento) {
            if (disCover.size() == 0) {
@@ -2221,28 +2167,18 @@ public class MultiDB extends JFrame {
 
        public void actionPerformed(ActionEvent evento) {
 
-    	   JFileChooser fc = new JFileChooser(new NewFileSystemView());
-    	   fc.setFileSelectionMode(JFileChooser.DIRECTORIES_ONLY);
-           fc.setDialogTitle("Path for music files");
-           int status = fc.showOpenDialog(f);
-           if (status == JFileChooser.APPROVE_OPTION){  
-	           auxPath = fc.getSelectedFile();
+    	   auxPath=FileDealer.selectPath(f,"Path for music files");
+    	   if (auxPath!=null){
 	           dirDisc=auxPath.getAbsolutePath();
-	           fc.setFileSelectionMode(JFileChooser.DIRECTORIES_ONLY);
-	           fc.setDialogTitle("Path for cover files");
-	           status = fc.showOpenDialog(f);
-	           if (status == JFileChooser.APPROVE_OPTION){  
-		           auxPath = fc.getSelectedFile();
+	           auxPath=FileDealer.selectPath(f,"Path for cover files");
+	           if (auxPath!=null){
 		           dirCovers=auxPath.getAbsolutePath();		           
-		           
-		           if (auxPath.isDirectory() == false) {
-		               Errors.errorDir(dirCovers);
-		           } else {
-		               portadas = auxPath.list();
-		               int tam = portadas.length;
-		               if (tam == 0) {
-		                   Errors.errorDir(dirCovers);
-		               } else { //para todas las portadas
+		        
+		           portadas = auxPath.list();
+		           int tam = portadas.length;
+		           if (tam == 0) {
+		                Errors.errorDir(dirCovers);
+		           } else { //para todas las portadas
 		                   for (int i = 0; i < tam; i++) {
 		                       File currentCover = new File(dirCovers + sep + portadas[i]);
 		                       //portadas[i]=portadas[i].substring(portadas[i].lastIndexOf("."));
@@ -2278,7 +2214,7 @@ public class MultiDB extends JFrame {
 		               }
 		           }
 		        }
-           }
+           
        }
    }  //FIN HANDLER COPIARPORTADAS
    
@@ -2291,30 +2227,17 @@ public class MultiDB extends JFrame {
 
        public void actionPerformed(ActionEvent evento) {
 
-    	   JFileChooser fc = new JFileChooser(new NewFileSystemView());
-           fc.setFileSelectionMode(JFileChooser.DIRECTORIES_ONLY);
-           fc.setDialogTitle("Path for backup destination");
-           int status = fc.showOpenDialog(f);
-           if (status == JFileChooser.APPROVE_OPTION){  
-	           auxPath = fc.getSelectedFile();
+    	   auxPath=FileDealer.selectPath(f, "Path for backup destination");
+    	   if (auxPath!=null){
 	           dirDest=auxPath.getAbsolutePath();
-	           fc.setFileSelectionMode(JFileChooser.DIRECTORIES_ONLY);
-	           fc.setDialogTitle("Path for music files");
-	           status = fc.showOpenDialog(f);
-	           if (status == JFileChooser.APPROVE_OPTION){  
-		           auxPath = fc.getSelectedFile();
+	           auxPath=FileDealer.selectPath(f, "Path for cover discs");
+	           if (auxPath!=null){
 		           dirDisc=auxPath.getAbsolutePath();
-		           
-		        
-		           if (auxPath.isDirectory() == false) {
+		           String[] grupos = auxPath.list();
+		           tam = grupos.length;
+		           if (tam == 0) {
 		               Errors.errorDir(dirDisc);
-		           } else {
-		
-		               String[] grupos = auxPath.list();
-		               tam = grupos.length;
-		               if (tam == 0) {
-		                   Errors.errorDir(dirDisc);
-		               } else { //para todos los grupos de la carpeta
+		           } else { //para todos los grupos de la carpeta
 		                   for (int j = 0; j < tam; j++) {
 		                       String nombreGrupo = grupos[j];
 		                       File discosGrupoF = new File(dirDisc + sep + nombreGrupo);
@@ -2361,7 +2284,6 @@ public class MultiDB extends JFrame {
 		                       }
 		                   }
 		               }
-		           }
 		       }
 	       }
        }
@@ -2381,12 +2303,8 @@ public class MultiDB extends JFrame {
        @Override
        public void actionPerformed(ActionEvent evento) {
 
-    	   JFileChooser fc = new JFileChooser(new NewFileSystemView());
-           fc.setFileSelectionMode(JFileChooser.DIRECTORIES_ONLY);
-           fc.setDialogTitle("Path for review files");
-           int status = fc.showOpenDialog(f);
-           if (status == JFileChooser.APPROVE_OPTION){  
-	           auxPath = fc.getSelectedFile();
+    	   auxPath=FileDealer.selectPath(f, "Path for review files");
+    	   if (auxPath!=null){
 	           dirReviews=auxPath.getAbsolutePath();
 	
 	           if (auxPath.isDirectory() == false) {
@@ -2668,6 +2586,19 @@ public class MultiDB extends JFrame {
        }
    }
    
+
+   private class PopupMenuDownloadCover implements ActionListener{
+  	   private ImageDealer imageDealer = new ImageDealer();
+  	   private String group,title,searchString;
+  	   
+         public void actionPerformed(ActionEvent e) {
+      	   group=musicTabModel.getDiscAtRow(selectedModelRow).group;
+      	   title=musicTabModel.getDiscAtRow(selectedModelRow).title;
+      	   searchString=group+" "+title;
+      	   imageDealer.searchImage(searchString);
+         }
+     }
+   
    private class PopupMenuShowBigCoverHandler implements ActionListener{
 
 		@Override
@@ -2708,7 +2639,7 @@ public class MultiDB extends JFrame {
            JSpinner spinner = (JSpinner) e.getSource();
            String nameFile = (String) spinner.getValue();
            pathDisco=(File)musicTabModel.getValueAt(selectedModelRow,Disc.COL_PATH);
-           putImage(coversView,pathDisco + File.separator + nameFile);
+           multiIm.putImage(coversView, MultiDBImage.FILE_TYPE,pathDisco + File.separator + nameFile);
        }
    } //FIN HANDLER VIEW COVERS
    
@@ -3820,29 +3751,7 @@ public class MultiDB extends JFrame {
 		}
    }
    
-   
-   //PUT IMAGE/////////////////////////////////////////////////////////////////////////  
-   public class PutImage extends Thread {
-	   
-	    public JLabel label;
-	    public String file;
-		BufferedImage img = null;
-		BufferedImage scaled = new BufferedImage(COVERS_DIM.width,COVERS_DIM.height,BufferedImage.SCALE_FAST);
-	    
-		public PutImage() {
-			super();
-		}
-
-		@Override
-		public void run() {
-			 origIcon = new ImageIcon(file);
-		     imagen = origIcon.getImage();
-		     Image image = imagen.getScaledInstance(400, 400, Image.SCALE_FAST);
-		     scaledIcon.setImage(image);
-		     label.setIcon(scaledIcon);
-		     label.repaint();
-		}
-  }
+  
    
    //RANDOM PLAY/////////////////////////////////////////////////////////////////////////  
    public class RandomPlayThread extends Thread {
@@ -4008,26 +3917,5 @@ public class MultiDB extends JFrame {
 		}
   }
 
-   //////////////////////////////////////WORKARAOUND FOR BUGS IN XP AND VISTA FOR JFILECHOOSER///////////////
-   private static class NewFileSystemView extends FileSystemView {
-       public File createNewFolder(File containingDir) throws IOException {
-           return FileSystemView.getFileSystemView().createNewFolder(containingDir);
-       }
-
-       public File[] getRoots() {
-           List<File> result = new ArrayList<File>();
-
-           for (File file : (File[]) ShellFolder.get("fileChooserComboBoxFolders")) {
-               if (!(file instanceof ShellFolder) || !((ShellFolder) file).isLink()) {
-                   result.add(file);
-               }
-           }
-
-           return result.toArray(new File[result.size()]);
-       }
-   }
-
-	
-   
 }
 	

@@ -135,7 +135,6 @@ public class MultiDBImage{
     			this.type=type;
     			this.dim=dim;
     			this.sourceName=name;
-    			this.type=IMAGE_TYPE;
     		}
     	   		
     	    public PutImage(JLabel label,Image image,String name) {
@@ -152,32 +151,33 @@ public class MultiDBImage{
     		public void run() {
     			if (this.label==null){
     				Errors.writeError(Errors.VAR_NULL,"Error in MultiDBImage when putting image on label");
-    			}
-    			switch(this.type){
-    			case(FILE_TYPE):
-    				origIcon = new ImageIcon(sourceName);
-   		     		imagen = origIcon.getImage();
-   		     		//imageThread = imagen.getScaledInstance(dim.width, dim.height, Image.SCALE_FAST);
-   		     		imageThread = MultiDBImage.getScaledImage(imagen,dim.width, dim.height);
-    				break;
-    			case(URL_TYPE):
-	    			imagen=MultiDBImage.getImageFromUrl(this.sourceName);
-	    			//imageThread = imagen.getScaledInstance(dim.width, dim.height, Image.SCALE_FAST);
-   		     		imageThread = MultiDBImage.getScaledImage(imagen,dim.width, dim.height);  		    	
-    				break;
-    			case(IMAGE_TYPE):
-    				if (this.imageThread==null){
-        				Errors.writeError(Errors.VAR_NULL,"Error in MultiDBImage when putting image on label");
-        			}
-    				imagen=imageThread;
-    				//imageThread = imagen.getScaledInstance(dim.width, dim.height, Image.SCALE_FAST);
-   		     		imageThread = MultiDBImage.getScaledImage(imagen,dim.width, dim.height);
-    				break;
-    			}
-    			scaledIcon = new ImageIcon();
-    		    scaledIcon.setImage(imageThread);
-    		    this.label.setIcon(scaledIcon);
-    		    this.label.repaint();
+    			}else{
+	    			switch(this.type){
+	    			case(FILE_TYPE):
+	    				origIcon = new ImageIcon(sourceName);
+	   		     		imagen = origIcon.getImage();
+	   		     		//imageThread = imagen.getScaledInstance(dim.width, dim.height, Image.SCALE_FAST);
+	   		     		imageThread = MultiDBImage.getScaledImage(imagen,dim.width, dim.height);
+	    				break;
+	    			case(URL_TYPE):
+		    			imagen=MultiDBImage.getImageFromUrl(this.sourceName);
+		    			//imageThread = imagen.getScaledInstance(dim.width, dim.height, Image.SCALE_FAST);
+	   		     		imageThread = MultiDBImage.getScaledImage(imagen,dim.width, dim.height);  		    	
+	    				break;
+	    			case(IMAGE_TYPE):
+	    				if (this.imageThread==null){
+	        				Errors.writeError(Errors.VAR_NULL,"Error in MultiDBImage when putting image on label");
+	        			}
+	    				imagen=imageThread;
+	    				//imageThread = imagen.getScaledInstance(dim.width, dim.height, Image.SCALE_FAST);
+	   		     		imageThread = MultiDBImage.getScaledImage(imagen,dim.width, dim.height);
+	    				break;
+	    			}
+	    			scaledIcon = new ImageIcon();
+	    		    scaledIcon.setImage(imageThread);
+	    		    this.label.setIcon(scaledIcon);
+	    		    this.label.repaint();
+	    		}
     		}
     }
 
