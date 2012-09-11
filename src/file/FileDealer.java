@@ -4,8 +4,15 @@ import java.io.File;
 import java.io.FileInputStream;
 import java.io.FileOutputStream;
 import java.io.IOException;
+import java.util.ArrayList;
+import java.util.List;
+
+import javax.swing.JFileChooser;
+import javax.swing.filechooser.FileSystemView;
 
 import main.Errors;
+import main.MultiDB;
+import sun.awt.shell.ShellFolder;
 
 public class FileDealer {
 	 //copy files from one folder to another 
@@ -90,4 +97,49 @@ public class FileDealer {
             }
         }
     }
+    
+    public static File selectFile(MultiDB f,String message){
+    	JFileChooser fc = new JFileChooser(new NewFileSystemView());
+        fc.setFileSelectionMode(JFileChooser.FILES_ONLY);
+        fc.setDialogTitle(message);
+        int status = fc.showOpenDialog(f);
+        if (status == JFileChooser.APPROVE_OPTION){  
+	           File file = fc.getSelectedFile();
+	           if (file.isDirectory()) return null;
+	           return file;
+        }else return null;    	
+    }
+    
+    public static File selectPath(MultiDB f,String message){
+    	JFileChooser fc = new JFileChooser(new NewFileSystemView());
+        fc.setDialogTitle(message);
+        fc.setFileSelectionMode(JFileChooser.DIRECTORIES_ONLY);
+        int status = fc.showOpenDialog(f);
+        if (status == JFileChooser.APPROVE_OPTION){  
+	        File file = fc.getSelectedFile();
+	        if (!file.isDirectory()) return null;
+	        return file;
+        }else return null;    	
+    }
+    
+    //////////////////////////////////////WORKARAOUND FOR BUGS IN XP AND VISTA FOR JFILECHOOSER///////////////
+    public static class NewFileSystemView extends FileSystemView {
+        public File createNewFolder(File containingDir) throws IOException {
+            return FileSystemView.getFileSystemView().createNewFolder(containingDir);
+        }
+
+        public File[] getRoots() {
+            List<File> result = new ArrayList<File>();
+
+            for (File file : (File[]) ShellFolder.get("fileChooserComboBoxFolders")) {
+                if (!(file instanceof ShellFolder) || !((ShellFolder) file).isLink()) {
+                    result.add(file);
+                }
+            }
+
+            return result.toArray(new File[result.size()]);
+        }
+    }
+    
+  
 }
