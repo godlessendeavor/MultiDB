@@ -12,6 +12,7 @@ import java.net.URLEncoder;
 import main.Errors;
 import main.MultiDB;
 
+import org.apache.commons.codec.binary.Base64;
 import org.htmlparser.Node;
 import org.htmlparser.filters.TagNameFilter;
 import org.htmlparser.nodes.TagNode;
@@ -65,6 +66,32 @@ public class WebReader {
 		return(getHTMLfromURL(urltext,"UTF8"));
 	}
 	
+	
+	//get any HTML page from an URL, specifying encoding
+	public static String getHTMLfromURLHTTPS(String urltext,String accountKey){
+			String ret = new String("");
+			try {		
+				byte[] accountKeyBytes = Base64.encodeBase64((accountKey + ":" + accountKey).getBytes());
+			    String accountKeyEnc = new String(accountKeyBytes);
+			    URL urlb = new URL(urltext);
+			    URLConnection urlConnection =urlb.openConnection();
+			    urlConnection.setRequestProperty("Authorization","Basic " + accountKeyEnc);
+			            
+			    BufferedReader in = new BufferedReader(new InputStreamReader(urlConnection.getInputStream()));
+				String inputLine;
+				while ((inputLine = in.readLine()) != null) 
+					ret=ret+inputLine;
+				//System.out.println(HTMLText);
+				in.close();				
+			} catch (MalformedURLException e) {
+				e.printStackTrace();
+				return("Error");
+			} catch (IOException e) {
+				e.printStackTrace();
+				return("400");
+			}
+			return(ret);
+		} 	
 	
 	//gets all tag nodes of list entryList who matches type
 	//if inside is marked then also nodes inside nodes are searched (tables into tables for example)

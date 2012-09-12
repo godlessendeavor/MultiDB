@@ -151,6 +151,9 @@ public class MultiDB extends JFrame {
     public static String webEMLyrics;
     public static String webMBSearch;
     public static String webMBBand;
+    public static String webBing1;
+    public static String webBing2;
+    public static String webBingAccountKey;
     public static String ftpUser;
     public static String ftpPassword;
     public static String ftpHost;
@@ -1317,6 +1320,12 @@ public class MultiDB extends JFrame {
 	 					   webMBSearch=param;
 	 				   }else if (cad.indexOf("<webMBBand>")>-1){
 	 					   webMBBand=param;
+	 				   }else if (cad.indexOf("<bingSearch1>")>-1){
+	 					  webBing1=param;
+	 				   }else if (cad.indexOf("<bingSearch2>")>-1){
+	 					  webBing2=param;
+	 				   }else if (cad.indexOf("<bingAccountKey>")>-1){
+	 					  webBingAccountKey=param;
 	 				   }else if (cad.indexOf("<ftpUser>")>-1){
 	 					   ftpUser=param;
 				   	   }else if (cad.indexOf("<ftpPswd>")>-1){

@@ -3,38 +3,30 @@ package image;
 import java.awt.Dimension;
 import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
-import java.io.BufferedReader;
 import java.io.File;
 import java.io.IOException;
-import java.io.InputStreamReader;
-import java.net.URL;
-import java.net.URLConnection;
 import java.net.URLEncoder;
 import java.util.ArrayList;
 
 import javax.swing.BoxLayout;
 import javax.swing.ButtonGroup;
-import javax.swing.ImageIcon;
 import javax.swing.JButton;
 import javax.swing.JFrame;
 import javax.swing.JLabel;
 import javax.swing.JOptionPane;
-import javax.swing.JPanel;
 import javax.swing.JRadioButton;
-import javax.swing.JScrollPane;
 import javax.swing.JSpinner;
 import javax.swing.SpinnerListModel;
-import javax.swing.SpinnerModel;
 import javax.swing.event.ChangeEvent;
 import javax.swing.event.ChangeListener;
 
 import json.JSONArray;
 import json.JSONException;
 import json.JSONObject;
+import main.Errors;
+import main.MultiDB;
 import music.db.Disc;
-
-import org.apache.commons.codec.binary.Base64;
-import org.apache.http.client.ClientProtocolException;
+import web.WebReader;
 
 
 
@@ -42,25 +34,37 @@ public class ImageDealer {
 
     public final Dimension COVERS_DIM = new Dimension(400,400);
     public final Dimension MAX_COVERS_DIM = new Dimension(1200,800);
-    public final int SEEK_NUMBER = 4;
+    public final int SEEK_NUMBER_LOW = 4;
+    public final int SEEK_NUMBER_MAX = 8;
+
+	private final String bingUrl1=MultiDB.webBing1;
+	private final String bingUrl2=MultiDB.webBing2;
     
     
     private JLabel coversView,selectCoversView,bigCoversView;
-    private JFrame selectCoverFrame,bigCoversFrame;
-    private JScrollPane bigCoversScroll;
+    private JFrame selectCoverFrame;
     private JSpinner spinnerCovers;
     private JButton spinnerCoversButton;
-    JRadioButton backRButton,frontRButton;
+    private JRadioButton backRButton,frontRButton;
     private SpinnerListModel spinnerCoversM;
-    private ImageIcon origIcon, scaledIcon, bigIcon;
     private Disc currentDisc;
     private MultiDBImage multiIm;
 	private ArrayList<MultiDBImage> imageListWeb = new ArrayList<MultiDBImage>();
 	protected boolean frontCover=true;
+	protected  String bingUrl;
+	   
 	
 	
     
     public ImageDealer() {
+    	bingUrl = bingUrl1+SEEK_NUMBER_LOW+bingUrl2;
+    	selectFrameInit();
+	}
+    
+    public ImageDealer(int seekNumber) {
+    	if (seekNumber>SEEK_NUMBER_MAX) seekNumber=SEEK_NUMBER_MAX;
+    	if (seekNumber<1) seekNumber=SEEK_NUMBER_LOW;
+    	bingUrl = bingUrl1+seekNumber+bingUrl2;
     	selectFrameInit();
 	}
     
@@ -133,11 +137,13 @@ public class ImageDealer {
     	MultiDBImage tempIm;
     	
     	imageListWeb.clear();
-    	/*try{
+    	try{
+    		
 		  	String search=URLEncoder.encode("'"+name+"'","UTF-8");
-		    String bingUrl = "https://api.datamarket.azure.com/Bing/Search/Image?$top="+SEEK_NUMBER+"&$skip=1&$format=json&Query="+search;
-		    String accountKey = "q/A6WQyu0vO3KTSBuWct2DJaYopgVSwrbcs60F4aUjc=";
-		    byte[] accountKeyBytes = Base64.encodeBase64((accountKey + ":" + accountKey).getBytes());
+		    String bingUrl = this.bingUrl+search;
+		    System.out.println(bingUrl);
+		    HTMLText=WebReader.getHTMLfromURLHTTPS(bingUrl,MultiDB.webBingAccountKey);
+		   /* byte[] accountKeyBytes = Base64.encodeBase64((accountKey + ":" + accountKey).getBytes());
 		    String accountKeyEnc = new String(accountKeyBytes);
 		    URL urlb = new URL(bingUrl);
 		    URLConnection urlConnection =urlb.openConnection();
@@ -148,58 +154,60 @@ public class ImageDealer {
 			while ((inputLine = in.readLine()) != null) 
 				HTMLText=HTMLText+inputLine;
 			//System.out.println(HTMLText);
-			in.close();
+			in.close();*/
 			
-			
-			try {
-				job = new JSONObject(HTMLText);
-				job=job.getJSONObject("d");
-				JSONArray list = job.getJSONArray("results");				
-				for (int i=0;i<list.length();i++){
-					job=list.getJSONObject(i);
-					tempIm=new MultiDBImage();
-					tempIm.url=job.getString("MediaUrl");
-					tempIm.width=job.getInt("Width");
-					tempIm.height=job.getInt("Height");
-					tempIm.fileSize=job.getInt("FileSize");
-					imageNames.add(tempIm.width+" "+tempIm.height+" "+tempIm.url);
-					tempIm.image=MultiDBImage.getImageFromUrl(tempIm.url);
-					imageListWeb.add(tempIm);
-				}
-				*/
-				tempIm=new MultiDBImage();
-				tempIm.url="http://i118.photobucket.com/albums/o99/JouniK86/absml/frontbig.jpg";				
-				tempIm.image=MultiDBImage.getImageFromUrl(tempIm.url);
-				if (tempIm.image==null) System.out.println("merdaa!");
-				imageListWeb.add(tempIm);
-				tempIm=new MultiDBImage();
-				tempIm.url="http://i118.photobucket.com/albums/o99/JouniK86/absml/rawfront.jpg";				
-				tempIm.image=MultiDBImage.getImageFromUrl(tempIm.url);
-				if (tempIm.image==null) System.out.println("merdaa!");
-				imageListWeb.add(tempIm);
-				tempIm=new MultiDBImage();
-				tempIm.url="http://www.metalkingdom.net/album/img/d45/23694.jpg";				
-				tempIm.image=MultiDBImage.getImageFromUrl(tempIm.url);
-				if (tempIm.image==null) System.out.println("merdaa!");
-				imageListWeb.add(tempIm);
+			if (HTMLText.compareTo("Error")==0)  Errors.showError(Errors.WEB_MALF_URL);
+			else{
+				try {
+					job = new JSONObject(HTMLText);
+					job=job.getJSONObject("d");
+					//System.out.println(job.toString());
+					JSONArray list = job.getJSONArray("results");				
+					for (int i=0;i<list.length();i++){
+						job=list.getJSONObject(i);
+						tempIm=new MultiDBImage();
+						tempIm.url=job.getString("MediaUrl");
+						//System.out.println(tempIm.url);
+						tempIm.width=job.getInt("Width");
+						tempIm.height=job.getInt("Height");
+						tempIm.fileSize=job.getInt("FileSize");
+						imageNames.add(tempIm.width+" "+tempIm.height+" "+tempIm.url);
+						tempIm.image=MultiDBImage.getImageFromUrl(tempIm.url);
+						imageListWeb.add(tempIm);
+					}
+					
 				
-				spinnerCoversM.setList(imageListWeb);
-				tempIm=new MultiDBImage();
-				tempIm.putImage(selectCoversView,imageListWeb.get(0).image);
-				selectCoverFrame.getContentPane().add(selectCoversView);
-				selectCoverFrame.setVisible(true);
-			/*} catch (JSONException e) {
-				// TODO Auto-generated catch block
-				e.printStackTrace();
+					/*tempIm=new MultiDBImage();
+					tempIm.url="http://i118.photobucket.com/albums/o99/JouniK86/absml/frontbig.jpg";				
+					tempIm.image=MultiDBImage.getImageFromUrl(tempIm.url);
+					if (tempIm.image==null) System.out.println("merdaa!");
+					imageListWeb.add(tempIm);
+					tempIm=new MultiDBImage();
+					tempIm.url="http://i118.photobucket.com/albums/o99/JouniK86/absml/rawfront.jpg";				
+					tempIm.image=MultiDBImage.getImageFromUrl(tempIm.url);
+					if (tempIm.image==null) System.out.println("merdaa!");
+					imageListWeb.add(tempIm);
+					tempIm=new MultiDBImage();
+					tempIm.url="http://www.metalkingdom.net/album/img/d45/23694.jpg";				
+					tempIm.image=MultiDBImage.getImageFromUrl(tempIm.url);
+					if (tempIm.image==null) System.out.println("merdaa!");
+					imageListWeb.add(tempIm);*/
+					
+					spinnerCoversM.setList(imageListWeb);
+					tempIm=new MultiDBImage();
+					tempIm.putImage(selectCoversView,imageListWeb.get(0).image);
+					selectCoverFrame.getContentPane().add(selectCoversView);
+					selectCoverFrame.setVisible(true);
+				} catch (JSONException e) {
+					// TODO Auto-generated catch block
+					e.printStackTrace();
+				}
 			}
-		
-		} catch (ClientProtocolException e) {
-			// TODO Auto-generated catch block
-			e.printStackTrace();
 		} catch (IOException e) {
 			// TODO Auto-generated catch block
 			e.printStackTrace();
-		}*/
+		}
+    	
 	}    
     
 
