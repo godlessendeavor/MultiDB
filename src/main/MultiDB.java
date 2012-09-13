@@ -2604,6 +2604,7 @@ public class MultiDB extends JFrame {
       	   group=musicTabModel.getDiscAtRow(selectedModelRow).group;
       	   title=musicTabModel.getDiscAtRow(selectedModelRow).title;
       	   searchString=group+" "+title;
+      	   imageDealer.setDisc(musicTabModel.getDiscAtRow(selectedModelRow));
       	   imageDealer.searchImage(searchString);
          }
      }

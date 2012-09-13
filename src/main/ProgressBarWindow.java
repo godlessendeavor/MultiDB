@@ -14,6 +14,7 @@ import javax.swing.JScrollPane;
 public class ProgressBarWindow{
  
     public final Dimension dimRelate = new Dimension(300,120);
+    public final Dimension dimWebImageReader = new Dimension(300,120);
 	private JFrame frame;
 	private JProgressBar progressBar;
     private JLabel infoLabel;
@@ -56,7 +57,7 @@ public class ProgressBarWindow{
     public void setPer(int quant){
     	this.per=100*quant/(max-min);
     	progressBar.setValue(this.per);
-    	if (quant==max) closeProgBar();
+    	if (quant>=max) closeProgBar();
     	infoLabel.setText(String.format("Completed %d%% of task.\n", per));
     }
     

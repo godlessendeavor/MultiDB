@@ -25,6 +25,7 @@ import json.JSONException;
 import json.JSONObject;
 import main.Errors;
 import main.MultiDB;
+import main.ProgressBarWindow;
 import music.db.Disc;
 import web.WebReader;
 
@@ -121,94 +122,103 @@ public class ImageDealer {
 	  /*  coversView = new JLabel();
         //dimensions for covers
         coversView.setMinimumSize(COVERS_DIM);
-	    
-	    //bigcover frame
-        bigCoversFrame=new JFrame("Cover");
-        bigCoversView = new JLabel();
-        bigCoversScroll = new JScrollPane(bigCoversView);
-        bigCoversFrame.add(bigCoversScroll);*/
+	    */
     }
     
     
     public void searchImage(String name){
-    	String HTMLText="";
-    	JSONObject job;
-    	ArrayList<String> imageNames = new ArrayList<String>();
-    	MultiDBImage tempIm;
-    	
-    	imageListWeb.clear();
-    	try{
-    		
-		  	String search=URLEncoder.encode("'"+name+"'","UTF-8");
-		    String bingUrl = this.bingUrl+search;
-		    System.out.println(bingUrl);
-		    HTMLText=WebReader.getHTMLfromURLHTTPS(bingUrl,MultiDB.webBingAccountKey);
-		   /* byte[] accountKeyBytes = Base64.encodeBase64((accountKey + ":" + accountKey).getBytes());
-		    String accountKeyEnc = new String(accountKeyBytes);
-		    URL urlb = new URL(bingUrl);
-		    URLConnection urlConnection =urlb.openConnection();
-		    urlConnection.setRequestProperty("Authorization","Basic " + accountKeyEnc);
-		            
-		    BufferedReader in = new BufferedReader(new InputStreamReader(urlConnection.getInputStream()));
-			String inputLine;
-			while ((inputLine = in.readLine()) != null) 
-				HTMLText=HTMLText+inputLine;
-			//System.out.println(HTMLText);
-			in.close();*/
-			
-			if (HTMLText.compareTo("Error")==0)  Errors.showError(Errors.WEB_MALF_URL);
-			else{
-				try {
-					job = new JSONObject(HTMLText);
-					job=job.getJSONObject("d");
-					//System.out.println(job.toString());
-					JSONArray list = job.getJSONArray("results");				
-					for (int i=0;i<list.length();i++){
-						job=list.getJSONObject(i);
-						tempIm=new MultiDBImage();
-						tempIm.url=job.getString("MediaUrl");
-						//System.out.println(tempIm.url);
-						tempIm.width=job.getInt("Width");
-						tempIm.height=job.getInt("Height");
-						tempIm.fileSize=job.getInt("FileSize");
-						imageNames.add(tempIm.width+" "+tempIm.height+" "+tempIm.url);
-						tempIm.image=MultiDBImage.getImageFromUrl(tempIm.url);
-						imageListWeb.add(tempIm);
-					}
-					
-				
-					/*tempIm=new MultiDBImage();
-					tempIm.url="http://i118.photobucket.com/albums/o99/JouniK86/absml/frontbig.jpg";				
-					tempIm.image=MultiDBImage.getImageFromUrl(tempIm.url);
-					if (tempIm.image==null) System.out.println("merdaa!");
-					imageListWeb.add(tempIm);
-					tempIm=new MultiDBImage();
-					tempIm.url="http://i118.photobucket.com/albums/o99/JouniK86/absml/rawfront.jpg";				
-					tempIm.image=MultiDBImage.getImageFromUrl(tempIm.url);
-					if (tempIm.image==null) System.out.println("merdaa!");
-					imageListWeb.add(tempIm);
-					tempIm=new MultiDBImage();
-					tempIm.url="http://www.metalkingdom.net/album/img/d45/23694.jpg";				
-					tempIm.image=MultiDBImage.getImageFromUrl(tempIm.url);
-					if (tempIm.image==null) System.out.println("merdaa!");
-					imageListWeb.add(tempIm);*/
-					
-					spinnerCoversM.setList(imageListWeb);
-					tempIm=new MultiDBImage();
-					tempIm.putImage(selectCoversView,imageListWeb.get(0).image);
-					selectCoverFrame.getContentPane().add(selectCoversView);
-					selectCoverFrame.setVisible(true);
-				} catch (JSONException e) {
-					// TODO Auto-generated catch block
-					e.printStackTrace();
-				}
-			}
-		} catch (IOException e) {
-			// TODO Auto-generated catch block
-			e.printStackTrace();
-		}
-    	
+    	SearchImageInternet searchImageInternetThread = new SearchImageInternet(name);
+    	searchImageInternetThread.start();
 	}    
+    
+    
+    
+  //THREAD FOR SEARCH IMAGE INTERNET////////////////////////////////////////////////////////////////////////  
+    public class SearchImageInternet extends Thread {
+    	   
+    	private String HTMLText="";
+    	private JSONObject job;
+    	private ArrayList<String> imageNames = new ArrayList<String>();
+    	private MultiDBImage tempIm;
+    	private String name;
+    	   
+    	    
+    	    public SearchImageInternet(String name) {
+    			super();
+    			this.name=name;
+    		}
+    	    
+    	      	   		
+
+    		@Override
+    		public void run() {
+    			ProgressBarWindow pw = new ProgressBarWindow();
+    	        pw.setFrameSize(pw.dimWebImageReader);
+    	        pw.startProgBar(2);
+
+    	    	imageListWeb.clear();
+    	    	try{
+    	    		
+    			  	String search=URLEncoder.encode("'"+name+"'","UTF-8");
+    			    String searchString = bingUrl+search;
+    			    //System.out.println(searchString);
+    			    pw.setPer(0, "Searching...");
+    			    HTMLText=WebReader.getHTMLfromURLHTTPS(searchString,MultiDB.webBingAccountKey);
+    			    pw.setPer(1, "Downloading results...");
+    				if (HTMLText.compareTo("Error")==0)  Errors.showError(Errors.WEB_MALF_URL);
+    				else{
+    					try {
+    						job = new JSONObject(HTMLText);
+    						job=job.getJSONObject("d");
+    						//System.out.println(job.toString());
+    						JSONArray list = job.getJSONArray("results");				
+    						for (int i=0;i<list.length();i++){
+    							job=list.getJSONObject(i);
+    							tempIm=new MultiDBImage();
+    							tempIm.url=job.getString("MediaUrl");
+    							//System.out.println(tempIm.url);
+    							tempIm.width=job.getInt("Width");
+    							tempIm.height=job.getInt("Height");
+    							tempIm.fileSize=job.getInt("FileSize");
+    							imageNames.add(tempIm.width+" "+tempIm.height+" "+tempIm.url);
+    							tempIm.image=MultiDBImage.getImageFromUrl(tempIm.url);
+    							imageListWeb.add(tempIm);
+    						}
+    						
+    					
+    						/*tempIm=new MultiDBImage();
+    						tempIm.url="http://i118.photobucket.com/albums/o99/JouniK86/absml/frontbig.jpg";				
+    						tempIm.image=MultiDBImage.getImageFromUrl(tempIm.url);
+    						if (tempIm.image==null) System.out.println("merdaa!");
+    						imageListWeb.add(tempIm);
+    						tempIm=new MultiDBImage();
+    						tempIm.url="http://i118.photobucket.com/albums/o99/JouniK86/absml/rawfront.jpg";				
+    						tempIm.image=MultiDBImage.getImageFromUrl(tempIm.url);
+    						if (tempIm.image==null) System.out.println("merdaa!");
+    						imageListWeb.add(tempIm);
+    						tempIm=new MultiDBImage();
+    						tempIm.url="http://www.metalkingdom.net/album/img/d45/23694.jpg";				
+    						tempIm.image=MultiDBImage.getImageFromUrl(tempIm.url);
+    						if (tempIm.image==null) System.out.println("merdaa!");
+    						imageListWeb.add(tempIm);*/
+    						
+    						spinnerCoversM.setList(imageListWeb);
+    						tempIm=new MultiDBImage();
+    						tempIm.putImage(selectCoversView,imageListWeb.get(0).image);
+    						selectCoverFrame.getContentPane().add(selectCoversView);
+    						selectCoverFrame.setVisible(true);
+    						pw.setPer(2,"");
+    					} catch (JSONException e) {
+    						// TODO Auto-generated catch block
+    						e.printStackTrace();
+    					}
+    				}
+    			} catch (IOException e) {
+    				// TODO Auto-generated catch block
+    				e.printStackTrace();
+    			}
+    		}
+    }
     
 
     
@@ -219,26 +229,22 @@ public class ImageDealer {
     
 private class SaveCurrentCoverHandler implements ActionListener {
 
-    	String archivo,rutaArch,type;
-    	File file;
+    String archivo,rutaArch,type;
+    File file;
     	
-    	public void actionPerformed(ActionEvent evento) {
-    		archivo = ((MultiDBImage) spinnerCovers.getValue()).name;
-    		rutaArch = currentDisc.path.getAbsolutePath();
-    		file = new File(rutaArch + File.separator + archivo);
-    		if (file.canWrite()) {
-    			if (frontCover) type="front"; else type="back";
-    			if (file.renameTo(new File(rutaArch + File.separator + currentDisc.group + " - " + currentDisc.title + " - " + type+".jpg"))) {
-    				JOptionPane.showMessageDialog(selectCoverFrame, "File renamed succesfully");
-    				} else {
-    				JOptionPane.showMessageDialog(selectCoverFrame, "Could not rename file");
-    				}
-    				} else {
-    				JOptionPane.showMessageDialog(selectCoverFrame, "Could not rename file");
-    			}
-    			selectCoverFrame.dispose();
-    		}
-    	} //FIN HANDLER CHANGE NAME
+    public void actionPerformed(ActionEvent evento) {
+    	archivo = ((MultiDBImage) spinnerCovers.getValue()).name;
+    	rutaArch = currentDisc.path.getAbsolutePath();
+    	file = new File(rutaArch + File.separator + archivo);
+    	if (file.canWrite()) {
+    		if (frontCover) type="front"; else type="back";
+    		if (file.renameTo(new File(rutaArch + File.separator + currentDisc.group + " - " + currentDisc.title + " - " + type+".jpg"))) {
+    			JOptionPane.showMessageDialog(selectCoverFrame, "File renamed succesfully");
+    		} else 	JOptionPane.showMessageDialog(selectCoverFrame, "Could not rename file");
+    	} else JOptionPane.showMessageDialog(selectCoverFrame, "Could not rename file");
+    	selectCoverFrame.dispose();
+    }
+} //FIN HANDLER CHANGE NAME
     
 
 
