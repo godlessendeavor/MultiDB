@@ -2611,23 +2611,11 @@ public class MultiDB extends JFrame {
    private class PopupMenuShowBigCoverHandler implements ActionListener{
 
 		@Override
-			public void actionPerformed(ActionEvent arg0) {		
-				imagen = origIcon.getImage();
-				int width=origIcon.getIconWidth();
-				int height=origIcon.getIconHeight();
-				if ((width>MAX_COVERS_DIM.width)&&(height>MAX_COVERS_DIM.height)){
-					width=MAX_COVERS_DIM.width;
-					height=MAX_COVERS_DIM.height;
-				}
-				imagen = imagen.getScaledInstance(width,height, Image.SCALE_FAST);
-				bigIcon.setImage(imagen);
-				bigCoversView.setIcon(bigIcon);
-				bigCoversView.setMinimumSize(new Dimension(width,height));
-				//bigCoversView.setMaximumSize(bigCoversView.getMinimumSize());
-				//bigCoverFrame.setMinimumSize(new Dimension(width,height));			
-				bigCoversFrame.setSize(width,height);
-				//bigCoverFrame.setMaximumSize(bigCoverFrame.getMinimumSize());
-		        
+			public void actionPerformed(ActionEvent arg0) {	
+				int height=multiIm.image.getHeight(null);
+				int width=multiIm.image.getWidth(null);
+				multiIm.putImage(bigCoversView,multiIm.image, new Dimension(width,height));
+				bigCoversFrame.setSize(width+30,height+50);
 				bigCoversFrame.setVisible(true);
 			}
 	   }//END OF PopupMenuShowBigCoverHandler
