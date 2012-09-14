@@ -234,39 +234,19 @@ public class MultiDB extends JFrame {
     public JMenuBar menuBar;
     //menu items
     public JMenu menuDataBase;
-    public JMenuItem menuRelDBBU;
-    public JMenuItem menuAddItem;
-    public JMenuItem menuDelItem;
-    public JMenuItem menuMakeBUP;
-    public JMenuItem menuRestoreBUP;
-    public JMenuItem menuAddBUDB;
-    public JMenuItem menuUploadBackup;
-    public JMenuItem menuUploadAllBackup;
-    public JMenuItem menuOpenCSVDB;
-    public JMenuItem menuSaveCSVDB;
+    public JMenuItem menuRelDBBU,menuAddItem,menuDelItem,menuMakeBUP,menuRestoreBUP,menuAddBUDB, menuUploadBackup,menuUploadAllBackup;
+    public JMenuItem menuOpenCSVDB, menuSaveCSVDB;
     public JMenu menuEdit;
-    public JMenuItem menuUndo;
-    public JMenuItem menuRedo;
-    public JMenuItem menuPaste;
-    public JMenuItem menuFilter;
+    public JMenuItem menuUndo,menuRedo,menuPaste,menuFilter;
     public JMenu menuMusicOptions;
     public JMenu menuMoviesOptions;
-    public JMenuItem menuOpcionesCovers;
-    public JMenuItem menuOpcionesGuardar;
-    public JMenuItem menuOpcionesCopiarPortadas;
-    public JMenuItem menuOpcionesCoverBackup;
-    public JMenuItem menuCopyReviews2BUP;
+    public JMenuItem menuOpcionesCovers,menuOpcionesGuardar,menuOpcionesCopiarPortadas,menuOpcionesCoverBackup,menuCopyReviews2BUP;
     public JMenu menuViewNewDiscsViaWeb;  
-    public JMenuItem menuLoadGroupData; 
-    public JMenuItem menuPlayRandom;
-    public JMenuItem menuViaEM;
-    public JMenuItem menuViaMB;
+    public JMenuItem menuLoadGroupData,menuPlayRandom,menuViaEM,menuViaMB;
     public JTabbedPane multiPane;
     //popupmenus
-    public JPopupMenu popupTable;
-    public JMenuItem menuPlay;
-    public JMenuItem menuViewLyrics;
-    public JMenuItem menuLoadFilmData; 
+    public JPopupMenu popupTable,popupComments;
+    public JMenuItem menuPlay,menuDownloadCover,menuViewLyrics,menuLoadFilmData; 
     public MusicTableRenderer coloredTableRenderer;    
         
     //n-tuplas
@@ -280,7 +260,7 @@ public class MultiDB extends JFrame {
     public JScrollPane spRev,splitLeft,newDiscsSp,bigCoversScroll, infoScroll;
     public JSplitPane splitRight;
     public ImageIcon origIcon, scaledIcon, bigIcon;
-    public JPopupMenu popupCover,popupReview,popupVideoReview,popupComments;
+    public JPopupMenu popupCover,popupReview,popupVideoReview,popupCommentsr;
     public JFrame selectCoverFrame,bigCoversFrame,infoFrame,newDiscsFrame;   
     public JSpinner spinnerCovers;
     public JButton spinnerCoversButton;
@@ -593,7 +573,7 @@ public class MultiDB extends JFrame {
 		menuViewLyrics.addActionListener(popupMenuViewLyrics);	
 		menuViewLyrics.setEnabled(false);
 		menuViewLyrics.setName(LYR_MENU_NAME);
-		JMenuItem menuDownloadCover = new JMenuItem("Download cover");
+		menuDownloadCover = new JMenuItem("Download cover");
 		PopupMenuDownloadCover popupMenuDownloadCover = new PopupMenuDownloadCover();
 		menuDownloadCover.addActionListener(popupMenuDownloadCover);
 		JMenuItem menuPastePopup = new JMenuItem("Paste");
@@ -648,6 +628,7 @@ public class MultiDB extends JFrame {
         	menuAddBUDB.setEnabled(true);
         	menuMakeBUP.setEnabled(false);
         	menuRestoreBUP.setEnabled(false);
+        	menuDownloadCover.setEnabled(false);
         }
 		
 		////////////////////////////////TABLES LAYOUT\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\
@@ -2928,6 +2909,7 @@ public class MultiDB extends JFrame {
 	   	   		    if (backUpConnected) menuPlayRandom.setEnabled(true);
 	   	   		    if (backUpConnected) menuOpcionesCoverBackup.setEnabled(true);
 	   	   		    if (backUpConnected) menuOpcionesCovers.setEnabled(true);
+	   	   		    if (backUpConnected) menuDownloadCover.setEnabled(true);
 	   	   			break;
 	   	   		case IND_MOVIES_TAB:
 	   	   			menuLoadFilmData.setEnabled(true);	
@@ -2939,7 +2921,8 @@ public class MultiDB extends JFrame {
 	   	   			menuPlay.setEnabled(false);
 	   	   			menuViewLyrics.setEnabled(false);
 	   	   		    menuPlayRandom.setEnabled(false);
-	   	   		    menuLoadFilmData.setEnabled(false);	
+	   	   		    menuLoadFilmData.setEnabled(false);
+	   	   		    menuDownloadCover.setEnabled(false);
 	   	   			break;
 	  			}
 	}
@@ -3348,6 +3331,7 @@ public class MultiDB extends JFrame {
                                    menuOpcionesCovers.setEnabled(true);
                                    menuOpcionesCopiarPortadas.setEnabled(true);
                                    menuOpcionesCoverBackup.setEnabled(true);
+                                   menuDownloadCover.setEnabled(true);
                                    
                                } catch (NumberFormatException e) {
                                    Errors.errorSint(backUpPath + sep + nombreGrupo + sep + discosGrupo[k]);
