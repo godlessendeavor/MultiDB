@@ -61,6 +61,32 @@ public class MultiDBImage{
 		return null;
     }
 	
+	public void setImageFromUrl(String urlstring){
+		this.image=getImageFromUrl(urlstring);
+	}
+	
+	public void setImageFromUrl(){
+		this.image=getImageFromUrl(this.url);
+	}
+	
+	public static Image getImageFromFile(File path){
+		return getImageFromFile(path.getAbsolutePath());
+	} 
+	
+	public static Image getImageFromFile(String path){
+		ImageIcon icon = new ImageIcon(path);
+    	return icon.getImage();
+	} 
+	
+	
+	public void setImageFromFile(File path){
+		this.image=getImageFromFile(path);
+	} 
+	
+	public void setImageFromFile(String path){
+		this.image=getImageFromFile(path);
+	} 
+	
     public void putImage(JLabel labelFrom,int type, String name, Dimension dim) {
     	PutImage putImageThread = new PutImage(labelFrom,type,name,dim);
     	putImageThread.start();

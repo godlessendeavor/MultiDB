@@ -920,25 +920,7 @@ public class MultiDB extends JFrame {
 	        moviesDataBase.setReviewView(videosReviewView);
 	        docsDataBase.setReviewView(docsReviewView);
         }
-        
-        
-        
-/////////////////////////creating layout for frame selectCover//////////////////////////////
 
-        selectCoverFrame = new JFrame("Select a picture");
-        selectCoverFrame.setSize(500, 500);
-        //selectCoversView = new JLabel();
-        //selectCoversView.setMinimumSize(COVERS_DIM);
-        selectCoverFrame.getContentPane().setLayout(new BoxLayout(selectCoverFrame.getContentPane(),BoxLayout.Y_AXIS));
-        spinnerCoversM = new SpinnerListModel();
-        spinnerCovers = new JSpinner(spinnerCoversM);
-        spinnerCoversButton = new JButton("Cambiar a nomenclatura oficial");
-        ChangeNameHandler changeNameHandler = new ChangeNameHandler();
-        spinnerCoversButton.addActionListener(changeNameHandler);
-        selectCoverFrame.getContentPane().add(spinnerCovers);
-        selectCoverFrame.getContentPane().add(spinnerCoversButton);
-        //selectCoverFrame.getContentPane().add(selectCoversView);
-        
         
         
 ////////////////////////////////table new Discs layout////////////////////////////
@@ -1208,11 +1190,7 @@ public class MultiDB extends JFrame {
         ChangeCoverListener changeCoverListener = new ChangeCoverListener();
         coversView.addMouseListener(changeCoverListener);
         
-        //handler to view covers on selectFrameCover
-        ViewCoverHandler viewHandler = new ViewCoverHandler();
-        spinnerCovers.addChangeListener(viewHandler);
-        
-        
+            
         /////////////////////////////player//////////////////////////////////////////
         //handler to close de player when closing the window
         ClosePlayerHandler closePlayerHandler = new ClosePlayerHandler();
@@ -1256,7 +1234,7 @@ public class MultiDB extends JFrame {
     }
 
 /////////////////////////////////////////////////////////////////////////////////////////////////////
-//////////////////////////////METODOS DE BUSQUEDA DE FICHEROS////////////////////////////////////////
+//////////////////////////////CONFIGURATION FILE PROCESSING METHOD///////////////////////////////////
 /////////////////////////////////////////////////////////////////////////////////////////////////////
 
   
@@ -1398,59 +1376,18 @@ public class MultiDB extends JFrame {
     }
     
     public void showCover(String type){
+    	ImageDealer imageDealer = new ImageDealer();
         boolean present=false;
-        int numArchivos,found, indexCover = 0;
-        //int numImageFiles;
         File pathDisc;
 
         if (((String) musicTabModel.getValueAt(selectedModelRow, Disc.COL_PRESENT)).compareTo("YES") == 0) present = true;
 
 		if (backUpConnected && present) {
 			pathDisc = (File) musicTabModel.getValueAt(selectedModelRow, Disc.COL_PATH);
-			String[] listaArchivos = pathDisc.list();
-			numArchivos = listaArchivos.length;
-			found = 0;
-			//numImageFiles = 0;
-			for (int i = 0; i < numArchivos; i++) {
-				listaArchivos[i] = listaArchivos[i].toLowerCase();
-				if (((listaArchivos[i].indexOf(".jpg") > -1) || (listaArchivos[i].indexOf(".gif") > -1)|| (listaArchivos[i].indexOf(".png")) > -1)) {
-					//numImageFiles++;// covers found!!
-					if (listaArchivos[i].indexOf(type) > -1) {
-						found = 1;// front cover found!!
-						indexCover = i;
-						break;
-					} else
-						found = 2;// covers found but not named front cover
-				}
-			}
-			if (found == 1) {
-				if (type.compareTo("front") == 0) currentFrontCover = true;
-				multiIm.putImage(coversView, MultiDBImage.FILE_TYPE, pathDisc + File.separator + listaArchivos[indexCover]);
-				splitRight.setTopComponent(coversView);
-			} else if (found == 2) {
-				splitRight.setTopComponent(COVERS_NOT_NAMED_PROP_MSG);
-
-				List<String> imageFiles = new LinkedList<String>();
-				//int currentImage = 0;
-				for (int i = 0; i < numArchivos; i++) {
-					if (((listaArchivos[i].indexOf(".jpg") > -1) || (listaArchivos[i].indexOf(".gif") > -1) || (listaArchivos[i].indexOf(".png")) > -1)){
-						imageFiles.add(listaArchivos[i]);
-						//currentImage++;
-					}
-				}
-
-				spinnerCoversM.setList(imageFiles);
-				multiIm.putImage(coversView, MultiDBImage.FILE_TYPE, pathDisc + File.separator +imageFiles.get(0));
-			
-				selectCoverFrame.getContentPane().add(coversView);
-				selectCoverFrame.setVisible(true);
-
-			} else {
-				currentFrontCover = false;
+			if (!imageDealer.showImage(pathDisc, coversView,type)){
 				splitRight.setTopComponent(COVERS_NOT_FOUND_MSG);
 			}
 		} else {
-			currentFrontCover = false;
 			splitRight.setTopComponent(COVERS_NOT_FOUND_MSG);
 		}
 		System.gc();
@@ -2016,32 +1953,7 @@ public class MultiDB extends JFrame {
 ///////////////////////////////////////////COVER MENU HANDLERS///////////////////////////////
 ///////////////////////////////////////////COVER MENU HANDLERS///////////////////////////////
   
-   private class ChangeNameHandler implements ActionListener {
-
-       String archivo,rutaArch,type;
-       File file;
-       Disc disc;
-
-       public void actionPerformed(ActionEvent evento) {
-           disc=musicTabModel.getDiscAtRow(selectedModelRow);
-           archivo = (String) spinnerCovers.getValue();
-           rutaArch = disc.path.getAbsolutePath();
-           file = new File(rutaArch + File.separator + archivo);
-           if (file.canWrite()) {
-               if (currentFrontCover) type="front"; else type="back";
-               if (file.renameTo(new File(rutaArch + File.separator + disc.group + " - " + disc.title + " - " + type+".jpg"))) {
-                   JOptionPane.showMessageDialog(selectCoverFrame, "File renamed succesfully");
-               } else {
-                   JOptionPane.showMessageDialog(selectCoverFrame, "Could not rename file");
-               }
-           } else {
-               JOptionPane.showMessageDialog(selectCoverFrame, "Could not rename file");
-           }
-           selectCoverFrame.dispose();
-       }
-   } //FIN HANDLER CHANGE NAME
-
-   private class NoCoverDiscHandler implements ActionListener {
+    private class NoCoverDiscHandler implements ActionListener {
 
        int posGuion = -1, longNombre = -1, numberFiles = 0, found = 0;
        String[] files;
@@ -2585,7 +2497,7 @@ public class MultiDB extends JFrame {
       	   group=musicTabModel.getDiscAtRow(selectedModelRow).group;
       	   title=musicTabModel.getDiscAtRow(selectedModelRow).title;
       	   searchString=group+" "+title;
-      	   imageDealer.setDisc(musicTabModel.getDiscAtRow(selectedModelRow));
+      	   ImageDealer.setDisc(musicTabModel.getDiscAtRow(selectedModelRow));
       	   imageDealer.searchImage(searchString);
          }
      }
@@ -2608,19 +2520,6 @@ public class MultiDB extends JFrame {
    ////// OTHER EVENT HANDLERS ///////////////////////////////////////////////////////////////////////////////
    ////// OTHER EVENT HANDLERS ///////////////////////////////////////////////////////////////////////////////
  
-     
-   private class ViewCoverHandler implements ChangeListener {
-
-       File pathDisco;
-
-       // manejar evento de cambio en lista
-       public void stateChanged(ChangeEvent e) {
-           JSpinner spinner = (JSpinner) e.getSource();
-           String nameFile = (String) spinner.getValue();
-           pathDisco=(File)musicTabModel.getValueAt(selectedModelRow,Disc.COL_PATH);
-           multiIm.putImage(coversView, MultiDBImage.FILE_TYPE,pathDisco + File.separator + nameFile);
-       }
-   } //FIN HANDLER VIEW COVERS
    
    private class CellEditorHandler implements CellEditorListener {
 
@@ -2765,6 +2664,7 @@ public class MultiDB extends JFrame {
             	   String review=(String)musicTabModel.getValueAt(selectedModelRow, Disc.COL_REVIEW);
             	   review=review.replace("\\\"","\"");
             	   reviewView.setText(review);
+            	   ImageDealer.setDisc(musicTabModel.getDiscAtRow(selectedModelRow));
             	   if (backUpConnected) showCover("front");
                }
                if (multiPane.getSelectedIndex()==IND_VIDEOS_TAB){
@@ -3034,8 +2934,8 @@ public class MultiDB extends JFrame {
        @Override
       public void mousePressed(MouseEvent e) {
           if (SwingUtilities.isLeftMouseButton(e)) {
-             if (currentFrontCover) {
-                 currentFrontCover=false;
+             if (ImageDealer.frontCover) {
+            	 ImageDealer.frontCover=false;
                  if (backUpConnected) showCover("back");
              }
              else {

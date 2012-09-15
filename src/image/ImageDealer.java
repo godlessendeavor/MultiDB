@@ -7,6 +7,8 @@ import java.io.File;
 import java.io.IOException;
 import java.net.URLEncoder;
 import java.util.ArrayList;
+import java.util.LinkedList;
+import java.util.List;
 
 import javax.swing.BoxLayout;
 import javax.swing.ButtonGroup;
@@ -40,18 +42,18 @@ public class ImageDealer {
 
 	private final String bingUrl1=MultiDB.webBing1;
 	private final String bingUrl2=MultiDB.webBing2;
+
+	public static boolean frontCover=true;
+    private static Disc currentDisc;
     
-    
-    private JLabel coversView,selectCoversView,bigCoversView;
+    private JLabel coversView,selectCoversView;
     private JFrame selectCoverFrame;
     private JSpinner spinnerCovers;
     private JButton spinnerCoversButton;
     private JRadioButton backRButton,frontRButton;
     private SpinnerListModel spinnerCoversM;
-    private Disc currentDisc;
     private MultiDBImage multiIm;
 	private ArrayList<MultiDBImage> imageListWeb = new ArrayList<MultiDBImage>();
-	protected boolean frontCover=true;
 	protected  String bingUrl;
 	   
 	
@@ -70,12 +72,12 @@ public class ImageDealer {
 	}
     
     public ImageDealer(Disc disc) {
-    	this.currentDisc=disc;
+    	currentDisc=disc;
     	selectFrameInit();
 	}
     
-    public void setDisc(Disc disc){
-    	this.currentDisc=disc;
+    public static void setDisc(Disc disc){
+    	currentDisc=disc;
     }
 
 
@@ -84,7 +86,7 @@ public class ImageDealer {
         multiIm = new MultiDBImage();
         
 	    selectCoverFrame = new JFrame("Select a picture");
-	    selectCoverFrame.setSize(500, 500);
+	    selectCoverFrame.setSize(500, 520);
 	    selectCoversView = new JLabel();
 	    selectCoversView.setMinimumSize(COVERS_DIM);
 	    selectCoverFrame.getContentPane().setLayout(new BoxLayout(selectCoverFrame.getContentPane(),BoxLayout.Y_AXIS));
@@ -132,24 +134,81 @@ public class ImageDealer {
 	}    
     
     
+    public boolean showImage(File pathDisc,JLabel labelIn,String type){
+    	int numArchivos,found,indexCover=0;
+    	String[] listaArchivos;
+    	MultiDBImage tempIm;
+    	
+		listaArchivos = pathDisc.list();
+		numArchivos = listaArchivos.length;
+		found = 0;
+		imageListWeb.clear();
+		
+		for (int i = 0; i < numArchivos; i++) {
+			listaArchivos[i] = listaArchivos[i].toLowerCase();
+			if (((listaArchivos[i].indexOf(".jpg") > -1) || (listaArchivos[i].indexOf(".gif") > -1)|| (listaArchivos[i].indexOf(".png")) > -1)) {
+				tempIm=new MultiDBImage();
+				System.out.println(pathDisc.getAbsolutePath() + File.separator + listaArchivos[i]);
+				tempIm.setImageFromFile(pathDisc.getAbsolutePath() + File.separator + listaArchivos[i]);
+				tempIm.width=tempIm.image.getWidth(null);
+				tempIm.height=tempIm.image.getHeight(null);
+				System.out.println(tempIm.width);
+				imageListWeb.add(tempIm);
+				if (listaArchivos[i].indexOf(type) > -1) {
+					found = 1;
+					indexCover = i;
+					break;
+				} else
+					found = 2;
+			}
+		}
+		
+		if (found == 1) {
+			imageListWeb.clear();
+			if (type.compareTo("front") == 0) frontCover = true; else frontCover = false;
+			multiIm.putImage(labelIn, MultiDBImage.FILE_TYPE, pathDisc + File.separator + listaArchivos[indexCover]);
+			//splitRight.setTopComponent(coversView);
+		} else if (found == 2) {
+			//splitRight.setTopComponent(COVERS_NOT_NAMED_PROP_MSG);
+
+			/*List<String> imageFiles = new LinkedList<String>();
+			//int currentImage = 0;
+			for (int i = 0; i < numArchivos; i++) {
+				if (((listaArchivos[i].indexOf(".jpg") > -1) || (listaArchivos[i].indexOf(".gif") > -1) || (listaArchivos[i].indexOf(".png")) > -1)){
+					imageFiles.add(listaArchivos[i]);
+					//currentImage++;
+				}
+			}*/
+
+			if (imageListWeb.size()>0){
+				spinnerCoversM.setList(imageListWeb);
+				System.out.println(imageListWeb.get(0).width);
+				multiIm.putImage(selectCoversView, imageListWeb.get(0).image);
+			
+				selectCoverFrame.getContentPane().add(selectCoversView);
+				selectCoverFrame.setVisible(true);
+			}
+			
+		} 
+		if (found==0) return false; else return true;
+    }
+    
+    
+    
     
   //THREAD FOR SEARCH IMAGE INTERNET////////////////////////////////////////////////////////////////////////  
     public class SearchImageInternet extends Thread {
     	   
     	private String HTMLText="";
     	private JSONObject job;
-    	private ArrayList<String> imageNames = new ArrayList<String>();
     	private MultiDBImage tempIm;
     	private String name;
-    	   
+    	  
+    	public SearchImageInternet(String name) {
+    		super();
+    		this.name=name;
+    	}
     	    
-    	    public SearchImageInternet(String name) {
-    			super();
-    			this.name=name;
-    		}
-    	    
-    	      	   		
-
     		@Override
     		public void run() {
     			ProgressBarWindow pw = new ProgressBarWindow();
@@ -176,12 +235,11 @@ public class ImageDealer {
     							job=list.getJSONObject(i);
     							tempIm=new MultiDBImage();
     							tempIm.url=job.getString("MediaUrl");
+    							tempIm.setImageFromUrl();
     							//System.out.println(tempIm.url);
     							tempIm.width=job.getInt("Width");
     							tempIm.height=job.getInt("Height");
     							tempIm.fileSize=job.getInt("FileSize");
-    							imageNames.add(tempIm.width+" "+tempIm.height+" "+tempIm.url);
-    							tempIm.image=MultiDBImage.getImageFromUrl(tempIm.url);
     							imageListWeb.add(tempIm);
     						}
     						
