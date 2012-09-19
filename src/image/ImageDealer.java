@@ -7,8 +7,6 @@ import java.io.File;
 import java.io.IOException;
 import java.net.URLEncoder;
 import java.util.ArrayList;
-import java.util.LinkedList;
-import java.util.List;
 
 import javax.swing.BoxLayout;
 import javax.swing.ButtonGroup;
@@ -46,7 +44,7 @@ public class ImageDealer {
 	public static boolean frontCover=true;
     private static Disc currentDisc;
     
-    private JLabel coversView,selectCoversView;
+    private JLabel selectCoversView;
     private JFrame selectCoverFrame;
     private JSpinner spinnerCovers;
     private JButton spinnerCoversButton;

@@ -1237,3 +1237,6 @@ Error in MultiDBImage when putting image on label
 15-sep-2012 12:02:18 main.Errors writeError
 GRAVE: Error with some var null
 Error in MultiDBImage when putting image on label
+19-sep-2012 23:42:32 main.Errors showError
+GRAVE: Error, file not found
+Not a directory

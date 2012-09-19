@@ -114,6 +114,10 @@ public class TabMod extends AbstractTableModel{
     	this.fireTableDataChanged();
     }
     
+    public void clearData(){
+    	data=new ArrayList<Disc>();
+    }
+    
     public void setAllDataString(ArrayList<String[]> data) {
     	String[] currRow = new String[numCols];
     	int size = this.getRowCount();
@@ -263,12 +267,19 @@ public class TabMod extends AbstractTableModel{
         return labels[col];
     }
 
-    @Override
-    public Class<? extends Object> getColumnClass(int c) {
-    	int i=1;
-    	while(getValueAt(i,c)==null) i++;
+    /*    @Override
+  public Class<? extends Object> getColumnClass(int c) {
+    	int i=0;
+    	Object obj=new Object();
+    	if (data.size()>0){
+    		System.out.println("i is "+i+" and c is "+c);
+    		while(getValueAt(i,c)==null) {
+    			if (i<data.size()) i++;
+    			else return obj.getClass();
+    		}
+    	}else return obj.getClass();
     	return getValueAt(i, c).getClass();
-   }
+   }*/
 
 
     @Override
