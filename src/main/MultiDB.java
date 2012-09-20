@@ -219,7 +219,7 @@ public class MultiDB extends JFrame {
     public WebMusicInfoExtractor webMusicInfoExtractor;
     public WebMoviesInfoExtractor webMoviesInfoExtractor;
     public NewDiscTabMod newDiscsTabMod;
-    public boolean backUpConnected = false,currentFrontCover = false,playFirstTime = true;
+    public boolean musicFolderConnected = false,currentFrontCover = false,playFirstTime = true;
     public SpinnerListModel spinnerCoversM;
     public File backUpPath,lyricsFile,auxPath;
     public Dimension bigCoverDim;
@@ -1389,7 +1389,7 @@ public class MultiDB extends JFrame {
 
         if (((String) musicTabModel.getValueAt(selectedModelRow, Disc.COL_PRESENT)).compareTo("YES") == 0) present = true;
 
-		if (backUpConnected && present) {
+		if (musicFolderConnected && present) {
 			pathDisc = (File) musicTabModel.getValueAt(selectedModelRow, Disc.COL_PATH);
 			if (!imageDealer.showImage(pathDisc, coversView,type)){
 				splitRight.setTopComponent(COVERS_NOT_FOUND_MSG);
@@ -1735,9 +1735,7 @@ public class MultiDB extends JFrame {
       
        public void actionPerformed(ActionEvent evento) {
     	   backUpPath=FileDealer.selectPath(f,"Select path for music");
-	    	if (backUpPath==null) {
-	    	   Errors.showError(Errors.FILE_NOT_FOUND,"Not a directory");
-	       } else {
+	    	if (backUpPath!=null) {
 	           String[] grupos = backUpPath.list();
 	           Integer tam = grupos.length;
 	           if (tam == 0) {
@@ -1755,9 +1753,7 @@ public class MultiDB extends JFrame {
 	      
        public void actionPerformed(ActionEvent evento) {
     	   File tempFolder=FileDealer.selectPath(f,"Select path for music");
-	    	if (tempFolder==null) {
-	    	   Errors.showError(Errors.FILE_NOT_FOUND,"Not a directory");
-	       } else {
+	    	if (tempFolder!=null){
 	           String[] grupos = tempFolder.list();
 	           Integer tam = grupos.length;
 	           if (tam == 0) {
@@ -1778,9 +1774,7 @@ public class MultiDB extends JFrame {
        public void actionPerformed(ActionEvent evento) {
     	   backUpPath=FileDealer.selectPath(f,"Path for Backup");
     	   reviewView.setText("");
-    	   if (auxPath==null) {
-	    	   Errors.showError(Errors.FILE_NOT_FOUND,"Not a directory");
-	       } else {
+    	   if (auxPath!=null) {
 	            String[] grupos = auxPath.list();
 	            Integer tam = grupos.length;
 	            if (tam == 0) {
@@ -1819,7 +1813,7 @@ public class MultiDB extends JFrame {
         	   }
         	   if (ret>-1) JOptionPane.showMessageDialog(f, "File created succesfully: "+auxPath.getAbsolutePath());
         	   else Errors.showError(ret);
-    	   }else Errors.showError(Errors.FILE_NOT_FOUND);
+    	   }
        }
    }  //FIN HANDLER DBBUP
     
@@ -1833,7 +1827,7 @@ public class MultiDB extends JFrame {
 	           if (ret==0){
 	        	   JOptionPane.showMessageDialog(f, "Backup Upload succesful");
 	           }else Errors.showError(ret);
-            }else Errors.showError(Errors.FILE_NOT_FOUND);
+            }
         }
     }  //FIN HANDLER UPLPOADBUP
     
@@ -1860,7 +1854,7 @@ public class MultiDB extends JFrame {
          	   pw.setPer(4, "Database Docs");
          	   if (ret!=0) Errors.showError(ret,"Docs DB");
         	   JOptionPane.showMessageDialog(f, "Done");
-            }else Errors.showError(Errors.FILE_NOT_FOUND);
+            }
         }
     }  //FIN HANDLER UPLPOADBUP
 
@@ -1889,7 +1883,7 @@ public class MultiDB extends JFrame {
 	      	   }
 	      	   if (ret>-1) JOptionPane.showMessageDialog(f, "File restored succesfully: "+fileIn.getAbsolutePath());
 	      	   else Errors.showError(ret);
-         }else Errors.showError(Errors.FILE_NOT_FOUND);
+         }
      }
    }  //FIN HANDLER DBRESTORE
  
@@ -1902,7 +1896,7 @@ public class MultiDB extends JFrame {
 	        retThread.setDaemon(true);
 	        retThread.fileName=file.getAbsolutePath();
 	        retThread.start();
-		 }else Errors.showError(Errors.FILE_NOT_FOUND);
+		 }
      }
  } //FIN HANDLER OPENCSVHANDLER  
  
@@ -1915,7 +1909,7 @@ public class MultiDB extends JFrame {
 	         storeThread.setDaemon(true);
 	         storeThread.fileName=file.getAbsolutePath();
 	         storeThread.start();
-         }else Errors.showError(Errors.FILE_NOT_FOUND);
+         }
      }
  } //FIN HANDLER SAVECSVHANDLER  
  
@@ -2693,7 +2687,7 @@ public class MultiDB extends JFrame {
             	   review=review.replace("\\\"","\"");
             	   reviewView.setText(review);
             	   ImageDealer.setDisc(musicTabModel.getDiscAtRow(selectedModelRow));
-            	   if (backUpConnected) showCover("front");
+            	   if (musicFolderConnected) showCover("front");
                }
                if (multiPane.getSelectedIndex()==IND_VIDEOS_TAB){
             	   String comment=(String)videosTabModel.getValueAt(selectedModelRow, Video.COL_REVIEW);
@@ -2832,12 +2826,12 @@ public class MultiDB extends JFrame {
 	   	   			menuRelDBBU.setEnabled(true);
 	   	   			menuAddBUDB.setEnabled(true);
 	   	   			menuLoadFilmData.setEnabled(false);	
-	   	   			if (backUpConnected) menuPlay.setEnabled(true);
-	   	   		    if (backUpConnected) menuViewLyrics.setEnabled(true);
-	   	   		    if (backUpConnected) menuPlayRandom.setEnabled(true);
-	   	   		    if (backUpConnected) menuOpcionesCoverBackup.setEnabled(true);
-	   	   		    if (backUpConnected) menuOpcionesCovers.setEnabled(true);
-	   	   		    if (backUpConnected) menuDownloadCover.setEnabled(true);
+	   	   			if (musicFolderConnected) menuPlay.setEnabled(true);
+	   	   		    if (musicFolderConnected) menuViewLyrics.setEnabled(true);
+	   	   		    if (musicFolderConnected) menuPlayRandom.setEnabled(true);
+	   	   		    if (musicFolderConnected) menuOpcionesCoverBackup.setEnabled(true);
+	   	   		    if (musicFolderConnected) menuOpcionesCovers.setEnabled(true);
+	   	   		    if (musicFolderConnected) menuDownloadCover.setEnabled(true);
 	   	   			break;
 	   	   		case IND_MOVIES_TAB:
 	   	   			menuLoadFilmData.setEnabled(true);	
@@ -2964,10 +2958,10 @@ public class MultiDB extends JFrame {
           if (SwingUtilities.isLeftMouseButton(e)) {
              if (ImageDealer.frontCover) {
             	 ImageDealer.frontCover=false;
-                 if (backUpConnected) showCover("back");
+                 if (musicFolderConnected) showCover("back");
              }
              else {
-            	 if (backUpConnected) showCover("front");
+            	 if (musicFolderConnected) showCover("front");
              }           
           } else if (SwingUtilities.isRightMouseButton(e)){
           	popupCover.show(e.getComponent(),e.getX(), e.getY());         	
@@ -3252,7 +3246,7 @@ public class MultiDB extends JFrame {
                                        //reviewView.append("Disc not found in Database:"+nombreGrupo+"::"+discosGrupo[k]+"\n");
                                        discsNF=discsNF+"Disc not found in Database:"+nombreGrupo+"::"+discosGrupo[k]+"\n";
                                    }
-                                   backUpConnected=true;
+                                   musicFolderConnected=true;
                                    menuPlay.setEnabled(true);
                                    menuPlayRandom.setEnabled(true);
                                    menuViewLyrics.setEnabled(true);
@@ -3330,6 +3324,7 @@ public class MultiDB extends JFrame {
                                    disco.group = nombreGrupo;
                                    disco.year = anho;
                                    disco.path = discoF;
+                                   disco.present="YES";
                                    musicTabModel.addDisc(disco);
                                    //OPCIONAL!!
                                    //busqueda de carpetas llamadas cover para avisar que las portadas estan ahi
@@ -3346,7 +3341,7 @@ public class MultiDB extends JFrame {
                                        }
                                    }*/
 
-                                   backUpConnected=false;
+                                   musicFolderConnected=true;
                                    menuPlay.setEnabled(true);
                                    menuPlayRandom.setEnabled(true);
                                    menuViewLyrics.setEnabled(true);

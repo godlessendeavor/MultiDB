@@ -79,12 +79,15 @@ public class MultiDBImage{
 	} 
 	
 	
-	public void setImageFromFile(File path){
-		this.image=getImageFromFile(path);
+	public void setImageFromFile(File pathToFile){
+		this.name=pathToFile.getName();
+		this.image=getImageFromFile(pathToFile);
 	} 
 	
-	public void setImageFromFile(String path){
-		this.image=getImageFromFile(path);
+	public void setImageFromFile(String pathToFile){
+		File file=new File(pathToFile);
+		this.name=file.getName();
+		this.image=getImageFromFile(pathToFile);
 	} 
 	
     public void putImage(JLabel labelFrom,int type, String name, Dimension dim) {

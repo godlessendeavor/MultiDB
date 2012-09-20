@@ -1240,3 +1240,6 @@ Error in MultiDBImage when putting image on label
 19-sep-2012 23:42:32 main.Errors showError
 GRAVE: Error, file not found
 Not a directory
+20-sep-2012 21:18:36 main.Errors showError
+GRAVE: Error, file not found
+Not a directory

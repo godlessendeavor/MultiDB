@@ -146,11 +146,11 @@ public class ImageDealer {
 			listaArchivos[i] = listaArchivos[i].toLowerCase();
 			if (((listaArchivos[i].indexOf(".jpg") > -1) || (listaArchivos[i].indexOf(".gif") > -1)|| (listaArchivos[i].indexOf(".png")) > -1)) {
 				tempIm=new MultiDBImage();
-				System.out.println(pathDisc.getAbsolutePath() + File.separator + listaArchivos[i]);
+				//System.out.println(pathDisc.getAbsolutePath() + File.separator + listaArchivos[i]);
 				tempIm.setImageFromFile(pathDisc.getAbsolutePath() + File.separator + listaArchivos[i]);
 				tempIm.width=tempIm.image.getWidth(null);
 				tempIm.height=tempIm.image.getHeight(null);
-				System.out.println(tempIm.width);
+				//System.out.println(tempIm.width);
 				imageListWeb.add(tempIm);
 				if (listaArchivos[i].indexOf(type) > -1) {
 					found = 1;
@@ -180,7 +180,7 @@ public class ImageDealer {
 
 			if (imageListWeb.size()>0){
 				spinnerCoversM.setList(imageListWeb);
-				System.out.println(imageListWeb.get(0).width);
+				//System.out.println(imageListWeb.get(0).width);
 				multiIm.putImage(selectCoversView, imageListWeb.get(0).image);
 			
 				selectCoverFrame.getContentPane().add(selectCoversView);
@@ -285,18 +285,27 @@ public class ImageDealer {
     
 private class SaveCurrentCoverHandler implements ActionListener {
 
-    String archivo,rutaArch,type;
+    String archivo,rutaArch,type,ext;
     File file;
     	
     public void actionPerformed(ActionEvent evento) {
     	archivo = ((MultiDBImage) spinnerCovers.getValue()).name;
     	rutaArch = currentDisc.path.getAbsolutePath();
     	file = new File(rutaArch + File.separator + archivo);
+    	int pos = archivo.lastIndexOf('.');
+    	if (pos>0) ext = "."+archivo.substring(pos+1);
+    	else ext=".jpg";
     	if (file.canWrite()) {
     		if (frontCover) type="front"; else type="back";
-    		if (file.renameTo(new File(rutaArch + File.separator + currentDisc.group + " - " + currentDisc.title + " - " + type+".jpg"))) {
-    			JOptionPane.showMessageDialog(selectCoverFrame, "File renamed succesfully");
-    		} else 	JOptionPane.showMessageDialog(selectCoverFrame, "Could not rename file");
+    		System.out.println(rutaArch + File.separator + currentDisc.group + " - " + currentDisc.title + " - " + type+ext);
+    		try{
+    			File nfile=new File(rutaArch + File.separator + currentDisc.group + " - " + currentDisc.title + " - " + type+ext);
+	    		if (file.renameTo(nfile)) {
+	    			JOptionPane.showMessageDialog(selectCoverFrame, "File renamed succesfully");
+	    		} else 	JOptionPane.showMessageDialog(selectCoverFrame, "Could not rename file");
+    		}catch(Exception e){
+    			e.printStackTrace();
+    		}
     	} else JOptionPane.showMessageDialog(selectCoverFrame, "Could not rename file");
     	selectCoverFrame.dispose();
     }
