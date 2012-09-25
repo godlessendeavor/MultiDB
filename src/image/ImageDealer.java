@@ -147,9 +147,7 @@ public class ImageDealer {
 			if (((listaArchivos[i].indexOf(".jpg") > -1) || (listaArchivos[i].indexOf(".gif") > -1)|| (listaArchivos[i].indexOf(".png")) > -1)) {
 				tempIm=new MultiDBImage();
 				//System.out.println(pathDisc.getAbsolutePath() + File.separator + listaArchivos[i]);
-				tempIm.setImageFromFile(pathDisc.getAbsolutePath() + File.separator + listaArchivos[i]);
-				tempIm.width=tempIm.image.getWidth(null);
-				tempIm.height=tempIm.image.getHeight(null);
+				tempIm.pathName = pathDisc.getAbsolutePath() + File.separator + listaArchivos[i];
 				//System.out.println(tempIm.width);
 				imageListWeb.add(tempIm);
 				if (listaArchivos[i].indexOf(type) > -1) {
@@ -165,6 +163,7 @@ public class ImageDealer {
 			imageListWeb.clear();
 			if (type.compareTo("front") == 0) frontCover = true; else frontCover = false;
 			multiIm.putImage(labelIn, MultiDBImage.FILE_TYPE, pathDisc + File.separator + listaArchivos[indexCover]);
+			
 			//splitRight.setTopComponent(coversView);
 		} else if (found == 2) {
 			//splitRight.setTopComponent(COVERS_NOT_NAMED_PROP_MSG);
@@ -179,6 +178,9 @@ public class ImageDealer {
 			}*/
 
 			if (imageListWeb.size()>0){
+				for (int i=0;i<imageListWeb.size();i++){
+					imageListWeb.get(i).setImageFromFile();
+				}
 				spinnerCoversM.setList(imageListWeb);
 				//System.out.println(imageListWeb.get(0).width);
 				multiIm.putImage(selectCoversView, imageListWeb.get(0).image);
@@ -289,7 +291,7 @@ private class SaveCurrentCoverHandler implements ActionListener {
     File file;
     	
     public void actionPerformed(ActionEvent evento) {
-    	archivo = ((MultiDBImage) spinnerCovers.getValue()).name;
+    	archivo = ((MultiDBImage) spinnerCovers.getValue()).pathName;
     	rutaArch = currentDisc.path.getAbsolutePath();
     	file = new File(rutaArch + File.separator + archivo);
     	int pos = archivo.lastIndexOf('.');

@@ -27,7 +27,8 @@ public class MultiDBImage{
 	public int width;
 	public int height;
 	public int fileSize;
-	public String name;
+	public File path;
+	public String pathName;
 	public String url;
 
 
@@ -41,7 +42,7 @@ public class MultiDBImage{
 		this.height = COVERS_DIM.height;
 		this.fileSize = 0;
 		this.url = "";
-		this.name="";
+		this.pathName="";
 	}
 
 	public static Image getImageFromUrl(String urlstring){
@@ -79,15 +80,28 @@ public class MultiDBImage{
 	} 
 	
 	
+	public void setImageFromFile(){
+		if (this.pathName!=null){
+			this.image=getImageFromFile(this.pathName);
+			this.width=this.image.getWidth(null);
+			this.height=this.image.getHeight(null);
+		}
+	} 
+	
 	public void setImageFromFile(File pathToFile){
-		this.name=pathToFile.getName();
-		this.image=getImageFromFile(pathToFile);
+		if (pathToFile!=null){
+			this.pathName=pathToFile.getName();
+			this.image=getImageFromFile(pathToFile);
+			this.width=this.image.getWidth(null);
+			this.height=this.image.getHeight(null);
+		}
 	} 
 	
 	public void setImageFromFile(String pathToFile){
-		File file=new File(pathToFile);
-		this.name=file.getName();
-		this.image=getImageFromFile(pathToFile);
+		if (pathToFile!=null){
+			File file=new File(pathToFile);
+			this.setImageFromFile(file);
+		}
 	} 
 	
     public void putImage(JLabel labelFrom,int type, String name, Dimension dim) {
@@ -159,6 +173,7 @@ public class MultiDBImage{
     	    private int type=0;
     	    private Dimension dim=COVERS_DIM;
     	    private Image imageThread;
+    	    private Image tempIm;
     	   
     	    
     	    public PutImage(JLabel label,int type,String name,Dimension dim) {
@@ -190,28 +205,27 @@ public class MultiDBImage{
 	    			switch(this.type){
 	    			case(FILE_TYPE):
 	    				origIcon = new ImageIcon(sourceName);
-	   		     		image = origIcon.getImage();
+	   		     		tempIm = origIcon.getImage();
 	   		     		//imageThread = imagen.getScaledInstance(dim.width, dim.height, Image.SCALE_FAST);
-	   		     		imageThread = MultiDBImage.getScaledImage(image,dim.width, dim.height);
+	   		     		imageThread = MultiDBImage.getScaledImage(tempIm,dim.width, dim.height);
 	    				break;
 	    			case(URL_TYPE):
-		    			image=MultiDBImage.getImageFromUrl(this.sourceName);
+	    				tempIm=MultiDBImage.getImageFromUrl(this.sourceName);
 		    			//imageThread = imagen.getScaledInstance(dim.width, dim.height, Image.SCALE_FAST);
-	   		     		imageThread = MultiDBImage.getScaledImage(image,dim.width, dim.height);  		    	
+	   		     		imageThread = MultiDBImage.getScaledImage(tempIm,dim.width, dim.height);  		    	
 	    				break;
 	    			case(IMAGE_TYPE):
 	    				if (this.imageThread==null){
 	        				Errors.writeError(Errors.VAR_NULL,"Error in MultiDBImage when putting image on label");
 	        			}
-	    				image=imageThread;
+	    				tempIm=imageThread;
 	    				//imageThread = imagen.getScaledInstance(dim.width, dim.height, Image.SCALE_FAST);
-	   		     		imageThread = MultiDBImage.getScaledImage(image,dim.width, dim.height);
+	   		     		imageThread = MultiDBImage.getScaledImage(tempIm,dim.width, dim.height);
 	    				break;
 	    			}
 	    			scaledIcon = new ImageIcon();
 	    		    scaledIcon.setImage(imageThread);
 	    		    this.label.setIcon(scaledIcon);
-	    		    this.label.repaint();
 	    		}
     		}
     }

@@ -121,8 +121,8 @@ public class MultiDB extends JFrame {
     public final Dimension LYRICS_DIM = new Dimension(500,700);
     public final Dimension MAIN_DIM = new Dimension(1230, 700);
     public final Dimension PANE_DIM = new Dimension(1200, 600);
-    public final JLabel COVERS_NOT_FOUND_MSG = new JLabel("Covers not available");
-    public final JLabel COVERS_NOT_NAMED_PROP_MSG = new JLabel("Covers found but not named properly");
+    public final String COVERS_NOT_FOUND_MSG = new String("Covers not available");
+    public final String COVERS_NOT_NAMED_PROP_MSG = new String("Covers found but not named properly");
     public final int EQ_NUM_BANDS = 10;
     public final String configFileName="multiDB.config";
     public final String LYR_PLAYER_NAME="playerLyricsMenu";
@@ -876,8 +876,6 @@ public class MultiDB extends JFrame {
         coversView = new JLabel();
         //dimensions for covers
         coversView.setMinimumSize(COVERS_DIM);
-        COVERS_NOT_FOUND_MSG.setMinimumSize(COVERS_DIM);
-        COVERS_NOT_NAMED_PROP_MSG.setMinimumSize(COVERS_DIM);
         reviewView = new JTextArea();
         font = new Font("Verdana", Font.BOLD, 11);
         reviewView.setFont(font);
@@ -1392,12 +1390,12 @@ public class MultiDB extends JFrame {
 		if (musicFolderConnected && present) {
 			pathDisc = (File) musicTabModel.getValueAt(selectedModelRow, Disc.COL_PATH);
 			if (!imageDealer.showImage(pathDisc, coversView,type)){
-				splitRight.setTopComponent(COVERS_NOT_FOUND_MSG);
+				coversView.setIcon(null);
+				coversView.setText(COVERS_NOT_FOUND_MSG);
 			}
 		} else {
-			splitRight.setTopComponent(COVERS_NOT_FOUND_MSG);
+			coversView.setText(COVERS_NOT_FOUND_MSG);
 		}
-		System.gc();
 	}
     
 //method to save current review in the database
