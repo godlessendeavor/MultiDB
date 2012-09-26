@@ -147,7 +147,8 @@ public class ImageDealer {
 			if (((listaArchivos[i].indexOf(".jpg") > -1) || (listaArchivos[i].indexOf(".gif") > -1)|| (listaArchivos[i].indexOf(".png")) > -1)) {
 				tempIm=new MultiDBImage();
 				//System.out.println(pathDisc.getAbsolutePath() + File.separator + listaArchivos[i]);
-				tempIm.pathName = pathDisc.getAbsolutePath() + File.separator + listaArchivos[i];
+				tempIm.path = new File(pathDisc.getAbsolutePath() + File.separator + listaArchivos[i]);
+				
 				//System.out.println(tempIm.width);
 				imageListWeb.add(tempIm);
 				if (listaArchivos[i].indexOf(type) > -1) {
@@ -236,27 +237,32 @@ public class ImageDealer {
     							tempIm=new MultiDBImage();
     							tempIm.url=job.getString("MediaUrl");
     							tempIm.setImageFromUrl();
-    							//System.out.println(tempIm.url);
-    							tempIm.width=job.getInt("Width");
-    							tempIm.height=job.getInt("Height");
-    							tempIm.fileSize=job.getInt("FileSize");
-    							imageListWeb.add(tempIm);
+    							if (tempIm.image!=null){
+	    							tempIm.path=new File(ImageDealer.currentDisc.path+File.separator+i);
+	    							tempIm.width=job.getInt("Width");
+	    							tempIm.height=job.getInt("Height");
+	    							tempIm.fileSize=job.getInt("FileSize");
+	    							imageListWeb.add(tempIm);
+	    						}
     						}
     						
     					
-    						/*tempIm=new MultiDBImage();
-    						tempIm.url="http://i118.photobucket.com/albums/o99/JouniK86/absml/frontbig.jpg";				
+    					/*	tempIm=new MultiDBImage();
+    						tempIm.url="http://rapidimg.org/images/tH21J.jpg";				
     						tempIm.image=MultiDBImage.getImageFromUrl(tempIm.url);
+    						tempIm.path=new File(ImageDealer.currentDisc.path+File.separator+"01.jpg");
     						if (tempIm.image==null) System.out.println("merdaa!");
     						imageListWeb.add(tempIm);
     						tempIm=new MultiDBImage();
     						tempIm.url="http://i118.photobucket.com/albums/o99/JouniK86/absml/rawfront.jpg";				
     						tempIm.image=MultiDBImage.getImageFromUrl(tempIm.url);
+    						tempIm.path=new File(ImageDealer.currentDisc.path+File.separator+"02");
     						if (tempIm.image==null) System.out.println("merdaa!");
     						imageListWeb.add(tempIm);
     						tempIm=new MultiDBImage();
     						tempIm.url="http://www.metalkingdom.net/album/img/d45/23694.jpg";				
     						tempIm.image=MultiDBImage.getImageFromUrl(tempIm.url);
+    						tempIm.path=new File(ImageDealer.currentDisc.path+File.separator+"03");
     						if (tempIm.image==null) System.out.println("merdaa!");
     						imageListWeb.add(tempIm);*/
     						
@@ -271,7 +277,7 @@ public class ImageDealer {
     						e.printStackTrace();
     					}
     				}
-    			} catch (IOException e) {
+    			} catch (Exception e) {
     				// TODO Auto-generated catch block
     				e.printStackTrace();
     			}
@@ -287,28 +293,40 @@ public class ImageDealer {
     
 private class SaveCurrentCoverHandler implements ActionListener {
 
-    String archivo,rutaArch,type,ext;
-    File file;
+    private String archivo,rutaArch,type,ext;
+    private File file;
+    private boolean success=false;
+    private MultiDBImage tempIm;
     	
     public void actionPerformed(ActionEvent evento) {
-    	archivo = ((MultiDBImage) spinnerCovers.getValue()).pathName;
+    	tempIm=(MultiDBImage) spinnerCovers.getValue();
+    	file = tempIm.path;
     	rutaArch = currentDisc.path.getAbsolutePath();
-    	file = new File(rutaArch + File.separator + archivo);
+    	archivo=file.getName();
     	int pos = archivo.lastIndexOf('.');
     	if (pos>0) ext = "."+archivo.substring(pos+1);
     	else ext=".jpg";
-    	if (file.canWrite()) {
-    		if (frontCover) type="front"; else type="back";
-    		System.out.println(rutaArch + File.separator + currentDisc.group + " - " + currentDisc.title + " - " + type+ext);
-    		try{
+    	tempIm.type=ext.substring(1);
+    	try{
+	    	    	
+	    	if (!file.canWrite()) {
+	    		if (!file.createNewFile()) JOptionPane.showMessageDialog(selectCoverFrame, "Could not rename file");
+	    		else  {
+	    			tempIm.writeImageToFile();
+	    			success=true;
+	    		}
+	    	} else success=true;
+	    
+	    	if (success){
+		    	if (frontCover) type="front"; else type="back";
     			File nfile=new File(rutaArch + File.separator + currentDisc.group + " - " + currentDisc.title + " - " + type+ext);
-	    		if (file.renameTo(nfile)) {
-	    			JOptionPane.showMessageDialog(selectCoverFrame, "File renamed succesfully");
-	    		} else 	JOptionPane.showMessageDialog(selectCoverFrame, "Could not rename file");
-    		}catch(Exception e){
-    			e.printStackTrace();
-    		}
-    	} else JOptionPane.showMessageDialog(selectCoverFrame, "Could not rename file");
+	    		if (file.renameTo(nfile)) JOptionPane.showMessageDialog(selectCoverFrame, "File renamed succesfully");
+	    	    else JOptionPane.showMessageDialog(selectCoverFrame, "Could not rename file");	    	
+	    	}
+    	}catch(IOException e){
+    		//TODO
+			e.printStackTrace();
+		}
     	selectCoverFrame.dispose();
     }
 } //FIN HANDLER CHANGE NAME

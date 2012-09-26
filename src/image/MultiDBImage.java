@@ -1,12 +1,23 @@
 package image;
 
 import java.awt.Dimension;
+import java.awt.Graphics;
 import java.awt.Graphics2D;
+import java.awt.GraphicsConfiguration;
+import java.awt.GraphicsDevice;
+import java.awt.GraphicsEnvironment;
+import java.awt.HeadlessException;
 import java.awt.Image;
 import java.awt.RenderingHints;
+import java.awt.Transparency;
 import java.awt.image.BufferedImage;
+import java.awt.image.ColorModel;
+import java.awt.image.PixelGrabber;
 import java.io.File;
+import java.io.FileOutputStream;
 import java.io.IOException;
+import java.io.InputStream;
+import java.net.HttpURLConnection;
 import java.net.MalformedURLException;
 import java.net.URL;
 
@@ -28,8 +39,8 @@ public class MultiDBImage{
 	public int height;
 	public int fileSize;
 	public File path;
-	public String pathName;
 	public String url;
+	public String type;
 
 
 	private ImageIcon origIcon, scaledIcon;
@@ -42,10 +53,10 @@ public class MultiDBImage{
 		this.height = COVERS_DIM.height;
 		this.fileSize = 0;
 		this.url = "";
-		this.pathName="";
+		this.path=null;
 	}
 
-	public static Image getImageFromUrl(String urlstring){
+	/*public static Image getImageFromUrl2(String urlstring){
 		URL url;
 		BufferedImage bimage;
 		try {
@@ -60,7 +71,36 @@ public class MultiDBImage{
 			e.printStackTrace();
 		}
 		return null;
-    }
+    }*/
+	
+	
+	public static Image getImageFromUrl(String urlstring){
+		try {
+			URL server = new URL(urlstring);
+		    HttpURLConnection connection = (HttpURLConnection)server.openConnection();
+		    connection.setRequestMethod("GET");
+		    connection.setDoInput(true);
+		    connection.setDoOutput(true);
+		    connection.setUseCaches(false);
+		    connection.addRequestProperty("Accept","image/gif, image/x-xbitmap, image/jpeg, image/pjpeg, application/msword, application/vnd.ms-excel, application/vnd.ms-powerpoint, application/x-shockwave-flash, */*");
+		    connection.addRequestProperty("Accept-Language", "en-us,zh-cn;q=0.5");
+		    connection.addRequestProperty("Accept-Encoding", "gzip, deflate");
+		    connection.addRequestProperty("User-Agent", "Mozilla/4.0 (compatible; MSIE 6.0; Windows NT 5.0; .NET CLR 2.0.50727; MS-RTC LM 8)");
+		    connection.connect();
+		    InputStream is = connection.getInputStream();	
+					
+		    Image image = ImageIO.read(is);
+		    is.close();
+		    return image;
+		} catch (MalformedURLException e) {
+			// TODO Auto-generated catch block
+			e.printStackTrace();
+		} catch (IOException e) {
+			// TODO Auto-generated catch block
+			e.printStackTrace();
+		}
+		return null;
+	}
 	
 	public void setImageFromUrl(String urlstring){
 		this.image=getImageFromUrl(urlstring);
@@ -81,8 +121,8 @@ public class MultiDBImage{
 	
 	
 	public void setImageFromFile(){
-		if (this.pathName!=null){
-			this.image=getImageFromFile(this.pathName);
+		if (this.path!=null){
+			this.image=getImageFromFile(this.path);
 			this.width=this.image.getWidth(null);
 			this.height=this.image.getHeight(null);
 		}
@@ -90,7 +130,6 @@ public class MultiDBImage{
 	
 	public void setImageFromFile(File pathToFile){
 		if (pathToFile!=null){
-			this.pathName=pathToFile.getName();
 			this.image=getImageFromFile(pathToFile);
 			this.width=this.image.getWidth(null);
 			this.height=this.image.getHeight(null);
@@ -140,29 +179,100 @@ public class MultiDBImage{
         return resizedImg;
     }
     
-    public static void writeImageToJPG(File file,BufferedImage bufferedImage) {
+    public void writeImageToFile(){    	
+    	writeImageToFile(this.path,toBufferedImage(this.image),this.type);
+    }
+    
+    public static void writeImageToFile(File file,BufferedImage bufferedImage,String type) {
     	
     	try {
-			ImageIO.write(bufferedImage,"jpg",file);
+			ImageIO.write(bufferedImage,type,file);
 		} catch (IOException e) {
 			// TODO Auto-generated catch block
 			e.printStackTrace();
 		}
     }
     
-    public static void writeImageToJPG(String path,BufferedImage bufferedImage) {
-    	
-    	try {
-    		File file = new File(path);
-			ImageIO.write(bufferedImage,"jpg",file);
-		} catch (IOException e) {
-			// TODO Auto-generated catch block
-			e.printStackTrace();
-		}
+    public static void writeImageToFile(String path,BufferedImage bufferedImage,String type) {
+    	File file = new File(path);
+    	writeImageToFile(file,bufferedImage,type);
     }
     
     public String toString(){
     	return "Dim: "+this.width+"x"+this.height;
+    }
+    
+    
+ // This method returns a buffered image with the contents of an image
+    public static BufferedImage toBufferedImage(Image image) {
+        if (image instanceof BufferedImage) {
+            return (BufferedImage)image;
+        }
+
+        // This code ensures that all the pixels in the image are loaded
+        image = new ImageIcon(image).getImage();
+
+        // Determine if the image has transparent pixels; for this method's
+        // implementation, see Determining If an Image Has Transparent Pixels
+        boolean hasAlpha = hasAlpha(image);
+
+        // Create a buffered image with a format that's compatible with the screen
+        BufferedImage bimage = null;
+        GraphicsEnvironment ge = GraphicsEnvironment.getLocalGraphicsEnvironment();
+        try {
+            // Determine the type of transparency of the new buffered image
+            int transparency = Transparency.OPAQUE;
+            if (hasAlpha) {
+                transparency = Transparency.BITMASK;
+            }
+
+            // Create the buffered image
+            GraphicsDevice gs = ge.getDefaultScreenDevice();
+            GraphicsConfiguration gc = gs.getDefaultConfiguration();
+            bimage = gc.createCompatibleImage(
+                image.getWidth(null), image.getHeight(null), transparency);
+        } catch (HeadlessException e) {
+            // The system does not have a screen
+        }
+
+        if (bimage == null) {
+            // Create a buffered image using the default color model
+            int type = BufferedImage.TYPE_INT_RGB;
+            if (hasAlpha) {
+                type = BufferedImage.TYPE_INT_ARGB;
+            }
+            bimage = new BufferedImage(image.getWidth(null), image.getHeight(null), type);
+        }
+
+        // Copy image to buffered image
+        Graphics g = bimage.createGraphics();
+
+        // Paint the image onto the buffered image
+        g.drawImage(image, 0, 0, null);
+        g.dispose();
+
+        return bimage;
+    }
+    
+ // This method returns true if the specified image has transparent pixels
+    public static boolean hasAlpha(Image image) {
+        // If buffered image, the color model is readily available
+        if (image instanceof BufferedImage) {
+            BufferedImage bimage = (BufferedImage)image;
+            return bimage.getColorModel().hasAlpha();
+        }
+
+        // Use a pixel grabber to retrieve the image's color model;
+        // grabbing a single pixel is usually sufficient
+         PixelGrabber pg = new PixelGrabber(image, 0, 0, 1, 1, false);
+        try {
+            pg.grabPixels();
+        } catch (InterruptedException e) {
+        }
+
+        // Get the image's color model
+        ColorModel cm = pg.getColorModel();
+        return cm.hasAlpha();
     }
     
   //PUT IMAGE/////////////////////////////////////////////////////////////////////////  
