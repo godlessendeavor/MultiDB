@@ -14,7 +14,6 @@ import java.awt.image.BufferedImage;
 import java.awt.image.ColorModel;
 import java.awt.image.PixelGrabber;
 import java.io.File;
-import java.io.FileOutputStream;
 import java.io.IOException;
 import java.io.InputStream;
 import java.net.HttpURLConnection;
@@ -35,6 +34,7 @@ public class MultiDBImage{
     public static final int URL_TYPE=1;
     public static final int IMAGE_TYPE=2;
 	public Image image;
+	public Image thumbNail;
 	public int width;
 	public int height;
 	public int fileSize;
@@ -82,8 +82,8 @@ public class MultiDBImage{
 		    connection.setDoInput(true);
 		    connection.setDoOutput(true);
 		    connection.setUseCaches(false);
-		    connection.addRequestProperty("Accept","image/gif, image/x-xbitmap, image/jpeg, image/pjpeg, application/msword, application/vnd.ms-excel, application/vnd.ms-powerpoint, application/x-shockwave-flash, */*");
-		    connection.addRequestProperty("Accept-Language", "en-us,zh-cn;q=0.5");
+		    connection.addRequestProperty("Accept","image/gif, image/x-xbitmap, image/jpeg, image/pjpeg, */*");
+		    //connection.addRequestProperty("Accept-Language", "en-us,zh-cn;q=0.5");
 		    connection.addRequestProperty("Accept-Encoding", "gzip, deflate");
 		    connection.addRequestProperty("User-Agent", "Mozilla/4.0 (compatible; MSIE 6.0; Windows NT 5.0; .NET CLR 2.0.50727; MS-RTC LM 8)");
 		    connection.connect();
@@ -119,6 +119,13 @@ public class MultiDBImage{
     	return icon.getImage();
 	} 
 	
+	public void setThumbNailFromUrl(String urlstring){
+		this.thumbNail=getImageFromUrl(urlstring);
+	}
+	
+	public void setThumbNailFromUrl(){
+		this.thumbNail=getImageFromUrl(this.url);
+	}
 	
 	public void setImageFromFile(){
 		if (this.path!=null){
@@ -153,6 +160,16 @@ public class MultiDBImage{
     	putImageThread.start();
     }
     
+    public void putImage(JLabel labelFrom,MultiDBImage im) {
+    	putImage(labelFrom,im,COVERS_DIM);
+    }
+    
+    public void putImage(JLabel labelFrom,MultiDBImage im,Dimension dim) {
+    	if (im.image!=null) putImage(labelFrom,im.image,dim);
+    	else if (im.thumbNail!=null) putImage(labelFrom,im.thumbNail,dim);
+    	else Errors.writeError(Errors.IMAGE_NOT_FOUND, "Image not present before putting image");
+    }
+    
     public void putImage(JLabel labelFrom,Image image) {
     	PutImage putImageThread = new PutImage(labelFrom,image,COVERS_DIM);
     	putImageThread.start();
@@ -180,7 +197,9 @@ public class MultiDBImage{
     }
     
     public void writeImageToFile(){    	
-    	writeImageToFile(this.path,toBufferedImage(this.image),this.type);
+    	if (this.image==null){
+    		if ((this.thumbNail!=null)&&(this.url!=null)) writeImageToFile(this.path,toBufferedImage(getImageFromUrl(this.url)),this.type);
+    	}else writeImageToFile(this.path,toBufferedImage(this.image),this.type);
     }
     
     public static void writeImageToFile(File file,BufferedImage bufferedImage,String type) {
@@ -199,7 +218,9 @@ public class MultiDBImage{
     }
     
     public String toString(){
-    	return "Dim: "+this.width+"x"+this.height;
+    	String name="";
+    	if (this.path!=null) name=this.path.getName();
+    	return "Dim: "+this.width+"x"+this.height+" "+name;
     }
     
     

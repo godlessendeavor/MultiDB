@@ -78,12 +78,12 @@ public class DealMusicFiles {
         int group = -1;
 
         if (pathDisco.isDirectory() == false) {
-            Errors.errorDir(pathDisco.toString());
+            Errors.showWarning(Errors.WRONG_DIRECTORY,pathDisco.toString());
         } else {
             String[] grupos = pathDisco.list();
             Integer tam = grupos.length;
             if (tam == 0) {
-            	Errors.errorDir(pathDisco.toString());
+            	Errors.showWarning(Errors.WRONG_DIRECTORY,pathDisco.toString());
             } else {
                 for (int j = 0; j < tam; j++) {
                     currentGroup = grupos[j];

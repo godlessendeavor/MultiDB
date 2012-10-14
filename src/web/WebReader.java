@@ -1,9 +1,11 @@
 package web;
 
 import java.io.BufferedReader;
+import java.io.DataOutputStream;
 import java.io.IOException;
 import java.io.InputStreamReader;
 import java.io.UnsupportedEncodingException;
+import java.net.HttpURLConnection;
 import java.net.MalformedURLException;
 import java.net.URL;
 import java.net.URLConnection;
@@ -93,8 +95,50 @@ public class WebReader {
 			return(ret);
 		} 	
 	
+	
+	//get any HTML page from an URL, specifying encoding
+	public static String postHTMLfromURL(String urltext,String urlParameters){
+		String ret="";
+		try {
+			URL url = new URL(urltext);		
+			HttpURLConnection connection = (HttpURLConnection) url.openConnection();           
+			connection.setDoOutput(true);
+			connection.setDoInput(true);
+			connection.setInstanceFollowRedirects(false); 
+			connection.setRequestMethod("POST"); 
+			connection.setRequestProperty("Content-Type", "application/x-www-form-urlencoded"); 
+			connection.setRequestProperty("charset", "utf-8");
+			connection.setRequestProperty("Content-Length", "" + Integer.toString(urlParameters.getBytes().length));
+			connection.setUseCaches (false);
+	
+			DataOutputStream wr = new DataOutputStream(connection.getOutputStream ());
+			wr.writeBytes(urlParameters);
+			 // Get the response
+		    BufferedReader rd = new BufferedReader(new InputStreamReader(connection.getInputStream()));
+		    String inputLine;
+		    while ((inputLine = rd.readLine()) != null) {
+				ret=ret+inputLine;
+		    }			
+			wr.flush();
+			wr.close();
+			connection.disconnect();
+		} catch (MalformedURLException e) {
+			// TODO Auto-generated catch block
+			e.printStackTrace();
+			return("Error");
+		} catch (IOException e) {
+			// TODO Auto-generated catch block
+			e.printStackTrace();
+			return("400");
+		} 
+		return ret;
+	} 	
+	
+	
+	
+	
 	//gets all tag nodes of list entryList who matches type
-	//if inside is marked then also nodes inside nodes are searched (tables into tables for example)
+	//if inside is true then also nodes inside nodes are searched (tables into tables for example)
 	public static NodeList getTagNodesOfType (NodeList entryList,String type,boolean inside){
 		NodeList list=new NodeList();
 		NodeList currentList = null;
@@ -111,7 +155,6 @@ public class WebReader {
 			         // process recursively (nodes within nodes) via getChildren()
 			         //System.out.println(tag.toHtml());
 			         //System.out.println("...............               ...................");
-			         //boolean found=false;
 			         if (tag.getTagName().toLowerCase().compareTo(type)==0) {
 			        	 //System.out.println("Adding tag "+tag.toHtml());
 			        	 list.add(tag);

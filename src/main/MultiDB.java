@@ -311,6 +311,7 @@ public class MultiDB extends JFrame {
 
     public static void main(String[] args) {
         MultiDB aplicacion = new MultiDB();
+        //ImageDealer2 imd = new ImageDealer2();
         aplicacion.initApi();  
     }
 
@@ -1737,7 +1738,7 @@ public class MultiDB extends JFrame {
 	           String[] grupos = backUpPath.list();
 	           Integer tam = grupos.length;
 	           if (tam == 0) {
-	               Errors.errorDir(backUpPath.toString());
+	               Errors.showWarning(Errors.WRONG_DIRECTORY,backUpPath.toString());
 	           } else{              //para todos los grupos de la carpeta
 	        	    RelateDBBUPThread relThread = new RelateDBBUPThread();
 	        	    relThread.setDaemon(true);
@@ -1755,7 +1756,7 @@ public class MultiDB extends JFrame {
 	           String[] grupos = tempFolder.list();
 	           Integer tam = grupos.length;
 	           if (tam == 0) {
-	               Errors.errorDir(tempFolder.toString());
+	               Errors.showWarning(Errors.WRONG_DIRECTORY,tempFolder.toString());
 	           } else{              //para todos los grupos de la carpeta
 	        	    LoadFolderTempThread loadThread = new LoadFolderTempThread();
 	        	    loadThread.musicPath=tempFolder;
@@ -1776,7 +1777,7 @@ public class MultiDB extends JFrame {
 	            String[] grupos = auxPath.list();
 	            Integer tam = grupos.length;
 	            if (tam == 0) {
-	                Errors.errorDir(auxPath.getAbsolutePath());
+	                Errors.showWarning(Errors.WRONG_DIRECTORY,auxPath.getAbsolutePath());
 	            } else {
 	            	CopyThread copyThread = new CopyThread();
 	            	copyThread.path=auxPath.getAbsolutePath();
@@ -1991,12 +1992,12 @@ public class MultiDB extends JFrame {
 		               PrintWriter printer = new PrintWriter(buffer);
 		
 		               if (auxPath.isDirectory() == false) {
-		                   Errors.errorDir(auxPath.getAbsolutePath());
+		                   Errors.showWarning(Errors.WRONG_DIRECTORY,auxPath.getAbsolutePath());
 		               } else {
 		                   String[] grupos = auxPath.list();
 		                   Integer tam = grupos.length;
 		                   if (tam == 0) {
-		                       Errors.errorDir(auxPath.getAbsolutePath());
+		                       Errors.showWarning(Errors.WRONG_DIRECTORY,auxPath.getAbsolutePath());
 		                   } else {
 		
 		                       //para todos los grupos de la carpeta
@@ -2099,7 +2100,7 @@ public class MultiDB extends JFrame {
 		           portadas = auxPath.list();
 		           int tam = portadas.length;
 		           if (tam == 0) {
-		                Errors.errorDir(dirCovers);
+		                Errors.showWarning(Errors.WRONG_DIRECTORY,dirCovers);
 		           } else { //para todas las portadas
 		                   for (int i = 0; i < tam; i++) {
 		                       File currentCover = new File(dirCovers + sep + portadas[i]);
@@ -2158,7 +2159,7 @@ public class MultiDB extends JFrame {
 		           String[] grupos = auxPath.list();
 		           tam = grupos.length;
 		           if (tam == 0) {
-		               Errors.errorDir(dirDisc);
+		               Errors.showWarning(Errors.WRONG_DIRECTORY,dirDisc);
 		           } else { //para todos los grupos de la carpeta
 		                   for (int j = 0; j < tam; j++) {
 		                       String nombreGrupo = grupos[j];
@@ -2230,12 +2231,12 @@ public class MultiDB extends JFrame {
 	           dirReviews=auxPath.getAbsolutePath();
 	
 	           if (auxPath.isDirectory() == false) {
-	               Errors.errorDir(dirReviews);
+	               Errors.showWarning(Errors.WRONG_DIRECTORY,dirReviews);
 	           } else {
 	               reviews = auxPath.list();
 	               int tam = reviews.length;
 	               if (tam == 0) {
-	                   Errors.errorDir(dirReviews);
+	                   Errors.showWarning(Errors.WRONG_DIRECTORY,dirReviews);
 	               } else { //para todas las reviews
 	                   for (int i = 0; i < tam; i++) {
 	                	   //System.out.println(i);
