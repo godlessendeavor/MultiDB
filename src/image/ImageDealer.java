@@ -20,12 +20,6 @@ import javax.swing.SpinnerListModel;
 import javax.swing.event.ChangeEvent;
 import javax.swing.event.ChangeListener;
 
-import org.htmlparser.Node;
-import org.htmlparser.Parser;
-import org.htmlparser.nodes.TagNode;
-import org.htmlparser.util.NodeIterator;
-import org.htmlparser.util.NodeList;
-
 import json.JSONArray;
 import json.JSONException;
 import json.JSONObject;
@@ -33,6 +27,13 @@ import main.Errors;
 import main.MultiDB;
 import main.ProgressBarWindow;
 import music.db.Disc;
+
+import org.htmlparser.Node;
+import org.htmlparser.Parser;
+import org.htmlparser.nodes.TagNode;
+import org.htmlparser.util.NodeIterator;
+import org.htmlparser.util.NodeList;
+
 import web.WebReader;
 
 
@@ -93,6 +94,7 @@ public class ImageDealer {
 
 	public void selectFrameInit(){
         ///////////setting icons for pictures
+		frontCover=true;
         multiIm = new MultiDBImage();
         if (selectCoverFrame!=null) selectCoverFrame.dispose();
 	    selectCoverFrame = new JFrame("Select a picture");
@@ -467,26 +469,44 @@ public class ImageDealer {
     
 private class SaveCurrentCoverHandler implements ActionListener {
 
-    private String archivo,rutaArch,type,ext;
-    private File file;
-    private boolean success=false;
+
     private MultiDBImage tempIm;
     	
     public void actionPerformed(ActionEvent evento) {
     	tempIm=(MultiDBImage) spinnerCovers.getValue();
-    	file = tempIm.path;
+    	SaveImageThread saveImageThread = new SaveImageThread(tempIm);
+    	saveImageThread.setDaemon(true);
+    	saveImageThread.start();
+    	
+    
+} //FIN HANDLER CHANGE NAME
+    
+
+
+public class SaveImageThread extends Thread {
+	private MultiDBImage im;
+    private String archivo,rutaArch,type,ext;
+    private File file;
+    private boolean success=false;
+    
+    public SaveImageThread(MultiDBImage im) {
+		super();
+		this.im=im;
+	}
+	@Override
+	public void run() {
+		file = im.path;
     	rutaArch = currentDisc.path.getAbsolutePath();
     	archivo=file.getName();
     	int pos = archivo.lastIndexOf('.');
     	if (pos>0) ext = "."+archivo.substring(pos+1);
     	else ext=".jpg";
-    	tempIm.type=ext.substring(1);
-    	try{
-	    	    	
+    	im.type=ext.substring(1);
+    	try{	    	    	
 	    	if (!file.canWrite()) {
 	    		if (!file.createNewFile()) JOptionPane.showMessageDialog(selectCoverFrame, "Could not rename file");
 	    		else  {
-	    			tempIm.writeImageToFile();
+	    			im.writeImageToFile();
 	    			success=true;
 	    		}
 	    	} else success=true;
@@ -496,20 +516,22 @@ private class SaveCurrentCoverHandler implements ActionListener {
 		    	if (frontCover) type="front"; 
 		    	else if (!otherCover) type="back";
 		    	else type="other";
+		    	String name;
 		    	if (type.compareTo("other")==0){
-		    		nfile=new File(rutaArch + File.separator + tempIm);
-		    	}else nfile=new File(rutaArch + File.separator + currentDisc.group + " - " + currentDisc.title + " - " + type+ext);
-	    		if (file.renameTo(nfile)) JOptionPane.showMessageDialog(selectCoverFrame, "File renamed succesfully");
+		    		name=rutaArch + File.separator + im +ext;
+		    	}else name=rutaArch + File.separator + currentDisc.group + " - " + currentDisc.title + " - " + type+ext;
+		    	nfile= new File(name);
+	    		if (file.renameTo(nfile)) JOptionPane.showMessageDialog(selectCoverFrame, "File renamed succesfully to "+name);
 	    	    else JOptionPane.showMessageDialog(selectCoverFrame, "Could not rename file");	    	
 	    	}
     	}catch(IOException e){
     		//TODO
 			e.printStackTrace();
 		}
-    	selectCoverFrame.dispose();
     }
-} //FIN HANDLER CHANGE NAME
-    
+	}
+}
+
 
 private class DeleteCurrentCoverHandler implements ActionListener {
     private MultiDBImage tempIm,newIm;

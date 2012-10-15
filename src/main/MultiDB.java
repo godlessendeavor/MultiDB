@@ -3370,7 +3370,7 @@ public class MultiDB extends JFrame {
                    }
                }
            pw.closeProgBar();
-      	   infoFrame.setVisible(true);
+      	   if (infoText.getText().length()>0) infoFrame.setVisible(true);
 		}		
   }
    

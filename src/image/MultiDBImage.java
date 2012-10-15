@@ -307,6 +307,7 @@ public class MultiDBImage{
         ColorModel cm = pg.getColorModel();
         return cm.hasAlpha();
     }
+
     
   //PUT IMAGE/////////////////////////////////////////////////////////////////////////  
     public class PutImage extends Thread {
