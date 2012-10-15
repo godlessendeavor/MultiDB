@@ -39,27 +39,28 @@ import web.WebReader;
 
 public class ImageDealer {
 
-    public final Dimension COVERS_DIM = new Dimension(400,400);
-    public final Dimension MAX_COVERS_DIM = new Dimension(1200,800);
-    public final int SEEK_NUMBER_LOW = 4;
-    public final int SEEK_NUMBER_MAX = 8;
-    public final int BING_SEARCH = 1;
-    public final int COVER_PARADIES_SEARCH = 2;
+    public static final Dimension COVERS_DIM = new Dimension(400,400);
+    public static final Dimension MAX_COVERS_DIM = new Dimension(1200,800);
+    public static final int SEEK_NUMBER_LOW = 4;
+    public static final int SEEK_NUMBER_MAX = 8;
+    public static final String BING_SEARCH = "Bing";
+    public static final String COVER_PARADIES_SEARCH = "Paradies";
     
-	private final String bingUrl1=MultiDB.webBing1;
-	private final String bingUrl2=MultiDB.webBing2;
-	private final String coverParadiesURL="http://ecover.to/";
-	private final String coverParadiesURLSearch=coverParadiesURL+"?Module=SimpleSearch";
+	private static final String bingUrl1=MultiDB.webBing1;
+	private static final String bingUrl2=MultiDB.webBing2;
+	private static final String coverParadiesURL="http://ecover.to/";
+	private static final String coverParadiesURLSearch=coverParadiesURL+"?Module=SimpleSearch";
 	
 
 	public static boolean frontCover=true;
+	public static boolean otherCover=false;
     private static Disc currentDisc;
     
     protected JLabel selectCoversView;
     protected JFrame selectCoverFrame;
     protected JSpinner spinnerCovers;
     protected JButton saveCoverButton,deleteCoverButton;
-    protected JRadioButton backRButton,frontRButton;
+    protected JRadioButton backRButton,frontRButton,otherRButton;
     protected SpinnerListModel spinnerCoversM;
     protected MultiDBImage multiIm;
     protected ArrayList<MultiDBImage> imageList = new ArrayList<MultiDBImage>();
@@ -122,28 +123,33 @@ public class ImageDealer {
 	    frontRButton.setSelected(true);
 
 	    backRButton = new JRadioButton("Back");
+	    otherRButton = new JRadioButton("Other");
 
 	    //Group the radio buttons.
 	    ButtonGroup frontBackSelect = new ButtonGroup();
 	    frontBackSelect.add(frontRButton);
 	    frontBackSelect.add(backRButton);
+	    frontBackSelect.add(otherRButton);
 	    
 	    SelectTypeCoverHandler selectTypeCoverHandler = new SelectTypeCoverHandler();
 	    frontRButton.addActionListener(selectTypeCoverHandler);
 	    backRButton.addActionListener(selectTypeCoverHandler);
+	    otherRButton.addActionListener(selectTypeCoverHandler);
 	    
 	    selectCoverFrame.getContentPane().add(spinnerCovers);
 	    selectCoverFrame.getContentPane().add(frontRButton);
 	    selectCoverFrame.getContentPane().add(backRButton);
+	    selectCoverFrame.getContentPane().add(otherRButton);
 	    selectCoverFrame.getContentPane().add(saveCoverButton);
 	    selectCoverFrame.getContentPane().add(deleteCoverButton);
 	    
     }
     
     
-    public void searchImage(String name){
+    public void searchImage(String name,String type){
     	selectFrameInit();
     	SearchImageInternet searchImageInternetThread = new SearchImageInternet(name);
+    	searchImageInternetThread.type=type;
     	searchImageInternetThread.start();
 	}    
     
@@ -154,60 +160,63 @@ public class ImageDealer {
     	MultiDBImage tempIm;
     	
 		listaArchivos = pathDisc.list();
-		numArchivos = listaArchivos.length;
-		found = 0;
-		imageList.clear();
-		
-		for (int i = 0; i < numArchivos; i++) {
-			listaArchivos[i] = listaArchivos[i].toLowerCase();
-			if (((listaArchivos[i].indexOf(".jpg") > -1) || (listaArchivos[i].indexOf(".gif") > -1)|| (listaArchivos[i].indexOf(".png")) > -1)) {
-				tempIm=new MultiDBImage();
-				//System.out.println(pathDisc.getAbsolutePath() + File.separator + listaArchivos[i]);
-				tempIm.path = new File(pathDisc.getAbsolutePath() + File.separator + listaArchivos[i]);
-				
-				//System.out.println(tempIm.width);
-				imageList.add(tempIm);
-				if (listaArchivos[i].indexOf(type) > -1) {
-					found = 1;
-					indexCover = i;
-					break;
-				} else
-					found = 2;
-			}
-		}
-		
-		if (found == 1) {
+		if (listaArchivos!=null){
+			numArchivos = listaArchivos.length;
+			found = 0;
 			imageList.clear();
-			if (type.compareTo("front") == 0) frontCover = true; else frontCover = false;
-			multiIm.putImage(labelIn, MultiDBImage.FILE_TYPE, pathDisc + File.separator + listaArchivos[indexCover]);
 			
-			//splitRight.setTopComponent(coversView);
-		} else if (found == 2) {
-			//splitRight.setTopComponent(COVERS_NOT_NAMED_PROP_MSG);
-
-			/*List<String> imageFiles = new LinkedList<String>();
-			//int currentImage = 0;
 			for (int i = 0; i < numArchivos; i++) {
-				if (((listaArchivos[i].indexOf(".jpg") > -1) || (listaArchivos[i].indexOf(".gif") > -1) || (listaArchivos[i].indexOf(".png")) > -1)){
-					imageFiles.add(listaArchivos[i]);
-					//currentImage++;
+				listaArchivos[i] = listaArchivos[i].toLowerCase();
+				if (((listaArchivos[i].indexOf(".jpg") > -1) || (listaArchivos[i].indexOf(".gif") > -1)|| (listaArchivos[i].indexOf(".png")) > -1)) {
+					tempIm=new MultiDBImage();
+					//System.out.println(pathDisc.getAbsolutePath() + File.separator + listaArchivos[i]);
+					tempIm.path = new File(pathDisc.getAbsolutePath() + File.separator + listaArchivos[i]);
+					
+					//System.out.println(tempIm.width);
+					imageList.add(tempIm);
+					if (listaArchivos[i].indexOf(type) > -1) {
+						found = 1;
+						indexCover = i;
+						break;
+					} else
+						found = 2;
 				}
-			}*/
-
-			if (imageList.size()>0){
-				for (int i=0;i<imageList.size();i++){
-					imageList.get(i).setImageFromFile();
-				}
-				spinnerCoversM.setList(imageList);
-				//System.out.println(imageListWeb.get(0).width);
-				multiIm.putImage(selectCoversView, imageList.get(0));
-			
-				selectCoverFrame.getContentPane().add(selectCoversView);
-				selectCoverFrame.setVisible(true);
 			}
 			
-		} 
-		if (found==0) return false; else return true;
+			if (found == 1) {
+				imageList.clear();
+				if (type.compareTo("front") == 0) frontCover = true; else frontCover = false;
+				multiIm.putImage(labelIn, MultiDBImage.FILE_TYPE, pathDisc + File.separator + listaArchivos[indexCover]);
+				
+				//splitRight.setTopComponent(coversView);
+			} else if (found == 2) {
+				//splitRight.setTopComponent(COVERS_NOT_NAMED_PROP_MSG);
+
+				/*List<String> imageFiles = new LinkedList<String>();
+				//int currentImage = 0;
+				for (int i = 0; i < numArchivos; i++) {
+					if (((listaArchivos[i].indexOf(".jpg") > -1) || (listaArchivos[i].indexOf(".gif") > -1) || (listaArchivos[i].indexOf(".png")) > -1)){
+						imageFiles.add(listaArchivos[i]);
+						//currentImage++;
+					}
+				}*/
+
+				if (imageList.size()>0){
+					for (int i=0;i<imageList.size();i++){
+						imageList.get(i).setImageFromFile();
+					}
+					spinnerCoversM.setList(imageList);
+					//System.out.println(imageListWeb.get(0).width);
+					multiIm.putImage(selectCoversView, imageList.get(0));
+				
+					selectCoverFrame.getContentPane().add(selectCoversView);
+					selectCoverFrame.setVisible(true);
+				}
+				
+			} 
+			if (found==0) return false; else return true;
+		}
+		return false;
     }
     
     
@@ -219,7 +228,7 @@ public class ImageDealer {
     	private String HTMLText="";
     	private MultiDBImage tempIm;
     	private String name;
-    	private Integer type;
+    	private String type;
     	private ProgressBarWindow pw = new ProgressBarWindow();
     	  
     	public SearchImageInternet(String name) {
@@ -228,7 +237,7 @@ public class ImageDealer {
     		this.type=COVER_PARADIES_SEARCH;
     	}
     	
-    	public SearchImageInternet(String name,Integer type) {
+    	public SearchImageInternet(String name,String type) {
     		super();
     		this.name=name;
     		this.type=type;
@@ -241,7 +250,7 @@ public class ImageDealer {
 
     	    imageList.clear();
     	   
-    	    if (type==BING_SEARCH) searchBing();
+    	    if (type.compareTo(BING_SEARCH)==0) searchBing();
     	    else searchCoverParadies(0);	
     	    if (imageList.size()>0){
     	    	spinnerCoversM.setList(imageList);
@@ -427,8 +436,9 @@ public class ImageDealer {
 				 									//get rid of "./;"
 				 									href=coverParadiesURL+href;
 				 									ti.url=href;
+				 									ti.name=href.substring(href.lastIndexOf("=")+1);
 				 									if (ti.thumbNail!=null){
-				 										ti.path=new File(ImageDealer.currentDisc.path+File.separator+i);
+				 										ti.path=new File(ImageDealer.currentDisc.path+File.separator+ti.name);
 				 										listTi.add(ti);
 				 									}
 			 									}
@@ -482,8 +492,13 @@ private class SaveCurrentCoverHandler implements ActionListener {
 	    	} else success=true;
 	    
 	    	if (success){
-		    	if (frontCover) type="front"; else type="back";
-    			File nfile=new File(rutaArch + File.separator + currentDisc.group + " - " + currentDisc.title + " - " + type+ext);
+	    		File nfile;
+		    	if (frontCover) type="front"; 
+		    	else if (!otherCover) type="back";
+		    	else type="other";
+		    	if (type.compareTo("other")==0){
+		    		nfile=new File(rutaArch + File.separator + tempIm);
+		    	}else nfile=new File(rutaArch + File.separator + currentDisc.group + " - " + currentDisc.title + " - " + type+ext);
 	    		if (file.renameTo(nfile)) JOptionPane.showMessageDialog(selectCoverFrame, "File renamed succesfully");
 	    	    else JOptionPane.showMessageDialog(selectCoverFrame, "Could not rename file");	    	
 	    	}
@@ -495,7 +510,6 @@ private class SaveCurrentCoverHandler implements ActionListener {
     }
 } //FIN HANDLER CHANGE NAME
     
-
 
 private class DeleteCurrentCoverHandler implements ActionListener {
     private MultiDBImage tempIm,newIm;
@@ -530,8 +544,17 @@ private class SelectTypeCoverHandler implements ActionListener {
 
 	public void actionPerformed(ActionEvent e) {
 		
-		if (e.getActionCommand().compareTo("Back")==0) frontCover=false;
-		else frontCover=true;
+		if (e.getActionCommand().compareTo("Back")==0) {
+			frontCover=false;
+			otherCover=false;
+		}
+		else if (e.getActionCommand().compareTo("Front")==0) {
+			frontCover=true;
+			otherCover=false;
+		}else{
+			frontCover=false;
+			otherCover=true;
+		}
 	}
 } //FIN SELECT TYPE COVER
 
@@ -545,7 +568,7 @@ private class ViewCoverHandler implements ChangeListener {
         try{
         	multiIm.putImage(selectCoversView, ((MultiDBImage) spinner.getValue()));
         }catch(IndexOutOfBoundsException ex){
-        	System.out.println("problema 3");
+        	Errors.writeError(Errors.GENERIC_STACK_TRACE, ex.toString());
         }
     }
 } //FIN HANDLER VIEW COVERS

@@ -246,7 +246,8 @@ public class MultiDB extends JFrame {
     public JTabbedPane multiPane;
     //popupmenus
     public JPopupMenu popupTable,popupComments;
-    public JMenuItem menuPlay,menuDownloadCover,menuViewLyrics,menuLoadFilmData; 
+    public JMenu menuDownloadCover;
+    public JMenuItem menuPlay,menuDownloadCoverViaBing,menuDownloadCoverViaCoverParadies,menuViewLyrics,menuLoadFilmData; 
     public MusicTableRenderer coloredTableRenderer;    
         
     //n-tuplas
@@ -311,7 +312,6 @@ public class MultiDB extends JFrame {
 
     public static void main(String[] args) {
         MultiDB aplicacion = new MultiDB();
-        //ImageDealer2 imd = new ImageDealer2();
         aplicacion.initApi();  
     }
 
@@ -357,7 +357,6 @@ public class MultiDB extends JFrame {
         webMusicInfoExtractor = new WebMusicInfoExtractor();
         webMoviesInfoExtractor = new WebMoviesInfoExtractor();
         ftpManager = new FTPManager();
-        Errors.setErrors();
         Errors.f=f;
         //n-tuplas
         musicTabModel = new music.db.TabMod();
@@ -581,9 +580,18 @@ public class MultiDB extends JFrame {
 		menuViewLyrics.addActionListener(popupMenuViewLyrics);	
 		menuViewLyrics.setEnabled(false);
 		menuViewLyrics.setName(LYR_MENU_NAME);
-		menuDownloadCover = new JMenuItem("Download cover");
-		PopupMenuDownloadCover popupMenuDownloadCover = new PopupMenuDownloadCover();
-		menuDownloadCover.addActionListener(popupMenuDownloadCover);
+		menuDownloadCover = new JMenu("Download cover");		
+		menuDownloadCoverViaBing = new JMenuItem("Download cover via Bing");
+		menuDownloadCoverViaBing.setName("Bing");
+		PopupMenuDownloadCover popupMenuDownloadCoverViaBing = new PopupMenuDownloadCover();
+		menuDownloadCoverViaBing.addActionListener(popupMenuDownloadCoverViaBing);
+		menuDownloadCoverViaCoverParadies = new JMenuItem("Download cover via CoverParadies");
+		menuDownloadCoverViaCoverParadies.setName("Paradies");
+		PopupMenuDownloadCover popupMenuDownloadCoverViaCoverParadies = new PopupMenuDownloadCover();
+		menuDownloadCoverViaCoverParadies.addActionListener(popupMenuDownloadCoverViaCoverParadies);
+		menuDownloadCover.add(menuDownloadCoverViaBing);
+		menuDownloadCover.add(menuDownloadCoverViaCoverParadies);
+		
 		JMenuItem menuPastePopup = new JMenuItem("Paste");
 		PopupMenuPasteHandler popupMenuPasteHandler = new PopupMenuPasteHandler();
 		menuPastePopup.addActionListener(popupMenuPasteHandler);
@@ -2515,13 +2523,15 @@ public class MultiDB extends JFrame {
   	   private String group,title,searchString;
   	   
          public void actionPerformed(ActionEvent e) {
-      	   group=musicTabModel.getDiscAtRow(selectedModelRow).group;
-      	   title=musicTabModel.getDiscAtRow(selectedModelRow).title;
-      	   searchString=group+" "+title;
-      	   ImageDealer.setDisc(musicTabModel.getDiscAtRow(selectedModelRow));
-      	   imageDealer.searchImage(searchString);
+      	   	group=musicTabModel.getDiscAtRow(selectedModelRow).group;
+      	   	title=musicTabModel.getDiscAtRow(selectedModelRow).title;
+      	   	searchString=group+" "+title;
+      	   	ImageDealer.setDisc(musicTabModel.getDiscAtRow(selectedModelRow));
+      	   	imageDealer.searchImage(searchString,((JMenuItem)e.getSource()).getName());
          }
      }
+   
+   
    
    private class PopupMenuShowBigCoverHandler implements ActionListener{
 

@@ -49,18 +49,19 @@ public abstract class Errors {
     //WEB ERRORS
     public static final Integer WEB_NOT_FOUND=-20;
     public static final Integer WEB_MALF_URL=-21;
+    public static final Integer WEB_ERROR_NOT_FOUND=-22;
     
     //IMAGE ERRORS
-    public static final Integer IMAGE_NOT_SAVED=-22;
+    public static final Integer IMAGE_NOT_SAVED=-23;
    
     //FORMAT ERRORS
-    public static final Integer NEGATIVE_NUMBER=-23;
+    public static final Integer NEGATIVE_NUMBER=-24;
 
     //NULL ERRORS
-    public static final Integer VAR_NULL=-24;
+    public static final Integer VAR_NULL=-25;
     
     //ERROR FOR PRINTING STACKTRACE
-    public static final Integer GENERIC_STACK_TRACE = -25;
+    public static final Integer GENERIC_STACK_TRACE = -26;
     
 	//Strings for definition of errors
     public static final String SEE_LOG = "See log for details";
@@ -74,6 +75,7 @@ public abstract class Errors {
     public static final Integer IMAGE_NOT_FOUND=-2;
     
     public static final Integer WRONG_DIRECTORY=-3;
+    
         
     public static void setErrors(){
     	errorsMap.put(LOADING_DB_DRIVER,"Error loading database driver");
@@ -98,6 +100,7 @@ public abstract class Errors {
     	errorsMap.put(NEGATIVE_NUMBER,"Cannot work with negative numbers"); 
     	errorsMap.put(WEB_NOT_FOUND,"Error retrieving web, web not found");
     	errorsMap.put(WEB_MALF_URL,"Error retrieving web, url malform error");
+    	errorsMap.put(WEB_ERROR_NOT_FOUND,"Error, web server returns no expected data");
     	errorsMap.put(IMAGE_NOT_SAVED,"Couldn't save image");   
     	errorsMap.put(VAR_NULL,"Error with some var null");
     	errorsMap.put(GENERIC_STACK_TRACE,"Error, see log for details"); 	
@@ -179,6 +182,8 @@ public abstract class Errors {
 
 
 	public static void setLogging(){
+		setErrors();
+		setWarnings();
 		String dirName="";
 		FileHandler fh;
 		String fileName = "multidb.log";

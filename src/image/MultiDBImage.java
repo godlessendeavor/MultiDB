@@ -41,9 +41,11 @@ public class MultiDBImage{
 	public File path;
 	public String url;
 	public String type;
+	public String name;
 
 
 	private ImageIcon origIcon, scaledIcon;
+	
 	
     public MultiDBImage() {
 		super();
@@ -54,6 +56,7 @@ public class MultiDBImage{
 		this.fileSize = 0;
 		this.url = "";
 		this.path=null;
+		this.name=null;
 	}
 
 	/*public static Image getImageFromUrl2(String urlstring){
@@ -97,7 +100,12 @@ public class MultiDBImage{
 			e.printStackTrace();
 		} catch (IOException e) {
 			// TODO Auto-generated catch block
-			e.printStackTrace();
+			Errors.writeError(Errors.WEB_ERROR_NOT_FOUND,urlstring);
+			//e.printStackTrace();
+		} catch (Exception e) {
+			// TODO Auto-generated catch block
+			Errors.writeError(Errors.GENERIC_STACK_TRACE,e.getMessage());
+			//e.printStackTrace();
 		}
 		return null;
 	}
@@ -218,9 +226,13 @@ public class MultiDBImage{
     }
     
     public String toString(){
-    	String name="";
-    	if (this.path!=null) name=this.path.getName();
-    	return "Dim: "+this.width+"x"+this.height+" "+name;
+    	if (this.name==null){
+	    	String name="";
+	    	if (this.path!=null) name=this.path.getName();
+	    	return "Dim: "+this.width+"x"+this.height+" "+name;
+    	}else {
+    		return this.name;
+    	}
     }
     
     
