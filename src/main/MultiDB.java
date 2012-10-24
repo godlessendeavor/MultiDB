@@ -1,7 +1,6 @@
 package main;
 
 import image.ImageDealer;
-import image.MultiDBImage;
 
 import java.awt.Color;
 import java.awt.Component;
@@ -225,8 +224,7 @@ public class MultiDB extends JFrame {
     public Dimension bigCoverDim;
 
     //IMAGE ELEMENTS
-    public MultiDBImage multiIm = new MultiDBImage();
-
+    public ImageDealer imageDealer;
     //MAIN VIEWING ELEMENTS
     
     //common
@@ -353,6 +351,7 @@ public class MultiDB extends JFrame {
         
         dbCSV = new CSV();
         mp3Player = new MP3Player();
+        imageDealer = new ImageDealer();
         //common
         webMusicInfoExtractor = new WebMusicInfoExtractor();
         webMoviesInfoExtractor = new WebMoviesInfoExtractor();
@@ -1390,7 +1389,6 @@ public class MultiDB extends JFrame {
     }
     
     public void showCover(String type){
-    	ImageDealer imageDealer = new ImageDealer();
         boolean present=false;
         File pathDisc;
 
@@ -2519,14 +2517,13 @@ public class MultiDB extends JFrame {
    
 
    private class PopupMenuDownloadCover implements ActionListener{
-  	   private ImageDealer imageDealer = new ImageDealer();
   	   private String group,title,searchString;
   	   
          public void actionPerformed(ActionEvent e) {
       	   	group=musicTabModel.getDiscAtRow(selectedModelRow).group;
       	   	title=musicTabModel.getDiscAtRow(selectedModelRow).title;
       	   	searchString=group+" "+title;
-      	   	ImageDealer.setDisc(musicTabModel.getDiscAtRow(selectedModelRow));
+      	   	imageDealer.setDisc(musicTabModel.getDiscAtRow(selectedModelRow));
       	   	imageDealer.searchImage(searchString,((JMenuItem)e.getSource()).getName());
          }
      }
@@ -2536,14 +2533,18 @@ public class MultiDB extends JFrame {
    private class PopupMenuShowBigCoverHandler implements ActionListener{
 
 		@Override
-			public void actionPerformed(ActionEvent arg0) {	
-				int height=multiIm.image.getHeight(null);
-				int width=multiIm.image.getWidth(null);
-				multiIm.putImage(bigCoversView,multiIm.image, new Dimension(width,height));
-				bigCoversFrame.setSize(width+30,height+50);
+		public void actionPerformed(ActionEvent arg0) {	
+	        boolean present=false;
+
+	        if (((String) musicTabModel.getValueAt(selectedModelRow, Disc.COL_PRESENT)).compareTo("YES") == 0) present = true;
+
+			if (musicFolderConnected && present) {
+				Dimension dim =imageDealer.showCurrentImageInLabel(bigCoversView);
+				bigCoversFrame.setSize(dim.width+10,dim.height+50);
 				bigCoversFrame.setVisible(true);
 			}
-	   }//END OF PopupMenuShowBigCoverHandler
+	   }
+   }//END OF PopupMenuShowBigCoverHandler
    
    
       
@@ -2695,7 +2696,7 @@ public class MultiDB extends JFrame {
             	   String review=(String)musicTabModel.getValueAt(selectedModelRow, Disc.COL_REVIEW);
             	   review=review.replace("\\\"","\"");
             	   reviewView.setText(review);
-            	   ImageDealer.setDisc(musicTabModel.getDiscAtRow(selectedModelRow));
+            	   imageDealer.setDisc(musicTabModel.getDiscAtRow(selectedModelRow));
             	   if (musicFolderConnected) showCover("front");
                }
                if (multiPane.getSelectedIndex()==IND_VIDEOS_TAB){

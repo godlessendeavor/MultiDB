@@ -1243,3 +1243,399 @@ Not a directory
 20-sep-2012 21:18:36 main.Errors showError
 GRAVE: Error, file not found
 Not a directory
+26-sep-2012 17:17:47 main.Errors writeError
+GRAVE: Error with some var null
+Error in MultiDBImage when putting image on label
+26-sep-2012 17:25:16 main.Errors writeError
+GRAVE: Error with some var null
+Error in MultiDBImage when putting image on label
+26-sep-2012 17:26:38 main.Errors writeError
+GRAVE: Error with some var null
+Error in MultiDBImage when putting image on label
+26-sep-2012 17:31:40 main.Errors writeError
+GRAVE: Error with some var null
+Error in MultiDBImage when putting image on label
+26-sep-2012 17:31:40 main.Errors writeError
+GRAVE: Error with some var null
+Error in MultiDBImage when putting image on label
+26-sep-2012 17:31:55 main.Errors writeError
+GRAVE: Error with some var null
+Error in MultiDBImage when putting image on label
+26-sep-2012 17:34:12 main.Errors writeError
+GRAVE: Error with some var null
+Error in MultiDBImage when putting image on label
+14-oct-2012 13:32:39 main.Errors showWarning
+GRAVE: Undefined error
+14-oct-2012 13:44:24 main.Errors showWarning
+GRAVE: Undefined error
+14-oct-2012 13:49:00 main.Errors showWarning
+GRAVE: Undefined error
+14-oct-2012 13:52:03 main.Errors showWarning
+GRAVE: Undefined error
+14-oct-2012 13:53:24 main.Errors showWarning
+GRAVE: Undefined error
+14-oct-2012 17:17:12 main.Errors showWarning
+GRAVE: Undefined error
+14-oct-2012 17:22:08 main.Errors showWarning
+GRAVE: Undefined error
+14-oct-2012 17:23:40 main.Errors showWarning
+GRAVE: Undefined error
+14-oct-2012 17:24:35 main.Errors showWarning
+GRAVE: Undefined error
+14-oct-2012 17:25:50 main.Errors showWarning
+GRAVE: Undefined error
+14-oct-2012 17:58:45 main.Errors showWarning
+GRAVE: Undefined error
+14-oct-2012 18:15:33 main.Errors showWarning
+GRAVE: Undefined error
+14-oct-2012 18:19:33 main.Errors showWarning
+GRAVE: Undefined error
+14-oct-2012 18:29:29 main.Errors showWarning
+GRAVE: Undefined error
+14-oct-2012 18:32:42 main.Errors showWarning
+GRAVE: Undefined error
+14-oct-2012 18:38:39 main.Errors showWarning
+GRAVE: Undefined error
+14-oct-2012 18:43:47 main.Errors showWarning
+GRAVE: Undefined error
+14-oct-2012 18:44:20 main.Errors showWarning
+GRAVE: Undefined error
+14-oct-2012 18:46:30 main.Errors showWarning
+GRAVE: Undefined error
+14-oct-2012 18:51:02 main.Errors showWarning
+GRAVE: Undefined error
+14-oct-2012 18:58:41 main.Errors showWarning
+GRAVE: Undefined error
+14-oct-2012 19:02:29 main.Errors showWarning
+GRAVE: Undefined error
+14-oct-2012 19:48:14 main.Errors showWarning
+GRAVE: Undefined error
+14-oct-2012 20:23:51 main.Errors showWarning
+GRAVE: Undefined error
+14-oct-2012 20:39:01 main.Errors showWarning
+GRAVE: Undefined error
+14-oct-2012 20:50:23 main.Errors showWarning
+GRAVE: Undefined error
+14-oct-2012 20:54:13 main.Errors showWarning
+GRAVE: Undefined error
+14-oct-2012 20:56:15 main.Errors showWarning
+GRAVE: Undefined error
+14-oct-2012 21:03:26 main.Errors showWarning
+GRAVE: Undefined error
+14-oct-2012 21:04:58 main.Errors showWarning
+GRAVE: Undefined error
+14-oct-2012 21:08:55 main.Errors showWarning
+GRAVE: Undefined error
+14-oct-2012 21:09:45 main.Errors showWarning
+GRAVE: Undefined error
+14-oct-2012 21:16:33 main.Errors showWarning
+GRAVE: Undefined error
+14-oct-2012 21:18:11 main.Errors showWarning
+GRAVE: Undefined error
+14-oct-2012 21:21:29 main.Errors showWarning
+GRAVE: Undefined error
+14-oct-2012 21:23:38 main.Errors showWarning
+GRAVE: Undefined error
+14-oct-2012 21:25:59 main.Errors showWarning
+GRAVE: Undefined error
+14-oct-2012 21:27:03 main.Errors showWarning
+GRAVE: Undefined error
+14-oct-2012 21:30:48 main.Errors showWarning
+GRAVE: Undefined error
+14-oct-2012 21:34:30 main.Errors showWarning
+GRAVE: Undefined error
+14-oct-2012 21:35:10 main.Errors showWarning
+GRAVE: Undefined error
+14-oct-2012 21:36:42 main.Errors showWarning
+GRAVE: Undefined error
+14-oct-2012 21:38:04 main.Errors showWarning
+GRAVE: Undefined error
+14-oct-2012 21:48:54 main.Errors showWarning
+GRAVE: Undefined error
+14-oct-2012 21:49:51 main.Errors showWarning
+GRAVE: Undefined error
+14-oct-2012 21:50:57 main.Errors showWarning
+GRAVE: Undefined error
+14-oct-2012 22:27:34 main.Errors showWarning
+GRAVE: Undefined error
+14-oct-2012 22:32:24 main.Errors showWarning
+GRAVE: Undefined error
+14-oct-2012 22:34:59 main.Errors showWarning
+GRAVE: Undefined error
+14-oct-2012 22:35:56 main.Errors showWarning
+GRAVE: Undefined error
+14-oct-2012 22:36:49 main.Errors showWarning
+GRAVE: Undefined error
+14-oct-2012 22:37:27 main.Errors showWarning
+GRAVE: Undefined error
+14-oct-2012 22:38:26 main.Errors showWarning
+GRAVE: Undefined error
+14-oct-2012 22:39:18 main.Errors showWarning
+GRAVE: Undefined error
+14-oct-2012 22:39:47 main.Errors showWarning
+GRAVE: Undefined error
+14-oct-2012 22:42:46 main.Errors showWarning
+GRAVE: Undefined error
+14-oct-2012 22:44:36 main.Errors writeError
+GRAVE: Error with some var null
+Error in MultiDBImage when putting image on label
+14-oct-2012 22:44:36 main.Errors writeError
+GRAVE: Error with some var null
+Error in MultiDBImage when putting image on label
+14-oct-2012 22:44:39 main.Errors writeError
+GRAVE: Error with some var null
+Error in MultiDBImage when putting image on label
+14-oct-2012 22:44:39 main.Errors writeError
+GRAVE: Error with some var null
+Error in MultiDBImage when putting image on label
+14-oct-2012 22:44:39 main.Errors writeError
+GRAVE: Error with some var null
+Error in MultiDBImage when putting image on label
+14-oct-2012 22:44:39 main.Errors writeError
+GRAVE: Error with some var null
+Error in MultiDBImage when putting image on label
+14-oct-2012 22:44:40 main.Errors writeError
+GRAVE: Error with some var null
+Error in MultiDBImage when putting image on label
+14-oct-2012 22:44:40 main.Errors writeError
+GRAVE: Error with some var null
+Error in MultiDBImage when putting image on label
+14-oct-2012 22:44:40 main.Errors writeError
+GRAVE: Error with some var null
+Error in MultiDBImage when putting image on label
+14-oct-2012 22:44:41 main.Errors writeError
+GRAVE: Error with some var null
+Error in MultiDBImage when putting image on label
+14-oct-2012 22:44:41 main.Errors writeError
+GRAVE: Error with some var null
+Error in MultiDBImage when putting image on label
+14-oct-2012 22:44:41 main.Errors writeError
+GRAVE: Error with some var null
+Error in MultiDBImage when putting image on label
+14-oct-2012 23:19:01 main.Errors showWarning
+GRAVE: Undefined error
+14-oct-2012 23:20:05 main.Errors showWarning
+GRAVE: Undefined error
+14-oct-2012 23:24:25 main.Errors showWarning
+GRAVE: Undefined error
+14-oct-2012 23:38:48 main.Errors writeError
+GRAVE: Error with some var null
+Error in MultiDBImage when putting image on label
+14-oct-2012 23:38:48 main.Errors writeError
+GRAVE: Error with some var null
+Error in MultiDBImage when putting image on label
+14-oct-2012 23:38:58 main.Errors writeError
+GRAVE: Error with some var null
+Error in MultiDBImage when putting image on label
+14-oct-2012 23:38:58 main.Errors writeError
+GRAVE: Error with some var null
+Error in MultiDBImage when putting image on label
+14-oct-2012 23:38:58 main.Errors writeError
+GRAVE: Error with some var null
+Error in MultiDBImage when putting image on label
+14-oct-2012 23:38:59 main.Errors writeError
+GRAVE: Error with some var null
+Error in MultiDBImage when putting image on label
+15-oct-2012 19:10:12 main.Errors showWarning
+GRAVE: Undefined error
+15-oct-2012 19:16:04 main.Errors showWarning
+GRAVE: Undefined error
+15-oct-2012 19:29:59 main.Errors writeError
+GRAVE: http://178.21.22.238/01970000/thumbs/01969888.JPG
+15-oct-2012 19:29:59 main.Errors writeError
+GRAVE: http://178.21.22.238/01970000/thumbs/01969889.JPG
+15-oct-2012 19:29:59 main.Errors writeError
+GRAVE: http://178.21.22.238/01970000/thumbs/01969890.JPG
+15-oct-2012 19:29:59 main.Errors writeError
+GRAVE: http://178.21.22.238/01970000/thumbs/01969892.JPG
+15-oct-2012 19:29:59 main.Errors writeError
+GRAVE: http://178.21.22.238/01970000/thumbs/01969891.JPG
+15-oct-2012 19:33:12 main.Errors writeError
+GRAVE: Error, web server returns no expected data
+http://178.21.22.238/01970000/thumbs/01969888.JPG
+15-oct-2012 19:33:12 main.Errors writeError
+GRAVE: Error, web server returns no expected data
+http://178.21.22.238/01970000/thumbs/01969889.JPG
+15-oct-2012 19:33:12 main.Errors writeError
+GRAVE: Error, web server returns no expected data
+http://178.21.22.238/01970000/thumbs/01969890.JPG
+15-oct-2012 19:33:12 main.Errors writeError
+GRAVE: Error, web server returns no expected data
+http://178.21.22.238/01970000/thumbs/01969892.JPG
+15-oct-2012 19:33:12 main.Errors writeError
+GRAVE: Error, web server returns no expected data
+http://178.21.22.238/01970000/thumbs/01969891.JPG
+15-oct-2012 19:38:19 main.Errors writeError
+GRAVE: Error, web server returns no expected data
+http://178.21.22.238/01970000/thumbs/01969888.JPG
+15-oct-2012 19:38:19 main.Errors writeError
+GRAVE: Error, web server returns no expected data
+http://178.21.22.238/01970000/thumbs/01969889.JPG
+15-oct-2012 19:38:19 main.Errors writeError
+GRAVE: Error, web server returns no expected data
+http://178.21.22.238/01970000/thumbs/01969890.JPG
+15-oct-2012 19:38:19 main.Errors writeError
+GRAVE: Error, web server returns no expected data
+http://178.21.22.238/01970000/thumbs/01969892.JPG
+15-oct-2012 19:38:19 main.Errors writeError
+GRAVE: Error, web server returns no expected data
+http://178.21.22.238/01970000/thumbs/01969891.JPG
+15-oct-2012 19:40:00 main.Errors writeError
+GRAVE: Error, web server returns no expected data
+http://178.21.22.238/01970000/thumbs/01969888.JPG
+15-oct-2012 19:40:00 main.Errors writeError
+GRAVE: Error, web server returns no expected data
+http://178.21.22.238/01970000/thumbs/01969889.JPG
+15-oct-2012 19:40:00 main.Errors writeError
+GRAVE: Error, web server returns no expected data
+http://178.21.22.238/01970000/thumbs/01969890.JPG
+15-oct-2012 19:40:00 main.Errors writeError
+GRAVE: Error, web server returns no expected data
+http://178.21.22.238/01970000/thumbs/01969892.JPG
+15-oct-2012 19:40:01 main.Errors writeError
+GRAVE: Error, web server returns no expected data
+http://178.21.22.238/01970000/thumbs/01969891.JPG
+15-oct-2012 19:41:20 main.Errors writeError
+GRAVE: Error, web server returns no expected data
+http://178.21.22.238/01970000/thumbs/01969888.JPG
+15-oct-2012 19:41:20 main.Errors writeError
+GRAVE: Error, web server returns no expected data
+http://178.21.22.238/01970000/thumbs/01969889.JPG
+15-oct-2012 19:41:20 main.Errors writeError
+GRAVE: Error, web server returns no expected data
+http://178.21.22.238/01970000/thumbs/01969890.JPG
+15-oct-2012 19:41:20 main.Errors writeError
+GRAVE: Error, web server returns no expected data
+http://178.21.22.238/01970000/thumbs/01969892.JPG
+15-oct-2012 19:41:20 main.Errors writeError
+GRAVE: Error, web server returns no expected data
+http://178.21.22.238/01970000/thumbs/01969891.JPG
+15-oct-2012 19:42:10 main.Errors writeError
+GRAVE: Error, web server returns no expected data
+http://178.21.22.238/01970000/thumbs/01969888.JPG
+15-oct-2012 19:42:10 main.Errors writeError
+GRAVE: Error, web server returns no expected data
+http://178.21.22.238/01970000/thumbs/01969889.JPG
+15-oct-2012 19:42:10 main.Errors writeError
+GRAVE: Error, web server returns no expected data
+http://178.21.22.238/01970000/thumbs/01969890.JPG
+15-oct-2012 19:42:10 main.Errors writeError
+GRAVE: Error, web server returns no expected data
+http://178.21.22.238/01970000/thumbs/01969892.JPG
+15-oct-2012 19:42:10 main.Errors writeError
+GRAVE: Error, web server returns no expected data
+http://178.21.22.238/01970000/thumbs/01969891.JPG
+15-oct-2012 20:07:19 main.Errors writeError
+GRAVE: Error, web server returns no expected data
+http://178.21.22.238/01955000/thumbs/01954907.JPG
+15-oct-2012 20:07:19 main.Errors writeError
+GRAVE: Error, web server returns no expected data
+http://178.21.22.238/01955000/thumbs/01954908.JPG
+15-oct-2012 20:07:19 main.Errors writeError
+GRAVE: Error, web server returns no expected data
+http://178.21.22.238/01955000/thumbs/01954909.JPG
+15-oct-2012 20:07:19 main.Errors writeError
+GRAVE: Error, web server returns no expected data
+http://178.21.22.238/01955000/thumbs/01954910.JPG
+15-oct-2012 20:07:19 main.Errors writeError
+GRAVE: Error, web server returns no expected data
+http://178.21.22.238/01955000/thumbs/01954912.JPG
+15-oct-2012 20:07:19 main.Errors writeError
+GRAVE: Error, web server returns no expected data
+http://178.21.22.238/01955000/thumbs/01954911.JPG
+15-oct-2012 20:07:19 main.Errors writeError
+GRAVE: Error, web server returns no expected data
+http://178.21.22.238/01955000/thumbs/01954913.JPG
+15-oct-2012 20:07:19 main.Errors writeError
+GRAVE: Error, web server returns no expected data
+http://178.21.22.238/01955000/thumbs/01954921.JPG
+15-oct-2012 20:07:19 main.Errors writeError
+GRAVE: Error, web server returns no expected data
+http://178.21.22.238/01955000/thumbs/01954923.JPG
+15-oct-2012 20:07:19 main.Errors writeError
+GRAVE: Error, web server returns no expected data
+http://178.21.22.238/01955000/thumbs/01954914.JPG
+15-oct-2012 20:07:19 main.Errors writeError
+GRAVE: Error, web server returns no expected data
+http://178.21.22.238/01955000/thumbs/01954925.JPG
+15-oct-2012 20:07:19 main.Errors writeError
+GRAVE: Error, web server returns no expected data
+http://178.21.22.238/01955000/thumbs/01954920.JPG
+15-oct-2012 20:07:20 main.Errors writeError
+GRAVE: Error, web server returns no expected data
+http://178.21.22.238/01955000/thumbs/01954922.JPG
+15-oct-2012 20:07:20 main.Errors writeError
+GRAVE: Error, web server returns no expected data
+http://178.21.22.238/01955000/thumbs/01954924.JPG
+15-oct-2012 20:07:20 main.Errors writeError
+GRAVE: Error, web server returns no expected data
+http://178.21.22.238/01955000/thumbs/01954919.JPG
+15-oct-2012 20:07:22 main.Errors writeError
+GRAVE: Error, web server returns no expected data
+http://178.21.22.238/01965000/thumbs/01964999.JPG
+15-oct-2012 20:07:23 main.Errors writeError
+GRAVE: Error, web server returns no expected data
+http://178.21.22.238/01965000/thumbs/01965000.JPG
+15-oct-2012 20:07:23 main.Errors writeError
+GRAVE: Error, web server returns no expected data
+http://178.21.22.238/01967500/thumbs/01965001.JPG
+15-oct-2012 20:07:23 main.Errors writeError
+GRAVE: Error, web server returns no expected data
+http://178.21.22.238/01967500/thumbs/01965002.JPG
+15-oct-2012 20:07:23 main.Errors writeError
+GRAVE: Error, web server returns no expected data
+http://178.21.22.238/01967500/thumbs/01965003.JPG
+15-oct-2012 20:07:24 main.Errors writeError
+GRAVE: Error, web server returns no expected data
+http://178.21.22.238/01972500/thumbs/01971635.JPG
+15-oct-2012 20:07:24 main.Errors writeError
+GRAVE: Error, web server returns no expected data
+http://178.21.22.238/01972500/thumbs/01971636.JPG
+15-oct-2012 20:07:24 main.Errors writeError
+GRAVE: Error, web server returns no expected data
+http://178.21.22.238/01972500/thumbs/01971637.JPG
+15-oct-2012 20:07:24 main.Errors writeError
+GRAVE: Error, web server returns no expected data
+http://178.21.22.238/01972500/thumbs/01971638.JPG
+15-oct-2012 20:07:24 main.Errors writeError
+GRAVE: Error, web server returns no expected data
+http://178.21.22.238/01972500/thumbs/01971639.JPG
+15-oct-2012 20:07:24 main.Errors writeError
+GRAVE: Error, web server returns no expected data
+http://178.21.22.238/01972500/thumbs/01971640.JPG
+15-oct-2012 20:07:24 main.Errors writeError
+GRAVE: Error, web server returns no expected data
+http://178.21.22.238/01972500/thumbs/01971641.JPG
+15-oct-2012 20:07:24 main.Errors writeError
+GRAVE: Error, web server returns no expected data
+http://178.21.22.238/01972500/thumbs/01971642.JPG
+15-oct-2012 20:07:24 main.Errors writeError
+GRAVE: Error, web server returns no expected data
+http://178.21.22.238/01972500/thumbs/01971643.JPG
+15-oct-2012 20:07:25 main.Errors writeError
+GRAVE: Error, web server returns no expected data
+http://178.21.22.238/01972500/thumbs/01971645.JPG
+15-oct-2012 20:07:25 main.Errors writeError
+GRAVE: Error, web server returns no expected data
+http://178.21.22.238/01972500/thumbs/01971647.JPG
+15-oct-2012 20:07:25 main.Errors writeError
+GRAVE: Error, web server returns no expected data
+http://178.21.22.238/01972500/thumbs/01971649.JPG
+15-oct-2012 20:07:25 main.Errors writeError
+GRAVE: Error, web server returns no expected data
+http://178.21.22.238/01972500/thumbs/01971644.JPG
+15-oct-2012 20:07:25 main.Errors writeError
+GRAVE: Error, web server returns no expected data
+http://178.21.22.238/01972500/thumbs/01971646.JPG
+15-oct-2012 20:07:25 main.Errors writeError
+GRAVE: Error, web server returns no expected data
+http://178.21.22.238/01972500/thumbs/01971648.JPG
+15-oct-2012 20:07:25 main.Errors writeError
+GRAVE: Error, web server returns no expected data
+http://178.21.22.238/01972500/thumbs/01971650.JPG
+15-oct-2012 20:08:06 main.Errors writeError
+GRAVE: Error, web server returns no expected data
+http://178.21.22.238/01957500/thumbs/01955524.JPG
+15-oct-2012 20:08:06 main.Errors writeError
+GRAVE: Error, web server returns no expected data
+http://178.21.22.238/01957500/thumbs/01955525.JPG

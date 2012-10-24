@@ -55,7 +55,8 @@ public class ImageDealer {
 
 	public static boolean frontCover=true;
 	public static boolean otherCover=false;
-    private static Disc currentDisc;
+    private Disc currentDisc;
+    private MultiDBImage multiIm;
     
     protected JLabel selectCoversView;
     protected JFrame selectCoverFrame;
@@ -63,7 +64,6 @@ public class ImageDealer {
     protected JButton saveCoverButton,deleteCoverButton;
     protected JRadioButton backRButton,frontRButton,otherRButton;
     protected SpinnerListModel spinnerCoversM;
-    protected MultiDBImage multiIm;
     protected ArrayList<MultiDBImage> imageList = new ArrayList<MultiDBImage>();
 	protected String bingUrl;
 	protected ViewCoverHandler viewHandler;   
@@ -87,8 +87,12 @@ public class ImageDealer {
     	selectFrameInit();
 	}
     
-    public static void setDisc(Disc disc){
+    public void setDisc(Disc disc){
     	currentDisc=disc;
+    }
+    
+    public MultiDBImage getImage(){
+    	return multiIm;
     }
 
 
@@ -98,7 +102,7 @@ public class ImageDealer {
         multiIm = new MultiDBImage();
         if (selectCoverFrame!=null) selectCoverFrame.dispose();
 	    selectCoverFrame = new JFrame("Select a picture");
-	    selectCoverFrame.setSize(600, 550);
+	    selectCoverFrame.setSize(600, 580);
 	    selectCoversView = new JLabel();
 	    selectCoversView.setMinimumSize(COVERS_DIM);
 	    selectCoverFrame.getContentPane().setLayout(new BoxLayout(selectCoverFrame.getContentPane(),BoxLayout.Y_AXIS));
@@ -155,6 +159,10 @@ public class ImageDealer {
     	searchImageInternetThread.start();
 	}    
     
+    public Dimension showCurrentImageInLabel(JLabel labelIn){
+    	return multiIm.putImage(labelIn);		
+    } 
+    
     
     public boolean showImage(File pathDisc,JLabel labelIn,String type){
     	int numArchivos,found,indexCover=0;
@@ -207,6 +215,7 @@ public class ImageDealer {
 					for (int i=0;i<imageList.size();i++){
 						imageList.get(i).setImageFromFile();
 					}
+					selectFrameInit();
 					spinnerCoversM.setList(imageList);
 					//System.out.println(imageListWeb.get(0).width);
 					multiIm.putImage(selectCoversView, imageList.get(0));
@@ -288,7 +297,7 @@ public class ImageDealer {
 							tempIm.url=job.getString("MediaUrl");
 							tempIm.setImageFromUrl();
 							if (tempIm.image!=null){
-	    						tempIm.path=new File(ImageDealer.currentDisc.path+File.separator+i);
+	    						tempIm.path=new File(ImageDealer.this.currentDisc.path+File.separator+i);
 	    						tempIm.width=job.getInt("Width");
 	    						tempIm.height=job.getInt("Height");
 	    						tempIm.fileSize=job.getInt("FileSize");
@@ -440,7 +449,7 @@ public class ImageDealer {
 				 									ti.url=href;
 				 									ti.name=href.substring(href.lastIndexOf("=")+1);
 				 									if (ti.thumbNail!=null){
-				 										ti.path=new File(ImageDealer.currentDisc.path+File.separator+ti.name);
+				 										ti.path=new File(ImageDealer.this.currentDisc.path+File.separator+ti.name);
 				 										listTi.add(ti);
 				 									}
 			 									}

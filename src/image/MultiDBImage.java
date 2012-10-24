@@ -178,6 +178,15 @@ public class MultiDBImage{
     	else Errors.writeError(Errors.IMAGE_NOT_FOUND, "Image not present before putting image");
     }
     
+    public void putImage(JLabel labelFrom,Dimension dim) {
+    	putImage(labelFrom,this,dim);
+    }
+    public Dimension putImage(JLabel labelFrom) {
+    	Dimension dim = new Dimension(image.getWidth(null),image.getHeight(null));
+    	putImage(labelFrom,this,dim);
+    	return dim;
+    }
+    
     public void putImage(JLabel labelFrom,Image image) {
     	PutImage putImageThread = new PutImage(labelFrom,image,COVERS_DIM);
     	putImageThread.start();
@@ -367,6 +376,7 @@ public class MultiDBImage{
 	   		     		imageThread = MultiDBImage.getScaledImage(tempIm,dim.width, dim.height);
 	    				break;
 	    			}
+	    			MultiDBImage.this.image=tempIm;
 	    			scaledIcon = new ImageIcon();
 	    		    scaledIcon.setImage(imageThread);
 	    		    this.label.setIcon(scaledIcon);
