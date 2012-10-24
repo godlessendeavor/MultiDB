@@ -163,17 +163,16 @@ public class ImageDealer {
     	return multiIm.putImage(labelIn);		
     } 
     
-    
-    public boolean showImage(File pathDisc,JLabel labelIn,String type){
-    	int numArchivos,found,indexCover=0;
+    private ArrayList<MultiDBImage> getListOfImages(File pathDisc){
+    	int numArchivos;    
     	String[] listaArchivos;
     	MultiDBImage tempIm;
-    	
-		listaArchivos = pathDisc.list();
+    	ArrayList<MultiDBImage> imList = new ArrayList<MultiDBImage>();
+    
+    	listaArchivos = pathDisc.list();
 		if (listaArchivos!=null){
 			numArchivos = listaArchivos.length;
-			found = 0;
-			imageList.clear();
+			imList.clear();
 			
 			for (int i = 0; i < numArchivos; i++) {
 				listaArchivos[i] = listaArchivos[i].toLowerCase();
@@ -181,53 +180,57 @@ public class ImageDealer {
 					tempIm=new MultiDBImage();
 					//System.out.println(pathDisc.getAbsolutePath() + File.separator + listaArchivos[i]);
 					tempIm.path = new File(pathDisc.getAbsolutePath() + File.separator + listaArchivos[i]);
-					
+					tempIm.name = listaArchivos[i];
 					//System.out.println(tempIm.width);
-					imageList.add(tempIm);
-					if (listaArchivos[i].indexOf(type) > -1) {
-						found = 1;
-						indexCover = i;
-						break;
-					} else
-						found = 2;
+					imList.add(tempIm);					
 				}
 			}
-			
-			if (found == 1) {
-				imageList.clear();
-				if (type.compareTo("front") == 0) frontCover = true; else frontCover = false;
-				multiIm.putImage(labelIn, MultiDBImage.FILE_TYPE, pathDisc + File.separator + listaArchivos[indexCover]);
-				
-				//splitRight.setTopComponent(coversView);
-			} else if (found == 2) {
-				//splitRight.setTopComponent(COVERS_NOT_NAMED_PROP_MSG);
-
-				/*List<String> imageFiles = new LinkedList<String>();
-				//int currentImage = 0;
-				for (int i = 0; i < numArchivos; i++) {
-					if (((listaArchivos[i].indexOf(".jpg") > -1) || (listaArchivos[i].indexOf(".gif") > -1) || (listaArchivos[i].indexOf(".png")) > -1)){
-						imageFiles.add(listaArchivos[i]);
-						//currentImage++;
-					}
-				}*/
-
-				if (imageList.size()>0){
-					for (int i=0;i<imageList.size();i++){
-						imageList.get(i).setImageFromFile();
-					}
-					selectFrameInit();
-					spinnerCoversM.setList(imageList);
-					//System.out.println(imageListWeb.get(0).width);
-					multiIm.putImage(selectCoversView, imageList.get(0));
-				
-					selectCoverFrame.getContentPane().add(selectCoversView);
-					selectCoverFrame.setVisible(true);
-				}
-				
-			} 
-			if (found==0) return false; else return true;
 		}
-		return false;
+		return imList;
+    }
+    
+    public void showImages(File pathDisc){    	
+    	if ((imageList=getListOfImages(pathDisc)).size()>1){
+    		showListOfImages();
+    	}else JOptionPane.showMessageDialog(selectCoverFrame,"Cannot find images");
+    }
+    
+    private void showListOfImages(){
+    	if (imageList.size()>0){
+			for (int i=0;i<imageList.size();i++){
+				imageList.get(i).setImageFromFile();
+			}
+			selectFrameInit();
+			spinnerCoversM.setList(imageList);
+			//System.out.println(imageListWeb.get(0).width);
+			multiIm.putImage(selectCoversView, imageList.get(0));
+			selectCoverFrame.getContentPane().add(selectCoversView);
+			selectCoverFrame.setVisible(true);
+		}
+    }
+    
+    public boolean showImage(File pathDisc,JLabel labelIn,String type){
+    	int indexCover=0;
+    	boolean found=false;
+    	
+		imageList.clear();			
+		imageList=getListOfImages(pathDisc);
+		
+		if (imageList.size()<1) return false;
+			
+		for (int i = 0; i < imageList.size(); i++) {
+			if (imageList.get(i).name.toLowerCase().indexOf(type) > -1) {
+				found = true;
+				indexCover = i;
+				break;
+			}
+		}
+			
+		if (found) {
+			if (type.compareTo("front") == 0) frontCover = true; else frontCover = false;
+			multiIm.putImage(labelIn, MultiDBImage.FILE_TYPE, imageList.get(indexCover).path.getAbsolutePath());
+		} else  showListOfImages();			
+		return true;
     }
     
     

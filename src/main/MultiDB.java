@@ -608,8 +608,12 @@ public class MultiDB extends JFrame {
 		JMenuItem menuViewBigCover = new JMenuItem("View cover in bigger frame");
 		PopupMenuShowBigCoverHandler showBigCoverHandler = new PopupMenuShowBigCoverHandler();
 		menuViewBigCover.addActionListener(showBigCoverHandler);
+		JMenuItem menuOpenCovers = new JMenuItem("Open images from folder");
+		PopupMenuOpenCovers menuHandlerOpenCovers = new PopupMenuOpenCovers();
+		menuOpenCovers.addActionListener(menuHandlerOpenCovers);
 
 		popupCover.add(menuViewBigCover);
+		popupCover.add(menuOpenCovers);
 			
 		popupReview = new JPopupMenu();
         JMenuItem menuSaveReview = new JMenuItem("Save review in database");
@@ -2542,6 +2546,21 @@ public class MultiDB extends JFrame {
 				Dimension dim =imageDealer.showCurrentImageInLabel(bigCoversView);
 				bigCoversFrame.setSize(dim.width+10,dim.height+50);
 				bigCoversFrame.setVisible(true);
+			}
+	   }
+   }//END OF PopupMenuShowBigCoverHandler
+   
+   
+   private class PopupMenuOpenCovers implements ActionListener{
+
+		@Override
+		public void actionPerformed(ActionEvent arg0) {	
+	        boolean present=false;
+
+	        if (((String) musicTabModel.getValueAt(selectedModelRow, Disc.COL_PRESENT)).compareTo("YES") == 0) present = true;
+
+			if (musicFolderConnected && present) {
+				imageDealer.showImages((File)musicTabModel.getValueAt(selectedModelRow,Disc.COL_PATH));
 			}
 	   }
    }//END OF PopupMenuShowBigCoverHandler
