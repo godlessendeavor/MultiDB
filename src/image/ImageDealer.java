@@ -8,15 +8,17 @@ import java.io.IOException;
 import java.net.URLEncoder;
 import java.util.ArrayList;
 
-import javax.swing.BoxLayout;
 import javax.swing.ButtonGroup;
 import javax.swing.JButton;
+import javax.swing.JComponent;
 import javax.swing.JFrame;
 import javax.swing.JLabel;
 import javax.swing.JOptionPane;
 import javax.swing.JRadioButton;
 import javax.swing.JSpinner;
+import javax.swing.JTextField;
 import javax.swing.SpinnerListModel;
+import javax.swing.SpringLayout;
 import javax.swing.event.ChangeEvent;
 import javax.swing.event.ChangeListener;
 
@@ -47,6 +49,11 @@ public class ImageDealer {
     public static final String BING_SEARCH = "Bing";
     public static final String COVER_PARADIES_SEARCH = "Paradies";
     
+    private static final String NORTH = SpringLayout.NORTH;
+    private static final String SOUTH = SpringLayout.SOUTH;
+    private static final String WEST = SpringLayout.WEST;
+    private static final String EAST = SpringLayout.EAST;
+    
 	private static final String bingUrl1=MultiDB.webBing1;
 	private static final String bingUrl2=MultiDB.webBing2;
 	private static final String coverParadiesURL="http://ecover.to/";
@@ -63,6 +70,8 @@ public class ImageDealer {
     protected JSpinner spinnerCovers;
     protected JButton saveCoverButton,deleteCoverButton;
     protected JRadioButton backRButton,frontRButton,otherRButton;
+    protected JLabel nofPicLabel,picNLabel;
+    protected JTextField newNameField;
     protected SpinnerListModel spinnerCoversM;
     protected ArrayList<MultiDBImage> imageList = new ArrayList<MultiDBImage>();
 	protected String bingUrl;
@@ -102,10 +111,10 @@ public class ImageDealer {
         multiIm = new MultiDBImage();
         if (selectCoverFrame!=null) selectCoverFrame.dispose();
 	    selectCoverFrame = new JFrame("Select a picture");
-	    selectCoverFrame.setSize(600, 580);
+	    selectCoverFrame.setSize(500, 580);
 	    selectCoversView = new JLabel();
-	    selectCoversView.setMinimumSize(COVERS_DIM);
-	    selectCoverFrame.getContentPane().setLayout(new BoxLayout(selectCoverFrame.getContentPane(),BoxLayout.Y_AXIS));
+	    selectCoversView.setMinimumSize(COVERS_DIM);	    
+	    
 	    spinnerCoversM = new SpinnerListModel();	
 	    try{
 	    	spinnerCoversM.setList(imageList);
@@ -114,6 +123,10 @@ public class ImageDealer {
 	    	//this exception breaks when the list has 0 members, like the first time this function is invoked
 	    }
 	    spinnerCovers = new JSpinner(spinnerCoversM);
+	    JComponent field = ((JSpinner.DefaultEditor) spinnerCovers.getEditor());
+	    Dimension prefSize = field.getPreferredSize();
+	    prefSize = new Dimension(300, prefSize.height);
+	    field.setPreferredSize(prefSize);
 	    saveCoverButton = new JButton("Save current cover");
 	    deleteCoverButton = new JButton("Delete current cover");
 	    //handler to view covers on selectFrameCover
@@ -142,12 +155,43 @@ public class ImageDealer {
 	    backRButton.addActionListener(selectTypeCoverHandler);
 	    otherRButton.addActionListener(selectTypeCoverHandler);
 	    
+	    nofPicLabel = new JLabel("Number of pics: ");
+	    //picNLabel = new JLabel("Pic number: ");
+	    newNameField = new JTextField(30);	    
+	    newNameField.setEnabled(false);
+	    
+	    //set layout
+	    SpringLayout layout = new SpringLayout();
+	    selectCoverFrame.getContentPane().setLayout(layout);
+	    
+	    
+	    
 	    selectCoverFrame.getContentPane().add(spinnerCovers);
 	    selectCoverFrame.getContentPane().add(frontRButton);
 	    selectCoverFrame.getContentPane().add(backRButton);
 	    selectCoverFrame.getContentPane().add(otherRButton);
+	    selectCoverFrame.getContentPane().add(nofPicLabel);
+	    //selectCoverFrame.getContentPane().add(picNLabel);
+	    selectCoverFrame.getContentPane().add(newNameField);
 	    selectCoverFrame.getContentPane().add(saveCoverButton);
 	    selectCoverFrame.getContentPane().add(deleteCoverButton);
+	    
+	    layout.putConstraint(NORTH, spinnerCovers,0, NORTH, selectCoverFrame.getContentPane());
+	    layout.putConstraint(WEST, spinnerCovers,0, WEST, selectCoverFrame.getContentPane());
+	    layout.putConstraint(NORTH, frontRButton,3, SOUTH, spinnerCovers);
+	    layout.putConstraint(NORTH, backRButton,3, SOUTH, frontRButton);
+	    layout.putConstraint(NORTH, otherRButton,3, SOUTH, backRButton);
+	    layout.putConstraint(NORTH, saveCoverButton,3, SOUTH, spinnerCovers);
+	    layout.putConstraint(WEST, saveCoverButton,50, EAST, frontRButton);
+	    layout.putConstraint(NORTH, deleteCoverButton,3, SOUTH, saveCoverButton);
+	    layout.putConstraint(WEST, deleteCoverButton,50, EAST, frontRButton);    
+	    layout.putConstraint(NORTH, nofPicLabel,3, SOUTH, spinnerCovers);
+	    layout.putConstraint(WEST, nofPicLabel,50, EAST, deleteCoverButton);
+	    //layout.putConstraint(NORTH, picNLabel,3, SOUTH, nofPicLabel);
+	    //layout.putConstraint(WEST, picNLabel,50, EAST, deleteCoverButton);
+	    layout.putConstraint(NORTH, newNameField,3, SOUTH, otherRButton);
+	    layout.putConstraint(SOUTH, selectCoversView,-3, SOUTH, selectCoverFrame.getContentPane());
+	    layout.putConstraint(WEST, selectCoversView,20, WEST, selectCoverFrame.getContentPane());
 	    
     }
     
@@ -201,6 +245,7 @@ public class ImageDealer {
 				imageList.get(i).setImageFromFile();
 			}
 			selectFrameInit();
+			nofPicLabel.setText("Number of pics: "+imageList.size());
 			spinnerCoversM.setList(imageList);
 			//System.out.println(imageListWeb.get(0).width);
 			multiIm.putImage(selectCoversView, imageList.get(0));
@@ -272,6 +317,7 @@ public class ImageDealer {
 				if (imageList.get(0).image!=null) tempIm.putImage(selectCoversView,imageList.get(0));
 				else if (imageList.get(0).thumbNail!=null) tempIm.putImage(selectCoversView,imageList.get(0).thumbNail);
 				else Errors.showWarning(Errors.IMAGE_NOT_FOUND);
+				nofPicLabel.setText("Number of pics: "+imageList.size());
 				selectCoverFrame.getContentPane().add(selectCoversView);
 				selectCoverFrame.setVisible(true);
     	    }else Errors.showWarning(Errors.IMAGE_NOT_FOUND);
@@ -500,6 +546,7 @@ public class SaveImageThread extends Thread {
     private String archivo,rutaArch,type,ext;
     private File file;
     private boolean success=false;
+    private Disc currDisc;
     
     public SaveImageThread(MultiDBImage im) {
 		super();
@@ -508,7 +555,8 @@ public class SaveImageThread extends Thread {
 	@Override
 	public void run() {
 		file = im.path;
-    	rutaArch = currentDisc.path.getAbsolutePath();
+		currDisc= new Disc(currentDisc);
+    	rutaArch = currDisc.path.getAbsolutePath();
     	archivo=file.getName();
     	int pos = archivo.lastIndexOf('.');
     	if (pos>0) ext = "."+archivo.substring(pos+1);
@@ -531,7 +579,8 @@ public class SaveImageThread extends Thread {
 		    	String name;
 		    	if (type.compareTo("other")==0){
 		    		name=rutaArch + File.separator + im +ext;
-		    	}else name=rutaArch + File.separator + currentDisc.group + " - " + currentDisc.title + " - " + type+ext;
+		    		if (newNameField.getText().compareTo("")!=0) name=rutaArch + File.separator + newNameField.getText() +ext;
+		    	}else name=rutaArch + File.separator + currDisc.group + " - " + currDisc.title + " - " + type+ext;
 		    	nfile= new File(name);
 	    		if (file.renameTo(nfile)) JOptionPane.showMessageDialog(selectCoverFrame, "File renamed succesfully to "+name);
 	    	    else JOptionPane.showMessageDialog(selectCoverFrame, "Could not rename file");	    	
@@ -556,8 +605,8 @@ private class DeleteCurrentCoverHandler implements ActionListener {
 			selectFrameInit();
 			newIm=new MultiDBImage();
 			newIm.putImage(selectCoversView,imageList.get(0));
+			nofPicLabel.setText("Number of pics: "+imageList.size());
 			selectCoverFrame.getContentPane().add(selectCoversView);
-			selectCoverFrame.setVisible(true);
 			selectCoverFrame.setVisible(true);
 		} else{
 			imageList.clear();
@@ -581,13 +630,16 @@ private class SelectTypeCoverHandler implements ActionListener {
 		if (e.getActionCommand().compareTo("Back")==0) {
 			frontCover=false;
 			otherCover=false;
+			newNameField.setEnabled(false);
 		}
 		else if (e.getActionCommand().compareTo("Front")==0) {
 			frontCover=true;
 			otherCover=false;
+			newNameField.setEnabled(false);
 		}else{
 			frontCover=false;
 			otherCover=true;
+			newNameField.setEnabled(true);
 		}
 	}
 } //FIN SELECT TYPE COVER
@@ -599,7 +651,9 @@ private class ViewCoverHandler implements ChangeListener {
     // manejar evento de cambio en lista
     public void stateChanged(ChangeEvent e) {
         JSpinner spinner = (JSpinner) e.getSource();
+        //int lenght=0;
         try{
+        	
         	multiIm.putImage(selectCoversView, ((MultiDBImage) spinner.getValue()));
         }catch(IndexOutOfBoundsException ex){
         	Errors.writeError(Errors.GENERIC_STACK_TRACE, ex.toString());

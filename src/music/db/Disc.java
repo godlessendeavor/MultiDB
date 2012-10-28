@@ -51,6 +51,10 @@ public class Disc implements Serializable, Comparable<Object> {
     public Disc() {
     }
     
+    public Disc(Disc disc){
+    	this.setFromStringArray(disc.toStringArray());
+    }
+    
     public String[] toStringArray(){
     	String[] ret = new String[12];
     	ret[COL_ID]=Integer.toString(this.id);
@@ -63,8 +67,8 @@ public class Disc implements Serializable, Comparable<Object> {
     	ret[COL_TYPE]=this.type;
     	ret[COL_MARK]=this.mark;
     	ret[COL_REVIEW]=this.review;
-    	ret[10]=this.present;
-    	ret[11]=this.path.getAbsolutePath();
+    	ret[COL_PRESENT]=this.present;
+    	ret[COL_PATH]=this.path.getAbsolutePath();
     	return ret;
     }
     
@@ -96,8 +100,8 @@ public class Disc implements Serializable, Comparable<Object> {
 	        this.type=array[COL_TYPE];
 	        this.mark=array[COL_MARK];
 	        this.review=array[COL_REVIEW];
-	        this.present=new String("NO");
-	        this.path=new File("");
+	        this.present=array[COL_PRESENT];
+	        this.path=new File(array[COL_PATH]);
     	}catch(NumberFormatException ex){
     		this.reset();
     	}
