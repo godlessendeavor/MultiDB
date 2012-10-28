@@ -9,6 +9,7 @@ import java.awt.GraphicsEnvironment;
 import java.awt.HeadlessException;
 import java.awt.Image;
 import java.awt.RenderingHints;
+import java.awt.Toolkit;
 import java.awt.Transparency;
 import java.awt.image.BufferedImage;
 import java.awt.image.ColorModel;
@@ -19,12 +20,19 @@ import java.io.InputStream;
 import java.net.HttpURLConnection;
 import java.net.MalformedURLException;
 import java.net.URL;
+import java.util.Iterator;
 
 import javax.imageio.ImageIO;
+import javax.imageio.ImageReader;
+import javax.imageio.event.IIOReadProgressListener;
+import javax.imageio.stream.ImageInputStream;
 import javax.swing.ImageIcon;
+import javax.swing.JFrame;
 import javax.swing.JLabel;
+import javax.swing.JTextArea;
 
 import main.Errors;
+import main.ProgressBarWindow;
 
 public class MultiDBImage{
 	
@@ -77,7 +85,7 @@ public class MultiDBImage{
     }*/
 	
 	
-	public static Image getImageFromUrl(String urlstring){
+	public Image getImageFromUrl(String urlstring,boolean prog){
 		try {
 			URL server = new URL(urlstring);
 		    HttpURLConnection connection = (HttpURLConnection)server.openConnection();
@@ -92,9 +100,19 @@ public class MultiDBImage{
 		    connection.connect();
 		    InputStream is = connection.getInputStream();	
 					
-		    Image image = ImageIO.read(is);
+		    
+		    Iterator readers = ImageIO.getImageReadersBySuffix("jpg");
+		    ImageReader imageReader = (ImageReader) readers.next();
+		    ImageInputStream imageInputStream = ImageIO.createImageInputStream(is);
+		    imageReader.setInput(imageInputStream, false);
+		    if (prog){
+		    	MultiIIOReadProgressListener prListener = new MultiIIOReadProgressListener();
+		    	imageReader.addIIOReadProgressListener(prListener);
+		    }
+		    BufferedImage caption = imageReader.read(0);
+		    /*Image image = ImageIO.read(is);*/
 		    is.close();
-		    return image;
+		    return toImage(caption);
 		} catch (MalformedURLException e) {
 			// TODO Auto-generated catch block
 			e.printStackTrace();
@@ -111,11 +129,11 @@ public class MultiDBImage{
 	}
 	
 	public void setImageFromUrl(String urlstring){
-		this.image=getImageFromUrl(urlstring);
+		this.image=getImageFromUrl(urlstring,true);
 	}
 	
 	public void setImageFromUrl(){
-		this.image=getImageFromUrl(this.url);
+		this.image=getImageFromUrl(this.url,true);
 	}
 	
 	public static Image getImageFromFile(File path){
@@ -128,11 +146,11 @@ public class MultiDBImage{
 	} 
 	
 	public void setThumbNailFromUrl(String urlstring){
-		this.thumbNail=getImageFromUrl(urlstring);
+		this.thumbNail=getImageFromUrl(urlstring,false);
 	}
 	
 	public void setThumbNailFromUrl(){
-		this.thumbNail=getImageFromUrl(this.url);
+		this.thumbNail=getImageFromUrl(this.url,false);
 	}
 	
 	public void setImageFromFile(){
@@ -215,7 +233,7 @@ public class MultiDBImage{
     
     public void writeImageToFile(){    	
     	if (this.image==null){
-    		if ((this.thumbNail!=null)&&(this.url!=null)) writeImageToFile(this.path,toBufferedImage(getImageFromUrl(this.url)),this.type);
+    		if ((this.thumbNail!=null)&&(this.url!=null)) writeImageToFile(this.path,toBufferedImage(getImageFromUrl(this.url,true)),this.type);
     	}else writeImageToFile(this.path,toBufferedImage(this.image),this.type);
     }
     
@@ -244,6 +262,10 @@ public class MultiDBImage{
     	}
     }
     
+    
+    public static Image toImage(BufferedImage bufferedImage) {
+        return Toolkit.getDefaultToolkit().createImage(bufferedImage.getSource());
+    }
     
  // This method returns a buffered image with the contents of an image
     public static BufferedImage toBufferedImage(Image image) {
@@ -316,6 +338,62 @@ public class MultiDBImage{
         ColorModel cm = pg.getColorModel();
         return cm.hasAlpha();
     }
+    
+    
+    private class MultiIIOReadProgressListener implements IIOReadProgressListener{
+    	
+    	JFrame infoFrame = new JFrame("Image download progress");
+    	JTextArea infoText = new JTextArea();
+    	 	
+    	
+    	public MultiIIOReadProgressListener() {
+			super();
+			infoFrame.add(infoText);
+		}
+
+		public void imageComplete(ImageReader source) {
+			infoFrame.setVisible(false);
+    	  }
+
+    	  public void imageProgress(ImageReader source, float percentageDone) {
+    		  infoText.setText("image progress: " + percentageDone + "%");
+    	  }
+
+    	  public void imageStarted(ImageReader source, int imageIndex) {
+    		  infoFrame.setSize(500, 100);
+    		  infoText.setWrapStyleWord(true);
+    		  infoText.setLineWrap(true);   
+    		  infoText.setText("image #" + imageIndex + " started " + source);
+    		  infoFrame.setVisible(true);
+    	  }
+
+    	  public void readAborted(ImageReader source) {
+    		  infoText.setText("Read aborted");
+    	  }
+
+    	  public void sequenceComplete(ImageReader source) {
+    		  infoText.setText("sequence complete ");
+    		  infoFrame.setVisible(false);
+    	  }
+
+    	  public void sequenceStarted(ImageReader source, int minIndex) {
+    		  infoText.setText("sequence started: " + minIndex);
+    	  }
+
+    	  public void thumbnailComplete(ImageReader source) {
+    		  infoText.setText("thumbnail complete " + source);
+    	  }
+
+    	  public void thumbnailProgress(ImageReader source, float percentageDone) {
+    		  infoText.setText("thumbnail started " + source + ": " + percentageDone + "%");
+    	  }
+
+    	  public void thumbnailStarted(ImageReader source, int imageIndex, int thumbnailIndex) {
+    		  infoText.setText("thumbnail progress, " + thumbnailIndex + " of "
+    	        + imageIndex);
+    	  }
+    }
+    
 
     
   //PUT IMAGE/////////////////////////////////////////////////////////////////////////  
@@ -327,7 +405,6 @@ public class MultiDBImage{
     	    private Dimension dim=COVERS_DIM;
     	    private Image imageThread;
     	    private Image tempIm;
-    	   
     	    
     	    public PutImage(JLabel label,int type,String name,Dimension dim) {
     			super();
@@ -337,6 +414,7 @@ public class MultiDBImage{
     			this.sourceName=name;
     		}
     	    
+    	
     	    public PutImage(JLabel label,Image image,Dimension dim) {
     			super();
     			this.label=label;
@@ -344,6 +422,8 @@ public class MultiDBImage{
     			this.imageThread=image;
     			if (dim==null) this.dim=COVERS_DIM; else this.dim=dim;  
     		}
+    	    
+    	  
     	   		
 
     		@Override
@@ -363,7 +443,7 @@ public class MultiDBImage{
 	   		     		imageThread = MultiDBImage.getScaledImage(tempIm,dim.width, dim.height);
 	    				break;
 	    			case(URL_TYPE):
-	    				tempIm=MultiDBImage.getImageFromUrl(this.sourceName);
+	    				tempIm=MultiDBImage.this.getImageFromUrl(this.sourceName,true);
 		    			//imageThread = imagen.getScaledInstance(dim.width, dim.height, Image.SCALE_FAST);
 	   		     		imageThread = MultiDBImage.getScaledImage(tempIm,dim.width, dim.height);  		    	
 	    				break;

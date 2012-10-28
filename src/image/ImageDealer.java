@@ -320,7 +320,10 @@ public class ImageDealer {
 				nofPicLabel.setText("Number of pics: "+imageList.size());
 				selectCoverFrame.getContentPane().add(selectCoversView);
 				selectCoverFrame.setVisible(true);
-    	    }else Errors.showWarning(Errors.IMAGE_NOT_FOUND);
+    	    }else {
+    	    	pw.setPer(2,"");
+    	    	Errors.showWarning(Errors.IMAGE_NOT_FOUND);
+    	    }
 			pw.setPer(2,"");			 				
     	}
     	
