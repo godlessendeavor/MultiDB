@@ -1780,12 +1780,13 @@ public class MultiDB extends JFrame {
 
    private class AddBUDBHandler implements ActionListener {
 
+	   Integer tam=0;
        public void actionPerformed(ActionEvent evento) {
-    	   backUpPath=FileDealer.selectPath(f,"Path for Backup");
+    	   auxPath=FileDealer.selectPath(f,"Path for folder with discs");
     	   reviewView.setText("");
     	   if (auxPath!=null) {
 	            String[] grupos = auxPath.list();
-	            Integer tam = grupos.length;
+	            if (grupos!=null) tam = grupos.length;
 	            if (tam == 0) {
 	                Errors.showWarning(Errors.WRONG_DIRECTORY,auxPath.getAbsolutePath());
 	            } else {

@@ -32,7 +32,6 @@ import javax.swing.JLabel;
 import javax.swing.JTextArea;
 
 import main.Errors;
-import main.ProgressBarWindow;
 
 public class MultiDBImage{
 	
@@ -101,7 +100,7 @@ public class MultiDBImage{
 		    InputStream is = connection.getInputStream();	
 					
 		    
-		    Iterator readers = ImageIO.getImageReadersBySuffix("jpg");
+		    Iterator<ImageReader> readers = ImageIO.getImageReadersBySuffix("jpg");
 		    ImageReader imageReader = (ImageReader) readers.next();
 		    ImageInputStream imageInputStream = ImageIO.createImageInputStream(is);
 		    imageReader.setInput(imageInputStream, false);
