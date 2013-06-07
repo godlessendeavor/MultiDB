@@ -124,7 +124,7 @@ public class WebMoviesInfoExtractor {
 	}
 	
 	
-	///////////////////////INTERNAL CLASS FOR BUTTON SELECT GROUPS////////////////////////
+	///////////////////////INTERNAL CLASS FOR BUTTON SELECT TITLE////////////////////////
 	 private class SelectTitleHandler implements ActionListener {
 	       public void actionPerformed(ActionEvent evento) {
 	    	   ListSelectionModel lsm = (ListSelectionModel) moviesTable.getSelectionModel();
@@ -140,7 +140,7 @@ public class WebMoviesInfoExtractor {
 	           }
 	       }
 	   } 
-	 ///class for button if there's no group that matches the search
+	 ///class for button if there's no title that matches the search
 	 private class NoneTitleHandler implements ActionListener {
 
 	       public void actionPerformed(ActionEvent evento) {

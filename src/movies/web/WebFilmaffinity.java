@@ -61,89 +61,74 @@ public class WebFilmaffinity {
 		Collator comparador = Collator.getInstance();
 	    comparador.setStrength(Collator.TERTIARY);
 	    Parser parser;
-	    Node nodea,nodeb;
-	    String href,year,director;
-	    int currentMovie=0;
+	    Node nodea,nodeb,nodec;
+	    String className,year,director;
 		
 		try {
 			String HTMLText = WebReader.getHTMLfromURL(WEFAURLSearchMovieInfo+URLEncoder.encode(title,"UTF-8"),"ISO-8859-1");
-
-				parser = new Parser(HTMLText);
-				NodeList nl = parser.parse(null);
-				NodeList ntd = WebReader.getTagNodesOfType(nl,"td",true);
-				for (NodeIterator k = ntd.elements (); k.hasMoreNodes (); ){				
-	 				  if ((nodea=k.nextNode()) instanceof TagNode){
-	 					 if (nodea.getChildren()!=null){
-		 					 NodeList anodes = WebReader.getTagNodesOfType(nodea.getChildren(),"a",false);
-		 	        		 for (NodeIterator j = anodes.elements (); j.hasMoreNodes (); ){
-		 		 				  if ((nodeb=j.nextNode()) instanceof TagNode){
-		 		 					  	href=null;
-		 			 			    	href = ((TagNode)nodeb).getAttribute("href");
-		 			 			    	if (href!=null){
-		 			 			    		if (href.contains("/es/film")){
-		 			 			    			if (((TagNode)nodeb).toPlainTextString()!=null){
-		 			 			    				if (nodea.getChildren()!=null){
-			 			 			 	        		 for (NodeIterator i = nodea.getChildren().elements (); i.hasMoreNodes (); ){
-			 			 			 		 				  if ((nodea=i.nextNode()) instanceof TextNode){
-			 			 			 		 					    year=nodea.getText().trim();
-			 			 			 		 					    if (year.length()>5){
-				 			 			 		 					    year=year.substring(1,5);
-				 			 			 		 					    try{
-				 			 			 		 					    	Integer.getInteger(year);
-				 			 			 		 					    	movieInfo=new Movie();
-				 			 			 		 					    	movieInfo.setTitle(((TagNode)nodeb).toPlainTextString());
-				 			 			 		 					    	movieInfo.setYear(year);
-				 			 			 		 					    	movies.add(movieInfo);
-				 			 			 		 					    	break;
-				 			 			 		 					    }
-				 			 			 		 					    catch(Exception ex){
-				 			 			 		 					    	
-				 			 			 		 					    }
-			 			 			 		 					    }
-			 			 			 		 					  }
-			 			 			 		 				  }
-			 			 			 	        		 }
-		 			 			    			}
-		 			 			    		}
-		 			 			    	}
-		 		 				  }
-		 	        		  }
-	 					 }
+			parser = new Parser(HTMLText);
+			NodeList nl = parser.parse(null);
+			NodeList ndiv = WebReader.getTagNodesOfType(nl,"div",true);
+			for (NodeIterator k = ndiv.elements (); k.hasMoreNodes (); ){				
+	 			if ((nodea=k.nextNode()) instanceof TagNode){
+	 				if ((className = ((TagNode)nodea).getAttribute("class"))!=null){
+	 					if (className.compareTo("mc-info-container")==0) {
+	 						movieInfo=new Movie();
+	 						if (nodea.getChildren()!=null){
+	 							NodeList ndivNested = WebReader.getTagNodesOfType(nodea.getChildren(),"div",false);
+	 							for (NodeIterator j = ndivNested.elements (); j.hasMoreNodes (); ){				
+	 								if ((nodeb=j.nextNode()) instanceof TagNode){
+	 									if ((className = ((TagNode)nodeb).getAttribute("class"))!=null){
+	 										if (className.compareTo("mc-title")==0) {
+	 											if (nodeb.getChildren()!=null){
+	 												for (NodeIterator i = nodeb.getChildren().elements (); i.hasMoreNodes (); ){
+	 													nodec = i.nextNode();
+	 													if (nodec instanceof TextNode){
+	 														year = ((TextNode)nodec).toPlainTextString().trim();
+	 														year = year.substring(1, year.length()-1);
+	 														try{
+				 			 		 					    	Integer.getInteger(year);
+				 			 		 					    	movieInfo.setYear(year);
+	 														}
+	 														catch(Exception ex){  	
+	 														}
+	 													}else if (nodec instanceof TagNode){
+	 														try{
+		 														NodeList nr = ((TagNode)nodec).getChildren();
+		 														title = nr.elementAt(0).getText();
+				 			 		 					    	movieInfo.setTitle(title);
+	 														}catch(Exception ex){  	
+	 														}
+	 													}
+	 												}
+	 											}
+	 										}
+	 										if (className.compareTo("mc-director")==0) {
+	 											if (nodeb.getChildren()!=null){
+	 												NodeList hrefist = WebReader.getTagNodesOfType(nodeb.getChildren(),"a",false);
+	 												for (NodeIterator i = hrefist.elements (); i.hasMoreNodes (); ){				
+	 													if ((nodec=i.nextNode()) instanceof TagNode){
+	 														try{
+		 														NodeList nr = ((TagNode)nodec).getChildren();
+		 														director = nr.elementAt(0).getText();
+				 			 		 					    	movieInfo.setDirector(director);
+	 														}catch(Exception ex){  	
+	 														}
+	 													}
+	 												}
+	 											}
+	 										}
+			 				 			}
+	 								}
+	 							}
+	 						}
+	 					    movies.add(movieInfo);
+	 					}
+	 				}
+	 					
 	 				  }
 				}				
-				NodeList spannodes = WebReader.getTagNodesOfType(nl,"span",false);
-	        	for (NodeIterator j = spannodes.elements (); j.hasMoreNodes (); ){
-		 			if ((nodea=j.nextNode()) instanceof TagNode){
-		 				href=null;
-		 			    href = ((TagNode)nodea).getAttribute("class");
-		 			    if (href!=null){
-		 			    	if (href.contains("director")){
-				    			if (nodea.getChildren()!=null){
-					    			for (NodeIterator i = nodea.getChildren().elements (); i.hasMoreNodes (); ){
-					    				if ((nodeb=i.nextNode()) instanceof TagNode){
-					    					href=null;
-					    					href = ((TagNode)nodeb).getAttribute("href");
-					    					if (href!=null){
-						    					if (href.contains("/es/search.php?stype=director")){
-								    				if ((director=((TagNode)nodeb).toPlainTextString())!=null){
-								    					if (currentMovie<movies.size()){
-									    					movieInfo=movies.get(currentMovie);
-									    					if (movieInfo.getDirector()==null)
-									    						movieInfo.setDirector(director);
-									    					else movieInfo.setDirector(movieInfo.getDirector()+", "+director);
-								    					}
-								    				}
-						    	 				}
-					    					}
-					    				}
-				    				 }
-				    			}
-		    					currentMovie++;
-		 			    	}
-		 			    }
-		 			}
-		 			
-		 		}
+
         		return movies;		
 			
 		} catch (Exception e) {
@@ -159,46 +144,41 @@ public class WebFilmaffinity {
 		Collator comparador = Collator.getInstance();
 	    comparador.setStrength(Collator.TERTIARY);
 	    Parser parser;
-	    Node nodea,nodeb,nodec;
+	    Node nodea,nodeb;
 	    String str,year;
 		
 		try {
 			String HTMLText = WebReader.getHTMLfromURL(WEFAURLSearchMovieInfo+URLEncoder.encode(title,"UTF-8"),"ISO-8859-1");
-
+				System.out.println("get movie info done");
 				parser = new Parser(HTMLText);
 				NodeList nl = parser.parse(null);
-				NodeList ntr = WebReader.getTagNodesOfType(nl,"tr",true);
+				NodeList ndl = WebReader.getTagNodesOfType(nl,"dl",true);
 				movieInfo = new Movie();
-				for (NodeIterator k = ntr.elements (); k.hasMoreNodes (); ){				
+				for (NodeIterator k = ndl.elements (); k.hasMoreNodes (); ){				
 	 				  if ((nodea=k.nextNode()) instanceof TagNode){
 	 					  if (nodea.getChildren()!=null){
-		 					 NodeList thnodes = WebReader.getTagNodesOfType(nodea.getChildren(),"th",false);
-		 	        		 for (NodeIterator j = thnodes.elements (); j.hasMoreNodes (); ){
+		 					 NodeList dnodes = nodea.getChildren();
+		 	        		 for (NodeIterator j = dnodes.elements (); j.hasMoreNodes (); ){
 		 		 				  if ((nodeb=j.nextNode()) instanceof TagNode){
 		 		 					  if (((TagNode)nodeb).toPlainTextString()!=null){
 		 		 						  str=((TagNode)nodeb).toPlainTextString();
-		 		 						  if (str.contains("A&Ntilde;O")){
-		 		 							 NodeList tdnodes = WebReader.getTagNodesOfType(nodea.getChildren(),"td",false);
-		 		 		 	        		 for (NodeIterator i = tdnodes.elements (); i.hasMoreNodes (); ){
-		 		 		 		 				 if ((nodec=i.nextNode()) instanceof TagNode){
-		 		 		 		 					 if (((TagNode)nodec).toPlainTextString()!=null){
-		 		 		 		 						year=((TagNode)nodec).toPlainTextString();
-		 		 		 		 						Pattern p = Pattern.compile("\\d+");
-		 		 		 		 						Matcher m = p.matcher(year);
-		 		 		 		 						if (m.find()) movieInfo.setYear(m.group());
-		 		 		 		 					 }
-		 		 		 		 				 }
+		 		 						  if (str.contains("A&ntilde;o")){
+		 		 							 j.nextNode(); //pass blank text node
+		 		 							 if ((nodeb=j.nextNode()) instanceof TagNode){
+		 		 		 		 				 if (((TagNode)nodeb).toPlainTextString()!=null){
+		 		 		 		 					year=((TagNode)nodeb).toPlainTextString().trim();
+		 		 		 		 					movieInfo.setYear(year);
+		 		 		 		 				 }		 		 		 		 				 
 		 		 		 	        		 }
 		 		 						  }
-		 		 						  else if (str.contains("DIRECTOR")){
-			 		 							 NodeList tdnodes = WebReader.getTagNodesOfType(nodea.getChildren(),"td",false);
-			 		 		 	        		 for (NodeIterator i = tdnodes.elements (); i.hasMoreNodes (); ){
-			 		 		 		 				 if ((nodec=i.nextNode()) instanceof TagNode){
-			 		 		 		 					 if (((TagNode)nodec).toPlainTextString()!=null){
-			 		 		 		 					    movieInfo.setDirector(((TagNode)nodec).toPlainTextString());
-			 		 		 		 					 }
-			 		 		 		 				 }
-			 		 		 	        		 }
+		 		 						  else if (str.contains("Director")){
+		 		 							 j.nextNode(); //pass blank text node	
+		 		 							 if ((nodeb=j.nextNode()) instanceof TagNode){
+		 		 		 		 				 if (((TagNode)nodeb).toPlainTextString()!=null){
+		 		 		 		 					str=((TagNode)nodeb).toPlainTextString().trim();
+		 		 		 		 					movieInfo.setDirector(str);
+		 		 		 		 				 }		 		 		 		 				 
+		 		 		 	        		 }
 			 		 					  }
 		 		 					  }	 		 					  
 		 		 				  }
