@@ -32,6 +32,7 @@ import javax.swing.JLabel;
 import javax.swing.JTextArea;
 
 import main.Errors;
+import web.WebReader;
 
 public class MultiDBImage{
 	
@@ -82,10 +83,11 @@ public class MultiDBImage{
 		}
 		return null;
     }*/
-	
-	
+	    
+    
 	public Image getImageFromUrl(String urlstring,boolean prog){
 		try {
+			InputStream finalStream;
 			URL server = new URL(urlstring);
 		    HttpURLConnection connection = (HttpURLConnection)server.openConnection();
 		    connection.setRequestMethod("GET");
@@ -93,16 +95,30 @@ public class MultiDBImage{
 		    connection.setDoOutput(true);
 		    connection.setUseCaches(false);
 		    connection.addRequestProperty("Accept","image/gif, image/x-xbitmap, image/jpeg, image/pjpeg, */*");
-		    //connection.addRequestProperty("Accept-Language", "en-us,zh-cn;q=0.5");
 		    connection.addRequestProperty("Accept-Encoding", "gzip, deflate");
 		    connection.addRequestProperty("User-Agent", "Mozilla/4.0 (compatible; MSIE 6.0; Windows NT 5.0; .NET CLR 2.0.50727; MS-RTC LM 8)");
 		    connection.connect();
 		    InputStream is = connection.getInputStream();	
-					
-		    
+		    finalStream = is;
+		    if ("gzip".equals(connection.getContentEncoding())){
+		    	//decompress stream
+		    	finalStream = WebReader.decompressStream(is);		    	
+		    }
+
 		    Iterator<ImageReader> readers = ImageIO.getImageReadersBySuffix("jpg");
+		    if (!readers.hasNext()){
+		    	Errors.writeError(Errors.WEB_NOT_FOUND,urlstring);
+		    	return null;
+		    }
 		    ImageReader imageReader = (ImageReader) readers.next();
-		    ImageInputStream imageInputStream = ImageIO.createImageInputStream(is);
+		    
+		    
+		    String formatName = imageReader.getFormatName();
+		    if (!formatName.equalsIgnoreCase("jpeg") && !formatName.equalsIgnoreCase("png") && !formatName.equalsIgnoreCase("gif")) {	    	
+		    	return null;
+		    }
+		    		    
+		    ImageInputStream imageInputStream = ImageIO.createImageInputStream(finalStream);
 		    imageReader.setInput(imageInputStream, false);
 		    if (prog){
 		    	MultiIIOReadProgressListener prListener = new MultiIIOReadProgressListener();
@@ -113,14 +129,12 @@ public class MultiDBImage{
 		    is.close();
 		    return toImage(caption);
 		} catch (MalformedURLException e) {
-			// TODO Auto-generated catch block
-			e.printStackTrace();
+			Errors.writeError(Errors.WEB_MALF_URL,urlstring);
+			//e.printStackTrace();
 		} catch (IOException e) {
-			// TODO Auto-generated catch block
 			Errors.writeError(Errors.WEB_ERROR_NOT_FOUND,urlstring);
 			//e.printStackTrace();
 		} catch (Exception e) {
-			// TODO Auto-generated catch block
 			Errors.writeError(Errors.GENERIC_STACK_TRACE,e.getMessage());
 			//e.printStackTrace();
 		}
@@ -241,7 +255,7 @@ public class MultiDBImage{
     	try {
 			ImageIO.write(bufferedImage,type,file);
 		} catch (IOException e) {
-			// TODO Auto-generated catch block
+			Errors.writeError(Errors.IMAGE_NOT_SAVED,"Error writing image to file");
 			e.printStackTrace();
 		}
     }
@@ -421,9 +435,6 @@ public class MultiDBImage{
     			this.imageThread=image;
     			if (dim==null) this.dim=COVERS_DIM; else this.dim=dim;  
     		}
-    	    
-    	  
-    	   		
 
     		@Override
     		public void run() {

@@ -385,51 +385,44 @@ public class ImageDealer {
  					parser = new Parser(HTMLText);		 				
 		 			NodeList nl = parser.parse(null); 
  					//System.out.println(HTMLText);
- 					NodeList tableNodes=WebReader.getTagNodesOfType(nl,"td",false);
+ 					NodeList tableNodes=WebReader.getTagNodesOfType(nl,"table",true);
 		 			Node node;
 		 			NodeList links;
 		 			String classTd="";
-		 			boolean filter=false;
 		 			for (NodeIterator i = tableNodes.elements (); i.hasMoreNodes ();){
 		 				node=i.nextNode();
 		 				if ((node) instanceof TagNode){
 			 				classTd=((TagNode)node).getAttribute("class");
-			 				filter=false;
-			 				if (classTd!=null){
-				 				if (classTd.contains("Cell_Menu")) filter=false;
-				 				else filter=true;
-			 				}else {
-			 					filter=true;
-			 				}
-			 				if (filter){ 					
-			 					if (((TagNode)node).getChildren()!=null){
-			 						links=WebReader.getTagNodesOfType(((TagNode)node).getChildren(),"a",false);
-			 						if (links.size()>0){  		 			    		
-			 							for (NodeIterator itlinks = links.elements (); itlinks.hasMoreNodes (); ){
-			 								String href = ((TagNode)itlinks.nextNode()).getAttribute("href");
-			 								if (href!=null){
-			 									if (href.contains("?Module=ViewEntry&amp;")){
-			 										//more than  1 result
-			 										href=href.substring(0, 18)+href.substring(22);
-			 										//get rid of "amp;"
-			 										filter=false;
-			 										for (int it=0;it<discList.size();it++){
-			 											disc = discList.get(it);
-			 											if (disc.getLink().contains(href)){
-			 												filter=true;//they can repeat, this is the only way to void repetitions
-			 												break;
-			 											}
-			 										}
-			 										if (!filter){
-			 											disc = new Disc();
-			 											disc.setLink(coverParadiesURL+href);
-			 											discList.add(disc);
-			 										}
-			 									}	
-			 								}	
-			 							}
-			 						}	
-			 					}	
+			 				if (classTd!=null)
+				 				if (classTd.contains("Table_SimpleSearchResult")) { 					
+				 					if (((TagNode)node).getChildren()!=null){
+				 						links=WebReader.getTagNodesOfType(((TagNode)node).getChildren(),"a",false);
+				 						if (links.size()>0){  		 			    		
+				 							for (NodeIterator itlinks = links.elements (); itlinks.hasMoreNodes (); ){
+				 								String href = ((TagNode)itlinks.nextNode()).getAttribute("href");
+				 								if (href!=null){
+				 									if (href.contains("Cover")){
+				 										//more than  1 result
+				 										String link = coverParadiesURL+href.substring(1);//get rid of /
+				 										boolean found = false;
+				 										for (int di=0;di<discList.size();di++){
+				 											if (discList.get(di).link.equalsIgnoreCase(link)){
+				 												found = true;
+				 												break;
+				 											}
+				 										}
+				 										if (!found){
+					 										disc = new Disc();
+					 										disc.setLink(link); 
+				 											discList.add(disc);			
+				 										}
+				 									}	
+				 								}	
+				 							}
+				 							break;
+				 						}	
+			 					}
+				 				
 			 				}
 		 				}
 		 			}
@@ -439,7 +432,8 @@ public class ImageDealer {
 							disc = discList.get(it);
 							imageList.addAll(getImageFromLinkCoverParadies(WebReader.getHTMLfromURL(disc.getLink())));
 						}
-		 			}else {
+		 				if (discList.size()==12) searchCoverParadies(page+1);
+		 			}else { //web goes directly to the unique result
 		 				imageList.addAll(getImageFromLinkCoverParadies(HTMLText));
 		 			}
  			}
@@ -489,17 +483,17 @@ public class ImageDealer {
 				 										if (nodeImg instanceof TagNode){
 				 											String img=((TagNode)nodeImg).getAttribute("src");
 				 											if (img!=null){
-				 												ti.setThumbNailFromUrl(img);
+				 												ti.setThumbNailFromUrl(coverParadiesURL+img.substring(1));
 				 												break;
 				 											}
 				 										}
 				 									}
 								 					//System.out.println(href);
-				 									href=href.substring(2);
-				 									//get rid of "./;"
-				 									href=coverParadiesURL+href;
+				 									href=coverParadiesURL+href.substring(1);
 				 									ti.url=href;
-				 									ti.name=href.substring(href.lastIndexOf("=")+1);
+				 									ti.name=href.substring(href.lastIndexOf("/")+1);
+				 									//System.out.println("URL =" + ti.url);
+				 									//System.out.println("URL =" + ti.name);
 				 									if (ti.thumbNail!=null){
 				 										ti.path=new File(ImageDealer.this.currentDisc.path+File.separator+ti.name);
 				 										listTi.add(ti);
@@ -515,7 +509,7 @@ public class ImageDealer {
 		 			}
 
  			} catch (Exception e) {
- 					// TODO Auto-generated catch block
+ 				Errors.showWarning(Errors.GENERIC_STACK_TRACE, e.getMessage());
  				e.printStackTrace();
  			}
     		return listTi;
@@ -589,8 +583,8 @@ public class SaveImageThread extends Thread {
 	    	    else JOptionPane.showMessageDialog(selectCoverFrame, "Could not rename file");	    	
 	    	}
     	}catch(IOException e){
-    		//TODO
-			e.printStackTrace();
+    		Errors.showWarning(Errors.IMAGE_NOT_SAVED, e.getMessage());
+			//e.printStackTrace();
 		}
     }
 	}

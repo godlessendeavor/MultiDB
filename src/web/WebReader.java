@@ -1,8 +1,11 @@
 package web;
 
 import java.io.BufferedReader;
+import java.io.ByteArrayInputStream;
+import java.io.ByteArrayOutputStream;
 import java.io.DataOutputStream;
 import java.io.IOException;
+import java.io.InputStream;
 import java.io.InputStreamReader;
 import java.io.UnsupportedEncodingException;
 import java.net.HttpURLConnection;
@@ -10,6 +13,7 @@ import java.net.MalformedURLException;
 import java.net.URL;
 import java.net.URLConnection;
 import java.net.URLEncoder;
+import java.util.zip.GZIPInputStream;
 
 import main.Errors;
 import main.MultiDB;
@@ -134,7 +138,28 @@ public class WebReader {
 		return ret;
 	} 	
 	
-	
+	public static InputStream decompressStream(InputStream is){
+		try {
+
+			GZIPInputStream gs = new GZIPInputStream(is);
+			
+			ByteArrayOutputStream outputStream = new ByteArrayOutputStream(); 
+			byte[] buffer = new byte[1024]; 
+			while (gs.available()!=0) { 
+				int count = gs.read(buffer); 
+				if (count > 0) outputStream.write(buffer, 0, count); 
+			} 
+			outputStream.close(); 
+			InputStream decodedInput=new ByteArrayInputStream(((ByteArrayOutputStream) outputStream).toByteArray());
+			return decodedInput;
+			
+		} catch (Exception e) {
+			// TODO Auto-generated catch block
+			Errors.writeError(Errors.GENERIC_STACK_TRACE,"Error while decompressing stream");
+			//e.printStackTrace();
+		}
+		return null;
+	}
 	
 	
 	//gets all tag nodes of list entryList who matches type
