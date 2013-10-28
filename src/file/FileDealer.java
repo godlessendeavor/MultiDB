@@ -85,14 +85,14 @@ public class FileDealer {
                 try {
                     fromStream.close();
                 } catch (IOException e) {
-                	Errors.showError(Errors.GENERIC_STACK_TRACE,e.toString());
+                	Errors.writeError(Errors.COPYING_IOERROR,"Could not close input stream while copying file "+fromFile+ " into "+toFile+"\nError: "+e.toString());
                 }
             }
             if (toStream != null) {
                 try {
                     toStream.close();
                 } catch (IOException e) {
-                	Errors.showError(Errors.COPYING_IOERROR,"Could not copy file "+fromFile+ " into "+toFile+"\nError: "+e.toString());
+                	Errors.writeError(Errors.COPYING_IOERROR,"Could not close output stream while copying file "+fromFile+ " into "+toFile+"\nError: "+e.toString());
                 }
             }
         }
