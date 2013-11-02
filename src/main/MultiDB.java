@@ -1386,9 +1386,9 @@ public class MultiDB extends JFrame {
 
 			}
 		} catch (UnsupportedFlavorException e) {
-			Errors.showError(Errors.GENERIC_STACK_TRACE,e.toString());
+			Errors.showError(Errors.GENERIC_ERROR,e.toString());
 		} catch (IOException e) {
-			Errors.showError(Errors.GENERIC_STACK_TRACE,e.toString());
+			Errors.showError(Errors.GENERIC_ERROR,e.toString());
 		}
     }
     
@@ -1512,7 +1512,7 @@ public class MultiDB extends JFrame {
            c.setPreferredWidth(30);
        	
        }catch(Exception ex){
-            Errors.showError(Errors.GENERIC_STACK_TRACE,"Error managing playlist table "+ex.getMessage());
+            Errors.showError(Errors.GENERIC_ERROR,"Error managing playlist table "+ex.getMessage());
             ex.printStackTrace();
        }
        
@@ -1850,7 +1850,10 @@ public class MultiDB extends JFrame {
       	    if (fbup!=null){  
                ProgressBarWindow pw = new ProgressBarWindow();
                pw.setFrameSize(pw.dimRelate);
-               pw.startProgBar(4);
+	   	       if (pw.startProgBar(4)<0) {
+		        	Errors.showError(Errors.GENERIC_ERROR);
+		        	return;
+		       }
          	   int ret=uploadBUP(IND_MUSIC_TAB,fbup);
          	   pw.setPer(1, "Database Music");
          	   if (ret!=0) Errors.showError(ret,"Music DB");
@@ -3219,7 +3222,10 @@ public class MultiDB extends JFrame {
            Integer tam = grupos.length;
            ProgressBarWindow pw = new ProgressBarWindow();
            pw.setFrameSize(pw.dimRelate);
-           pw.startProgBar(tam);
+	       if (pw.startProgBar(tam)<0) {
+	        	Errors.showError(Errors.GENERIC_ERROR);
+	        	return;
+	       }
            for (int j = 0; j < tam; j++) {
                String nombreGrupo = grupos[j];
         	   pw.setPer(j+1, "Loking for titles of "+nombreGrupo);
@@ -3318,7 +3324,10 @@ public class MultiDB extends JFrame {
            Integer tam = grupos.length;
            ProgressBarWindow pw = new ProgressBarWindow();
            pw.setFrameSize(pw.dimRelate);
-           pw.startProgBar(tam);
+	       if (pw.startProgBar(tam)<0) {
+	        	Errors.showError(Errors.GENERIC_ERROR);
+	        	return;
+	       }
            musicTabModel.clearData();
            for (int j = 0; j < tam; j++) {
                String nombreGrupo = grupos[j];
@@ -3504,7 +3513,7 @@ public class MultiDB extends JFrame {
 					} while (!closed);
 				}
 			} catch (Exception e) {
-				Errors.showError(Errors.GENERIC_STACK_TRACE,e.toString());
+				Errors.showError(Errors.GENERIC_ERROR,e.toString());
 			}
 		}
 
@@ -3541,11 +3550,14 @@ public class MultiDB extends JFrame {
 
 			 ProgressBarWindow pw = new ProgressBarWindow();
 	         pw.setFrameSize(pw.dimRelate);
-	         pw.startProgBar(size-1);
+		     if (pw.startProgBar(size)<0) {
+		       	Errors.showError(Errors.GENERIC_ERROR);
+		       	return;
+		     }
      
 			 for (int j = 0; j < size; j++) {
                  String nombreGrupo = folders[j];
-                 pw.setPer(j, "Adding discs of "+nombreGrupo);
+                 pw.setPer(j+1, "Adding discs of "+nombreGrupo);
                  File discosGrupoF = new File(path + sep + nombreGrupo);
                  if (discosGrupoF.isDirectory() == false) {
                       Errors.errorSint(path + sep + nombreGrupo);
@@ -3572,7 +3584,8 @@ public class MultiDB extends JFrame {
                      if (!exists) {
 							for (int k = 0; k < numeroDiscos; k++) {
 								currentDisc = new File(path + sep+ nombreGrupo + sep+ discosGrupo[k]);
-								if (currentDisc.isDirectory() == false) {Errors.errorSint(currentDisc.getAbsolutePath());
+								if (currentDisc.isDirectory() == false) {
+									Errors.errorSint(currentDisc.getAbsolutePath());
 								} else {
 									posGuion = discosGrupo[k].indexOf("-");
 									if (posGuion < 0) {
@@ -3604,11 +3617,17 @@ public class MultiDB extends JFrame {
 									}
 								}
 							}
-						}
+						}else{							
+			                 if (Errors.confirmDialog("Existing file or some error while copying, continue with the rest?")==JOptionPane.NO_OPTION){
+			                    break;
+			                 }			                    	
+			             }
 					}
              }
-			 JOptionPane.showMessageDialog(f, "Files copied successfully");
+			 JOptionPane.showMessageDialog(f, "Finished operation");
+			 pw.closeProgBar();
 		}
+		
    }
   
    //NEW DISCS OF GROUPS/////////////////////////////////////////////////////////////////////////  
@@ -3641,7 +3660,11 @@ public class MultiDB extends JFrame {
 			indexes.addAll(selectedModel);
 			ProgressBarWindow pw = new ProgressBarWindow();
 	        pw.setFrameSize(pw.dimRelate);
-	        pw.startProgBar(indexes.size());
+		    if (pw.startProgBar(indexes.size())<0) {
+			   	Errors.showError(Errors.GENERIC_ERROR);
+			   	return;
+			}
+	     
      
 			
 			for (int i=0;i<indexes.size();i++){
@@ -3717,7 +3740,10 @@ public class MultiDB extends JFrame {
 			
 			ProgressBarWindow pw = new ProgressBarWindow();
 	        pw.setFrameSize(pw.dimRelate);
-	        pw.startProgBar(selectedModel.size());
+	        if (pw.startProgBar(selectedModel.size())<0) {
+	        	Errors.showError(Errors.GENERIC_ERROR);
+	        	return;
+	        }
 			
 			for (int i=0;i<selectedModel.size();i++){
 		    	title = moviesTabModel.getMovieAtRow(selectedModel.get(i)).title;  
@@ -3752,7 +3778,10 @@ public class MultiDB extends JFrame {
 			
 			ProgressBarWindow pw = new ProgressBarWindow();
 	        pw.setFrameSize(pw.dimRelate);
-	        pw.startProgBar(selectedModel.size());
+	        if (pw.startProgBar(selectedModel.size())<0) {
+	        	Errors.showError(Errors.GENERIC_ERROR);
+	        	return;
+	        }
 	        dist=new LevenshteinDistance();
 	        dist.setThreshold(LevenshteinDistance.MED_THRESHOLD);
 			

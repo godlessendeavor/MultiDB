@@ -155,7 +155,7 @@ public class WebReader {
 			
 		} catch (Exception e) {
 			// TODO Auto-generated catch block
-			Errors.writeError(Errors.GENERIC_STACK_TRACE,"Error while decompressing stream");
+			Errors.writeError(Errors.GENERIC_ERROR,"Error while decompressing stream");
 			//e.printStackTrace();
 		}
 		return null;

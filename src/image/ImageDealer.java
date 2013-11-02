@@ -509,7 +509,7 @@ public class ImageDealer {
 		 			}
 
  			} catch (Exception e) {
- 				Errors.showWarning(Errors.GENERIC_STACK_TRACE, e.getMessage());
+ 				Errors.showWarning(Errors.GENERIC_ERROR, e.getMessage());
  				e.printStackTrace();
  			}
     		return listTi;
@@ -653,7 +653,7 @@ private class ViewCoverHandler implements ChangeListener {
         	
         	multiIm.putImage(selectCoversView, ((MultiDBImage) spinner.getValue()));
         }catch(IndexOutOfBoundsException ex){
-        	Errors.writeError(Errors.GENERIC_STACK_TRACE, ex.toString());
+        	Errors.writeError(Errors.GENERIC_ERROR, ex.toString());
         }
     }
 } //FIN HANDLER VIEW COVERS

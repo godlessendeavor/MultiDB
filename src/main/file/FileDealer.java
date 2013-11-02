@@ -8,6 +8,7 @@ import java.util.ArrayList;
 import java.util.List;
 
 import javax.swing.JFileChooser;
+import javax.swing.JOptionPane;
 import javax.swing.filechooser.FileSystemView;
 
 import main.Errors;
@@ -35,13 +36,17 @@ public class FileDealer {
                     		return true;
                     	}
                     else {
-                        if (!newDir.mkdir()) Errors.showError(Errors.FILE_NOT_FOUND,"File not found: "+ newDir.getName());
+                        if (!newDir.mkdir()) Errors.showError(Errors.FILE_NOT_POSIBLE_TO_CREATE, "Tried to create directory: " + newDir.getName());
                            else copyFiles(currentFile,newDir);
                     }
                 }else{
                     newDir=new File(toFile.getAbsolutePath()+sep+files[i]);
                     //System.out.println("copying file "+currentFile.getAbsolutePath()+"\n into "+newDir.getAbsolutePath());
-                    fileCopy(currentFile,newDir);
+                    if (!fileCopy(currentFile,newDir)){
+                    	if (Errors.confirmDialog("Could not copy file, continue with the rest?")==JOptionPane.NO_OPTION){
+                    		break;
+                    	}
+                    }
                 }
             }
         } else {
@@ -51,22 +56,26 @@ public class FileDealer {
         }
         return false;
     }
+    	
+    
 
     //copy folder and files inside folder to another folder already created
     public static boolean copyFolder(File fromFile, File toFile){
 
         File newDir = new File(toFile+File.separator+fromFile.getName());
         if (!newDir.mkdir()){
-        	Errors.showError(Errors.FILE_NOT_FOUND,"File not found: "+ newDir.getName());
+        	Errors.showError(Errors.FILE_NOT_POSIBLE_TO_CREATE,"File not found: "+ newDir.getName());
         	return true;
         }
         else return copyFiles(fromFile,newDir);
     }
 
     //copy file
-    public static void fileCopy(File fromFile, File toFile){
+    //return true if successful
+    public static boolean fileCopy(File fromFile, File toFile){
         FileInputStream fromStream = null;
         FileOutputStream toStream = null;
+        boolean result=true;
         try {
             fromStream = new FileInputStream(fromFile);
             toStream = new FileOutputStream(toFile);
@@ -79,13 +88,15 @@ public class FileDealer {
         } catch (IOException ex) {
         	Errors.showError(Errors.COPYING_IOERROR,"Could not copy file "+fromFile+ " into "+toFile+"\nError: "+ex.toString());
         	//reviewView.append("Could not copy file "+fromFile+ " into "+toFile+"\n");
+        	result = false;
         }
         finally {
             if (fromStream != null) {
                 try {
                     fromStream.close();
                 } catch (IOException e) {
-                	Errors.showError(Errors.GENERIC_STACK_TRACE,e.toString());
+                	Errors.showError(Errors.GENERIC_ERROR,e.toString());
+                	result = false;
                 }
             }
             if (toStream != null) {
@@ -93,9 +104,11 @@ public class FileDealer {
                     toStream.close();
                 } catch (IOException e) {
                 	Errors.showError(Errors.COPYING_IOERROR,"Could not copy file "+fromFile+ " into "+toFile+"\nError: "+e.toString());
+                	result = false;
                 }
             }
         }
+        return result;
     }
     
     public static File selectFile(MultiDB f,String message){

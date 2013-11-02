@@ -127,7 +127,7 @@ public class MultiDBImage{
 			Errors.writeError(Errors.WEB_ERROR_NOT_FOUND,urlstring);
 			//e.printStackTrace();
 		} catch (Exception e) {
-			Errors.writeError(Errors.GENERIC_STACK_TRACE,e.getMessage());
+			Errors.writeError(Errors.GENERIC_ERROR,e.getMessage());
 			//e.printStackTrace();
 		}
 		return null;

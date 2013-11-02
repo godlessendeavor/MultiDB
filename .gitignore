@@ -9,3 +9,4 @@
 /bin
 /multiDB.config
 /multidb.log.2
+/multidb.log.lck

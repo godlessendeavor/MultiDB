@@ -31,37 +31,38 @@ public abstract class Errors {
     public static final Integer DB_RESTORE = -10;
     
     //WEB READER ERRORS
-    public static final Integer UPLOADING_BUP=-11;
-    public static final Integer GROUP_NOT_FOUND=-12;
-    public static final Integer MOVIE_NOT_FOUND=-13;
+    public static final Integer UPLOADING_BUP=-101;
+    public static final Integer GROUP_NOT_FOUND=-102;
+    public static final Integer MOVIE_NOT_FOUND=-103;
     
     //FILE ERRORS
-    public static final Integer COPYING_FILE_EXISTS=-14;
-    public static final Integer FILE_NOT_FOUND=-15;
-    public static final Integer COPYING_IOERROR=-16;
-    public static final Integer WRITING_IOERROR=-17;
-    public static final Integer FILE_DELETE_ERROR=-18;
+    public static final Integer COPYING_FILE_EXISTS=-204;
+    public static final Integer FILE_NOT_FOUND=-205;
+    public static final Integer COPYING_IOERROR=-206;
+    public static final Integer WRITING_IOERROR=-207;
+    public static final Integer FILE_DELETE_ERROR=-208;
+    public static final Integer FILE_NOT_POSIBLE_TO_CREATE=-209;
     
     //ERROR SAVING REVIEW
-    public static final Integer SAVING_REVIEW=-19;
+    public static final Integer SAVING_REVIEW=-300;
     
     
     //WEB ERRORS
-    public static final Integer WEB_NOT_FOUND=-20;
-    public static final Integer WEB_MALF_URL=-21;
-    public static final Integer WEB_ERROR_NOT_FOUND=-22;
+    public static final Integer WEB_NOT_FOUND=-401;
+    public static final Integer WEB_MALF_URL=-402;
+    public static final Integer WEB_ERROR_NOT_FOUND=-403;
     
     //IMAGE ERRORS
-    public static final Integer IMAGE_NOT_SAVED=-23;
+    public static final Integer IMAGE_NOT_SAVED=-501;
    
     //FORMAT ERRORS
-    public static final Integer NEGATIVE_NUMBER=-24;
+    public static final Integer NEGATIVE_NUMBER=-601;
 
     //NULL ERRORS
-    public static final Integer VAR_NULL=-25;
+    public static final Integer VAR_NULL=-701;
     
     //ERROR FOR PRINTING STACKTRACE
-    public static final Integer GENERIC_STACK_TRACE = -26;
+    public static final Integer GENERIC_ERROR = -801;
     
 	//Strings for definition of errors
     public static final String SEE_LOG = "See log for details";
@@ -93,6 +94,7 @@ public abstract class Errors {
     	errorsMap.put(MOVIE_NOT_FOUND,"Film not found");
     	errorsMap.put(COPYING_FILE_EXISTS,"Error while copying file, file already exists");
     	errorsMap.put(FILE_NOT_FOUND,"Error, file not found");
+    	errorsMap.put(FILE_NOT_POSIBLE_TO_CREATE, "Error trying to create folder or file");
     	errorsMap.put(COPYING_IOERROR,"Error copying file, IOError");
     	errorsMap.put(WRITING_IOERROR,"Error writing to file, IOError");
     	errorsMap.put(FILE_DELETE_ERROR,"Error deleting file");
@@ -103,7 +105,7 @@ public abstract class Errors {
     	errorsMap.put(WEB_ERROR_NOT_FOUND,"Error, web server returns no expected data");
     	errorsMap.put(IMAGE_NOT_SAVED,"Couldn't save image");   
     	errorsMap.put(VAR_NULL,"Error with some var null");
-    	errorsMap.put(GENERIC_STACK_TRACE,"Error, see log for details"); 	
+    	errorsMap.put(GENERIC_ERROR,"Error, see log for details"); 	
     }
     
     public static void setWarnings(){
@@ -176,6 +178,10 @@ public abstract class Errors {
 		}		
 	}
 
+	public static int confirmDialog(String message){
+		return JOptionPane.showConfirmDialog(f, message);
+	}
+	
 ///////////////////////////////////////////////////////////////////////////////////
 //////////////////////SETUP LOGGING/////////////////////////////////////////////////////////////
 ///////////////////////////////////////////////////////////////////////////////////
