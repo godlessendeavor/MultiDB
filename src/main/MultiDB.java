@@ -3548,7 +3548,7 @@ public class MultiDB extends JFrame {
 		@Override
 		public void run() {
 
-			 ProgressBarWindow pw = new ProgressBarWindow();
+			 ProgressBarWindow pw = new ProgressBarWindow(true,false);
 	         pw.setFrameSize(pw.dimRelate);
 		     if (pw.startProgBar(size)<0) {
 		       	Errors.showError(Errors.GENERIC_ERROR);
@@ -3556,7 +3556,11 @@ public class MultiDB extends JFrame {
 		     }
      
 			 for (int j = 0; j < size; j++) {
-                 String nombreGrupo = folders[j];
+				 if (pw.aborted) {
+                	 pw.closeProgBar();
+                	 break;
+                 }
+                 String nombreGrupo = folders[j];                
                  pw.setPer(j+1, "Adding discs of "+nombreGrupo);
                  File discosGrupoF = new File(path + sep + nombreGrupo);
                  if (discosGrupoF.isDirectory() == false) {
