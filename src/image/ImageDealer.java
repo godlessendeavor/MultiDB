@@ -3,6 +3,7 @@ package image;
 import java.awt.Dimension;
 import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
+import java.awt.event.WindowAdapter;
 import java.io.File;
 import java.io.IOException;
 import java.net.URLEncoder;
@@ -64,6 +65,8 @@ public class ImageDealer {
 	public static boolean otherCover=false;
     private Disc currentDisc;
     private MultiDBImage multiIm;
+    private JLabel currentLabel; 
+    private File currentPath;
     
     protected JLabel selectCoversView;
     protected JFrame selectCoverFrame;
@@ -193,8 +196,17 @@ public class ImageDealer {
 	    layout.putConstraint(SOUTH, selectCoversView,-3, SOUTH, selectCoverFrame.getContentPane());
 	    layout.putConstraint(WEST, selectCoversView,20, WEST, selectCoverFrame.getContentPane());
 	    
+	    FrameCloseHandler frameCloseHandler = new FrameCloseHandler();
+	    selectCoverFrame.addWindowListener(frameCloseHandler);
     }
     
+	private class FrameCloseHandler extends WindowAdapter{
+		@Override
+	    public void windowClosing(java.awt.event.WindowEvent windowEvent) {
+			ImageDealer.this.showImage(ImageDealer.this.currentPath, ImageDealer.this.currentLabel, "front");
+		    selectCoverFrame.dispose();
+	    }
+	}
     
     public void searchImage(String name,String type){
     	selectFrameInit();
@@ -257,6 +269,8 @@ public class ImageDealer {
     public boolean showImage(File pathDisc,JLabel labelIn,String type){
     	int indexCover=0;
     	boolean found=false;
+    	currentLabel = labelIn;
+    	currentPath = pathDisc; 
     	
 		imageList.clear();			
 		imageList=getListOfImages(pathDisc);

@@ -3307,7 +3307,7 @@ public class MultiDB extends JFrame {
    
    
    
-   //RELATE DATABASE BACKUP/////////////////////////////////////////////////////////////////////////
+   //LOAD FOLDER TEMP /////////////////////////////////////////////////////////////////////////
    public class LoadFolderTempThread extends Thread {
 	   private int posGuion = -1, longNombre = -1;
 	   private String discsNF = "";
@@ -3365,20 +3365,6 @@ public class MultiDB extends JFrame {
                                    disco.path = discoF;
                                    disco.present="YES";
                                    musicTabModel.addDisc(disco);
-                                   //OPCIONAL!!
-                                   //busqueda de carpetas llamadas cover para avisar que las portadas estan ahi
-                                   /*files = discoF.list();
-                                   numberFiles = files.length;
-                                   for (int i = 0; i < numberFiles; i++) {
-                                       File fileArchivo = new File(backUpPath + sep + nombreGrupo + sep + discosGrupo[k] + "//" + files[i]);
-                                       if (fileArchivo.isDirectory()) {
-                                           files[i] = files[i].toLowerCase();
-
-                                           if (files[i].indexOf("cover") > -1) {
-                                               disCover.add(disco);
-                                           }
-                                       }
-                                   }*/
 
                                    musicFolderConnected=true;
                                    menuPlay.setEnabled(true);
