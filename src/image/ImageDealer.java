@@ -246,7 +246,7 @@ public class ImageDealer {
     }
     
     public void showImages(File pathDisc){    	
-    	if ((imageList=getListOfImages(pathDisc)).size()>1){
+    	if ((imageList=getListOfImages(pathDisc)).size()>0){
     		showListOfImages();
     	}else JOptionPane.showMessageDialog(selectCoverFrame,"Cannot find images");
     }
