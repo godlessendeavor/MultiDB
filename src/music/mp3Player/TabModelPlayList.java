@@ -92,6 +92,10 @@ public class TabModelPlayList extends AbstractTableModel {
         return songList;
     }
     
+    public List<Song> searchFiles(File pathFolder,boolean addToTable){
+    	return searchFiles(pathFolder, addToTable, "undefined", "undefined");    	
+    }
+    
     public int getRowCount() {
         return data.size();
     }

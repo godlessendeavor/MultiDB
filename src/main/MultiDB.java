@@ -84,6 +84,7 @@ import javax.swing.undo.UndoManager;
 
 import main.file.FileDealer;
 import main.ftp.FTPManager;
+import main.utils.LevenshteinDistance;
 import main.view.tables.ComboTableCellRenderer;
 import main.view.tables.DocsTableRenderer;
 import main.view.tables.MoviesTableRenderer;
@@ -95,6 +96,7 @@ import music.db.Disc;
 import music.db.NewDiscTabMod;
 import music.dealfiles.DealMusicFiles;
 import music.mp3Player.MP3Player;
+import music.mp3Player.MP3PlayerWindow;
 import music.mp3Player.PlayingEvent;
 import music.mp3Player.PlayingListener;
 import music.mp3Player.Song;
@@ -116,7 +118,7 @@ public class MultiDB extends JFrame {
 
     public final Dimension COVERS_DIM = new Dimension(400,400);
     public final Dimension MAX_COVERS_DIM = new Dimension(1200,800);
-    public final Dimension PLAYER_DIM = new Dimension(1000,600);
+    public static final Dimension PLAYER_DIM = new Dimension(1000,600);
     public final Dimension LYRICS_DIM = new Dimension(500,700);
     public final Dimension MAIN_DIM = new Dimension(1230, 700);
     public final Dimension PANE_DIM = new Dimension(1200, 600);
@@ -187,7 +189,7 @@ public class MultiDB extends JFrame {
     public List<Integer> selectedView = new LinkedList<Integer>();//selected Rows in table (View)
     public List<Integer> selectedModel = new LinkedList<Integer>();//selected Rows in table (Model)   
     public TimerThread timerThread;
-    public RandomPlayThread randomPlayThread;
+    //public RandomPlayThread randomPlayThread;
     public Clipboard sysClipboard;
     public long lastTime;
     public int currentCharPos;
@@ -278,6 +280,7 @@ public class MultiDB extends JFrame {
     public MP3Player mp3Player;
     public TabModelPlayList playList;
     public JFrame playerFrame;
+    public MP3PlayerWindow mp3PlayerWindow; 
     //public JButton playButton;
     public JButton pauseResumeButton,stopButton,resetEqButton;
     public JTable playListTable;
@@ -326,6 +329,7 @@ public class MultiDB extends JFrame {
     public void initApi(){
     	
     	Errors.setLogging();
+    	this.setIconImage(Toolkit.getDefaultToolkit().getImage("static\thrash8Icon.jpg")); 
     	//initializing vars
     	this.setSize(MAIN_DIM);
     	this.setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
@@ -352,6 +356,8 @@ public class MultiDB extends JFrame {
         dbCSV = new CSV();
         mp3Player = new MP3Player();
         imageDealer = new ImageDealer();
+        mp3PlayerWindow = new MP3PlayerWindow();
+        
         //common
         webMusicInfoExtractor = new WebMusicInfoExtractor();
         webMoviesInfoExtractor = new WebMoviesInfoExtractor();
@@ -1000,17 +1006,17 @@ public class MultiDB extends JFrame {
 //////////////////////layout for playerFrame////////////////////////////////////////////////////////
         
 		//frames
-        playerFrame=new JFrame("MP3Player");
+    /*    playerFrame=new JFrame("MP3Player");
         playerFrame.setSize(PLAYER_DIM);
         playerIntFrame = new JInternalFrame();
         equalizerFrame = new JInternalFrame();
         playerIntFrame.setTitle("Player");
         equalizerFrame.setTitle("Equalizer");
         playerIntFrame.setVisible(true);
-        equalizerFrame.setVisible(true);
+        equalizerFrame.setVisible(true);*/
 
         //layouts
-        BoxLayout blay1=new BoxLayout(playerIntFrame.getContentPane(),BoxLayout.Y_AXIS);
+    /*    BoxLayout blay1=new BoxLayout(playerIntFrame.getContentPane(),BoxLayout.Y_AXIS);
         playerIntFrame.getContentPane().setLayout(blay1);
         
         BoxLayout blay2=new BoxLayout(equalizerFrame.getContentPane(),BoxLayout.X_AXIS);
@@ -1019,9 +1025,9 @@ public class MultiDB extends JFrame {
         
         //Buttons
         
-   /*     playButton=new JButton("Play");
+        playButton=new JButton("Play");
         PlayButtonHandler playButtonHandler = new PlayButtonHandler();
-        playButton.addActionListener(playButtonHandler);*/
+        playButton.addActionListener(playButtonHandler);
         pauseResumeButton=new JButton("Pause/Resume");
         PauseResumeHandler pauseResumeHandler = new PauseResumeHandler();
         pauseResumeButton.addActionListener(pauseResumeHandler);
@@ -1108,7 +1114,7 @@ public class MultiDB extends JFrame {
         lyricsFrame.add(spLyrics);
         lyricsFrame.add(saveLyricsButton);
         lyricsFrame.add(downloadLyricsButton);
-  
+  */
        
 ///////////////////////ADDING LISTENER HANDLERS//////////////////////////////////////////////
 
@@ -1208,7 +1214,7 @@ public class MultiDB extends JFrame {
         coversView.addMouseListener(changeCoverListener);
         
             
-        /////////////////////////////player//////////////////////////////////////////
+  /*      /////////////////////////////player//////////////////////////////////////////
         //handler to close de player when closing the window
         ClosePlayerHandler closePlayerHandler = new ClosePlayerHandler();
         playerFrame.addWindowListener(closePlayerHandler);
@@ -1238,6 +1244,9 @@ public class MultiDB extends JFrame {
         //handler to close the player when closing the window
         CloseLyricsFrameHandler closeLyricsFrameHandler = new CloseLyricsFrameHandler();
         lyricsFrame.addWindowListener(closeLyricsFrameHandler);
+        
+        //////////////////////////////////////////////////////////////////////
+        */
         if (!isdb){
         	File file=FileDealer.selectFile(f,"Please select file for music database");
    	        if (file != null) {              //para todos los grupos de la carpeta
@@ -1431,7 +1440,7 @@ public class MultiDB extends JFrame {
     	docsTabModel.setValueAt(comments,selectedModelRow,Doc.COL_COMMENTS);
     	docsDataBase.updateCommentsOnly(docsTabModel.getDocAtRow(selectedModelRow));
     }
-
+/*
 //method to save current lyrics in a file  
     public void saveCurrentLyrics(){
     	File fileToWrite;
@@ -1456,7 +1465,7 @@ public class MultiDB extends JFrame {
 		}
     	
     }
-    
+    */
     //method to transform Rows selected in View to Model
     public List<Integer> transformViewSelectedToModel(List<Integer> selectedView){
     	selectedModel.clear();
@@ -1479,7 +1488,7 @@ public class MultiDB extends JFrame {
     	return selectedModel;
     }
   //method to manage layout of playlist table  
-   public void managePlayListTable(){
+   /*public void managePlayListTable(){
 	   ////managing layout
        try{
 	       TableColumn c = playListTable.getColumn("t");
@@ -1518,7 +1527,7 @@ public class MultiDB extends JFrame {
        
    }
    
-  
+  */
    
    public int uploadBUP(int db,File fbup){
    	
@@ -2322,7 +2331,7 @@ public class MultiDB extends JFrame {
    }
    
    
-   
+ /*  
 ////////////////////////////////////OTHER BUTTONS HANDLERS\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\
 ////////////////////////////////////OTHER BUTTONS HANDLERS\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\
 
@@ -2342,7 +2351,7 @@ public class MultiDB extends JFrame {
 			getLyricsThread.start();
 		}
  }//END OF SAVELYRICSHANDLER
-   
+   */
 
 ///////////////////////////////////////POPUPMENUS ACTIONLISTENERS\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\
 ///////////////////////////////////////POPUPMENUS ACTIONLISTENERS\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\
@@ -2402,7 +2411,12 @@ public class MultiDB extends JFrame {
        File pathDisc;
         public void actionPerformed(ActionEvent e) {
              pathDisc = (File) musicTabModel.getValueAt(selectedModelRow,Disc.COL_PATH);
-             playList.removeAllRows();
+             mp3PlayerWindow.setMusicTabModel(musicTabModel);
+             mp3PlayerWindow.setPlayer(mp3Player);
+             
+             mp3PlayerWindow.openAndStartPlaying(pathDisc,(String)musicTabModel.getValueAt(selectedModelRow,Disc.COL_GROUP),(String)musicTabModel.getValueAt(selectedModelRow,Disc.COL_TITLE));
+             
+/*             playList.removeAllRows();
              playList.numSongs=0;
              playList.searchFiles(pathDisc,true,(String)musicTabModel.getValueAt(selectedModelRow,Disc.COL_GROUP),(String)musicTabModel.getValueAt(selectedModelRow,Disc.COL_TITLE));
              if (playList.numSongs!=0){
@@ -2424,7 +2438,7 @@ public class MultiDB extends JFrame {
 	             splitPlayer.setDividerLocation(divLoc);
             } else {
                 JOptionPane.showMessageDialog(f,"Cannot find playable files\n");
-            }
+            }*/
         }
     } //Playing disc
    
@@ -2454,12 +2468,17 @@ public class MultiDB extends JFrame {
 		            		options,  //the titles of buttons
 		            		options[0]); //default button title
 		            if (select!=JOptionPane.CLOSED_OPTION){
-		            	randomPlayThread = new RandomPlayThread();
+		            	boolean fav = true;
+		            	if (select==JOptionPane.OK_OPTION) fav=true;
+		            	else fav=false;
+		            	mp3PlayerWindow.openAndStartPlaying(mark, fav);
+		            	/*randomPlayThread = new RandomPlayThread(); 
 		            	if (select==JOptionPane.OK_OPTION) randomPlayThread.fav=true;
 		            	else randomPlayThread.fav=false;
+		            	
 		            	randomPlayThread.mark=mark;
 		            	mark=-1.0;
-		            	randomPlayThread.start();
+		            	randomPlayThread.start();*/
 		            }
 	            }            	
         }
@@ -2828,7 +2847,7 @@ public class MultiDB extends JFrame {
        }
    } //TABLEKEYLISTENERHANDLER END
    
-   
+   /*
    
    private class CloseLyricsFrameHandler extends WindowAdapter {
 
@@ -2847,7 +2866,7 @@ public class MultiDB extends JFrame {
           }      
        }
    } //CLOSEPLAYERHANDLER
-   
+*/   
    private class TabbedPaneListener implements ChangeListener{
 
 	@Override
@@ -3002,7 +3021,7 @@ public class MultiDB extends JFrame {
       }
   }
    
-   ////////////////////////////////songs table popup////////////////
+  /* ////////////////////////////////songs table popup////////////////
    private class PopupSongListener extends MouseAdapter{
        @Override     
        public void mousePressed(MouseEvent e) {
@@ -3150,7 +3169,7 @@ public class MultiDB extends JFrame {
 		}
 
 	}
-   
+   */
    
 //////////////////////////////////////END OF HANDLERS/////////////////////////////////////////////////////////////// 
    
@@ -3702,7 +3721,7 @@ public class MultiDB extends JFrame {
 		}
    	}
 
-   //GET LYRICS/////////////////////////////////////////////////////////////////////////  
+  /* //GET LYRICS/////////////////////////////////////////////////////////////////////////  
    public class GetLyricsThread extends Thread {
 	   
 		public GetLyricsThread() {
@@ -3713,7 +3732,7 @@ public class MultiDB extends JFrame {
 		public void run() {
 			lyricsView.setText(webMusicInfoExtractor.getLyricsOfDisc(lyricsGroup,lyricsAlbum,"webEM"));	
 		}
-   }
+   }*/
    
    //GET FILM DATA/////////////////////////////////////////////////////////////////////////  
    public class GetFilmDataThread extends Thread {
@@ -3802,7 +3821,7 @@ public class MultiDB extends JFrame {
    }
    
   
-   
+   /*
    //RANDOM PLAY/////////////////////////////////////////////////////////////////////////  
    public class RandomPlayThread extends Thread {
 	   
@@ -3826,7 +3845,7 @@ public class MultiDB extends JFrame {
 		public void run() {
 
 			selectedDiscs=getListOfDiscsByMark(mark);
-			/*System.out.println(selectedDiscs.size());
+			System.out.println(selectedDiscs.size());
         	
 		    for(int j=0;j<selectedDiscs.size();j++){
 	            	playList.removeAllRows();
@@ -3839,7 +3858,7 @@ public class MultiDB extends JFrame {
                     } catch (MP3FilesNotFound ex) {
                     	System.out.println(currentGroup+ " "+currentAlbum);
 	                }
-	            } */
+	            } 
 			
 			
             do{
@@ -3926,12 +3945,12 @@ public class MultiDB extends JFrame {
 			dist.setThreshold(LevenshteinDistance.MED_THRESHOLD);
 			
 			//////////WITH NO REGEX/////////////////
-			/*while (rev.indexOf("\"") > -1) {
+			while (rev.indexOf("\"") > -1) {
 				rev = rev.substring(rev.indexOf("\"")+"\"".length(),rev.length());
 				if (rev.indexOf("\"")>-1) {
 					currFav= rev.substring(0,rev.indexOf("\""));
 					rev = rev.substring(rev.indexOf("\"")+"\"".length(),rev.length());
-				}*/
+				}
 			
 			
 			Pattern pattern = Pattern.compile("\"[^\"]*?\"");
@@ -3966,6 +3985,6 @@ public class MultiDB extends JFrame {
 			}
 		}
   }
-
+*/
 }
 	

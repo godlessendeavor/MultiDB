@@ -152,7 +152,7 @@ public class WebMusicInfoExtractor {
 	}
 	
 	
-	public String getLyricsOfDisc(String lyricsGroup,String lyricsAlbum,String web){
+	public static String getLyricsOfDisc(String lyricsGroup,String lyricsAlbum,String web){
 		String lyrics="";
 		if (web.compareTo("webEM")==0) {
 			lyrics=WebEncyclopediaMetallum.getLyricsOfDisc(lyricsGroup,lyricsAlbum);
