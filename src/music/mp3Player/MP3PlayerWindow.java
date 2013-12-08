@@ -57,6 +57,7 @@ import musicmovies.db.Video;
 public class MP3PlayerWindow {
 
     public static final Dimension PLAYER_DIM = new Dimension(1000,600);
+    public static final Dimension COVER_DIM = new Dimension(250,250);
     public static final int EQ_NUM_BANDS = 10;
     public final String LYR_PLAYER_NAME="playerLyricsMenu";
     
@@ -150,11 +151,13 @@ public class MP3PlayerWindow {
 	    
 	    
 	    //slider
-	    songSlider= new JSlider(JSlider.HORIZONTAL,0,0,0);
+	    songSlider = new JSlider(JSlider.HORIZONTAL,0,0,0);
 	    songSlider.setMajorTickSpacing(60);
 	    songSlider.setMinorTickSpacing(1);
 	    songSlider.setPaintLabels(true);
 	    songSlider.setPaintTicks(true);
+	    songSlider.setBounds(10, 55, 614, 47);
+	    playerFrame.getContentPane().add(songSlider);
 	    songInformation = new JTextField("");      
 	    
 	    //equalizer
@@ -166,7 +169,7 @@ public class MP3PlayerWindow {
 	    	equalizer[i].setPaintLabels(true);
 	    	equalizer[i].setPaintTicks(true);
 	    	equalizer[i].setName(((Integer)i).toString());
-	    	equalizer[i].setBounds(20+30*i, 480, 41, 101);
+	    	equalizer[i].setBounds(20+30*i, 490, 41, 101);
 	    	playerFrame.getContentPane().add(equalizer[i]);
 	    }
 	    resetEqButton=new JButton("Reset");
@@ -183,7 +186,7 @@ public class MP3PlayerWindow {
 	    playListTable.setDefaultRenderer(Object.class,playerTableRenderer);
 	    //playListTable.setBorder(new SoftBevelBorder(BevelBorder.LOWERED, null, null, null, null));
 	    spPlay = new JScrollPane();
-	    spPlay.setBounds(10, 53, 614, 424);
+	    spPlay.setBounds(10, 104, 614, 374);
 	    //spPlay.setHorizontalScrollBarPolicy(ScrollPaneConstants.HORIZONTAL_SCROLLBAR_NEVER);
 	    spPlay.setViewportView(playListTable);
 	    playListTable.setAutoResizeMode(JTable.AUTO_RESIZE_ALL_COLUMNS);
@@ -191,13 +194,13 @@ public class MP3PlayerWindow {
 	    
 		picPanel = new JPanel();
 		picPanel.setBorder(new LineBorder(new Color(0, 0, 0)));
-		picPanel.setBounds(634, 53, 249, 251);
+		picPanel.setBounds(634, 53, COVER_DIM.width, COVER_DIM.height);
 		playerFrame.getContentPane().add(picPanel);
 		picPanel.setLayout(null);
 		
 		picLabel = new JLabel("Cover");
 		picLabel.setToolTipText("Cover");
-		picLabel.setBounds(0, 0, 249, 251);
+		picLabel.setBounds(-2, 0, COVER_DIM.width, COVER_DIM.height);
 		picPanel.add(picLabel);
 		picLabel.setBackground(new Color(102, 204, 102));
 		
@@ -426,7 +429,7 @@ public class MP3PlayerWindow {
 	
     private void setCurrentCover(){
     	File pathDisc = playList.getSongAtRow(mp3Player.currentSong).discPath;
-		if (!imageDealer.showImage(pathDisc, picLabel,ImageDealer.FRONT_COVER)){
+		if (!imageDealer.showImage(pathDisc, picLabel,ImageDealer.FRONT_COVER, COVER_DIM)){
 			picLabel.setIcon(null);
 			picLabel.setText("Image not found");
 		}

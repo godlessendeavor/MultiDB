@@ -271,6 +271,10 @@ public class ImageDealer {
     }
     
     public boolean showImage(File pathDisc,JLabel labelIn,int type){
+    	return showImage(pathDisc, labelIn, type, COVERS_DIM);
+    }
+    
+    public boolean showImage(File pathDisc,JLabel labelIn,int type, Dimension dim){
     	int indexCover=0;
     	boolean found=false;
     	currentLabel = labelIn;
@@ -294,7 +298,7 @@ public class ImageDealer {
 			
 		if (found) {
 			if (type == FRONT_COVER) frontCover = true; else frontCover = false;
-			multiIm.putImage(labelIn, MultiDBImage.FILE_TYPE, imageList.get(indexCover).path.getAbsolutePath());
+			multiIm.putImage(labelIn, MultiDBImage.FILE_TYPE, imageList.get(indexCover).path.getAbsolutePath(), dim);
 		} else  showListOfImages();			
 		return true;
     }
