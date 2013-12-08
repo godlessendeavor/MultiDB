@@ -20,8 +20,6 @@ import java.awt.event.KeyAdapter;
 import java.awt.event.KeyEvent;
 import java.awt.event.MouseAdapter;
 import java.awt.event.MouseEvent;
-import java.awt.event.WindowAdapter;
-import java.awt.event.WindowEvent;
 import java.io.BufferedReader;
 import java.io.BufferedWriter;
 import java.io.File;
@@ -32,17 +30,12 @@ import java.io.PrintWriter;
 import java.util.ArrayList;
 import java.util.LinkedList;
 import java.util.List;
-import java.util.Random;
 import java.util.Set;
 import java.util.TreeSet;
-import java.util.regex.Matcher;
-import java.util.regex.Pattern;
 
 import javax.swing.AbstractAction;
 import javax.swing.AbstractCellEditor;
 import javax.swing.BorderFactory;
-import javax.swing.BoxLayout;
-import javax.swing.DefaultCellEditor;
 import javax.swing.ImageIcon;
 import javax.swing.JButton;
 import javax.swing.JComboBox;
@@ -97,9 +90,6 @@ import music.db.NewDiscTabMod;
 import music.dealfiles.DealMusicFiles;
 import music.mp3Player.MP3Player;
 import music.mp3Player.MP3PlayerWindow;
-import music.mp3Player.PlayingEvent;
-import music.mp3Player.PlayingListener;
-import music.mp3Player.Song;
 import music.mp3Player.TabModelPlayList;
 import music.web.WebMusicInfoExtractor;
 import musicmovies.db.Video;
@@ -1002,123 +992,7 @@ public class MultiDB extends JFrame {
 		//newDiscs Frame
 		newDiscsFrame = new JFrame("New Discs");
         newDiscsFrame.add(newDiscsSp);
-        
-//////////////////////layout for playerFrame////////////////////////////////////////////////////////
-        
-		//frames
-    /*    playerFrame=new JFrame("MP3Player");
-        playerFrame.setSize(PLAYER_DIM);
-        playerIntFrame = new JInternalFrame();
-        equalizerFrame = new JInternalFrame();
-        playerIntFrame.setTitle("Player");
-        equalizerFrame.setTitle("Equalizer");
-        playerIntFrame.setVisible(true);
-        equalizerFrame.setVisible(true);*/
 
-        //layouts
-    /*    BoxLayout blay1=new BoxLayout(playerIntFrame.getContentPane(),BoxLayout.Y_AXIS);
-        playerIntFrame.getContentPane().setLayout(blay1);
-        
-        BoxLayout blay2=new BoxLayout(equalizerFrame.getContentPane(),BoxLayout.X_AXIS);
-        equalizerFrame.getContentPane().setLayout(blay2);        
-        
-        
-        //Buttons
-        
-        playButton=new JButton("Play");
-        PlayButtonHandler playButtonHandler = new PlayButtonHandler();
-        playButton.addActionListener(playButtonHandler);
-        pauseResumeButton=new JButton("Pause/Resume");
-        PauseResumeHandler pauseResumeHandler = new PauseResumeHandler();
-        pauseResumeButton.addActionListener(pauseResumeHandler);
-        stopButton=new JButton("Stop");
-        StopButtonHandler stopButtonHandler = new StopButtonHandler();
-        stopButton.addActionListener(stopButtonHandler);
-        //playerFrame.add(playButton);
-        
-        
-        //slider
-        songSlider= new JSlider(JSlider.HORIZONTAL,0,0,0);
-        songSlider.setMajorTickSpacing(60);
-        songSlider.setMinorTickSpacing(1);
-        songSlider.setPaintLabels(true);
-        songSlider.setPaintTicks(true);
-        songInformation = new JTextField("");      
-        
-        playerIntFrame.add(pauseResumeButton);
-        playerIntFrame.add(stopButton);
-        playerIntFrame.add(songSlider);
-        playerIntFrame.add(songInformation);
-        
-        //equalizer
-        equalizer = new JSlider[EQ_NUM_BANDS];
-        int i;
-        for(i=0;i<EQ_NUM_BANDS;i++){  	
-        	equalizer[i]=new JSlider(JSlider.VERTICAL,-100,100,0); 
-        	equalizer[i].setMinorTickSpacing(1);
-        	equalizer[i].setPaintLabels(true);
-        	equalizer[i].setPaintTicks(true);
-        	equalizer[i].setName(((Integer)i).toString());
-        	equalizerFrame.add(equalizer[i]);
-        }
-        resetEqButton=new JButton("Reset");
-        ResetEqHandler resetEqHandler = new ResetEqHandler();
-        resetEqButton.addActionListener(resetEqHandler);
-        equalizerFrame.add(resetEqButton);
-        
-        //splits
-        splitPlayer = new JSplitPane(JSplitPane.VERTICAL_SPLIT,playerIntFrame,equalizerFrame);
-        splitPlayer.setDividerLocation(400);
-        playerFrame.add(splitPlayer);
-        
-        //songs table        
-        playListTable=new JTable();
-        playList = new TabModelPlayList();
-        spPlay = new JScrollPane(playListTable);
-        playerTableRenderer = new PlayerTableRenderer();
-        playListTable.setDefaultRenderer(Object.class,playerTableRenderer);
-        playerIntFrame.add(spPlay);        
-        
-        //popupmenu
-        popupSong = new JPopupMenu();
-		JMenuItem seeLyricsMenu = new JMenuItem("View Lyrics");
-		PopupMenuViewLyricsHandler popupMenuSeeLyrics = new PopupMenuViewLyricsHandler();
-		seeLyricsMenu.addActionListener(popupMenuSeeLyrics);
-		seeLyricsMenu.setName(LYR_PLAYER_NAME);
-		popupSong.add(seeLyricsMenu);
-        
-        //popupmenulistener
-        PopupSongListener popupSongListener = new PopupSongListener();
-        playListTable.addMouseListener(popupSongListener);
-        
-        
-////////////layout for lyrics frame////////////////////////////////////////////////////////////////////////
-        lyricsFrame=new JFrame("Lyrics");
-        lyricsFrame.setSize(LYRICS_DIM);
-        lyricsFrame.setDefaultCloseOperation(DO_NOTHING_ON_CLOSE);
-        lyricsView = new JTextArea();
-        lyricsView.setFont(font);
-        lyricsView.setForeground(Color.BLACK);
-        lyricsView.setBackground(Color.CYAN);
-        lyricsView.setLineWrap(true);
-        lyricsView.setWrapStyleWord(true);
-        spLyrics = new JScrollPane(lyricsView);
-        saveLyricsButton=new JButton("Save Lyrics");
-        SaveLyricsButtonHandler saveLyricsButtonHandler = new SaveLyricsButtonHandler();
-        saveLyricsButton.addActionListener(saveLyricsButtonHandler);
-        downloadLyricsButton=new JButton("Download Lyrics");
-        DownloadLyricsButtonHandler downloadLyricsButtonHandler = new DownloadLyricsButtonHandler();
-        downloadLyricsButton.addActionListener(downloadLyricsButtonHandler);
-        BoxLayout blay=new BoxLayout(lyricsFrame.getContentPane(),BoxLayout.Y_AXIS);
-        lyricsFrame.getContentPane().setLayout(blay);
-        lyricsFrame.add(spLyrics);
-        lyricsFrame.add(saveLyricsButton);
-        lyricsFrame.add(downloadLyricsButton);
-  */
-       
-///////////////////////ADDING LISTENER HANDLERS//////////////////////////////////////////////
-
-        
         ///////////////////////////for every table/////////////////////////////////////
         //n-tuplas where needed
 
@@ -1213,40 +1087,8 @@ public class MultiDB extends JFrame {
         ChangeCoverListener changeCoverListener = new ChangeCoverListener();
         coversView.addMouseListener(changeCoverListener);
         
-            
-  /*      /////////////////////////////player//////////////////////////////////////////
-        //handler to close de player when closing the window
-        ClosePlayerHandler closePlayerHandler = new ClosePlayerHandler();
-        playerFrame.addWindowListener(closePlayerHandler);
-        
-        //handler to edit name of played files
-        SongEditorHandler songEditorHandler = new SongEditorHandler();
-        DefaultCellEditor dcePlayer = (DefaultCellEditor) playListTable.getDefaultEditor(Object.class);
-        dcePlayer.addCellEditorListener(songEditorHandler);
-        
-        //handlers to manage the slider of mp3player     
-        //controls the time elapsed
-        PlayingHandler playingHandler = new PlayingHandler();
-        mp3Player.setPlayingListener(playingHandler);
-        
-        //manages the skipping of the song played
-        SongSliderHandler songSliderHandler = new SongSliderHandler();
-        songSlider.addMouseListener(songSliderHandler);
-        
-        
-        //Equalization slider handler
-        EqSliderHandler eqSliderHandler = new EqSliderHandler();
-        for (i=0;i<10;i++){
-        	equalizer[i].addChangeListener(eqSliderHandler);
-        }
-        
-        /////////////////////////////////lyrics/////////////////////////////////////////
-        //handler to close the player when closing the window
-        CloseLyricsFrameHandler closeLyricsFrameHandler = new CloseLyricsFrameHandler();
-        lyricsFrame.addWindowListener(closeLyricsFrameHandler);
-        
         //////////////////////////////////////////////////////////////////////
-        */
+        
         if (!isdb){
         	File file=FileDealer.selectFile(f,"Please select file for music database");
    	        if (file != null) {              //para todos los grupos de la carpeta
@@ -1401,7 +1243,7 @@ public class MultiDB extends JFrame {
 		}
     }
     
-    public void showCover(String type){
+    public void showCover(int type){
         boolean present=false;
         File pathDisc;
 
@@ -2471,6 +2313,8 @@ public class MultiDB extends JFrame {
 		            	boolean fav = true;
 		            	if (select==JOptionPane.OK_OPTION) fav=true;
 		            	else fav=false;
+		            	mp3PlayerWindow.setMusicTabModel(musicTabModel);
+		                mp3PlayerWindow.setPlayer(mp3Player);
 		            	mp3PlayerWindow.openAndStartPlaying(mark, fav);
 		            	/*randomPlayThread = new RandomPlayThread(); 
 		            	if (select==JOptionPane.OK_OPTION) randomPlayThread.fav=true;
@@ -2496,7 +2340,7 @@ public class MultiDB extends JFrame {
        public void actionPerformed(ActionEvent e) {
     	   lyricsView.setText("");
     	   if (((JMenuItem)e.getSource()).getName().compareTo(LYR_PLAYER_NAME)==0) {
-    	    	lyricsPath = playList.pathFolder;
+    	    	lyricsPath = playList.getSongAtRow(selectedModelRowPlayer).discPath;
     	    	lyricsGroup = playList.getSongAtRow(selectedModelRowPlayer).group;
     	    	lyricsAlbum = playList.getSongAtRow(selectedModelRowPlayer).album;
     	   }
@@ -2739,7 +2583,7 @@ public class MultiDB extends JFrame {
             	   review=review.replace("\\\"","\"");
             	   reviewView.setText(review);
             	   imageDealer.setDisc(musicTabModel.getDiscAtRow(selectedModelRow));
-            	   if (musicFolderConnected) showCover("front");
+            	   if (musicFolderConnected) showCover(ImageDealer.FRONT_COVER);
                }
                if (multiPane.getSelectedIndex()==IND_VIDEOS_TAB){
             	   String comment=(String)videosTabModel.getValueAt(selectedModelRow, Video.COL_REVIEW);
@@ -3010,10 +2854,10 @@ public class MultiDB extends JFrame {
           if (SwingUtilities.isLeftMouseButton(e)) {
              if (ImageDealer.frontCover) {
             	 ImageDealer.frontCover=false;
-                 if (musicFolderConnected) showCover("back");
+                 if (musicFolderConnected) showCover(ImageDealer.FRONT_COVER);
              }
              else {
-            	 if (musicFolderConnected) showCover("front");
+            	 if (musicFolderConnected) showCover(ImageDealer.BACK_COVER);
              }           
           } else if (SwingUtilities.isRightMouseButton(e)){
           	popupCover.show(e.getComponent(),e.getX(), e.getY());         	
@@ -3021,155 +2865,6 @@ public class MultiDB extends JFrame {
       }
   }
    
-  /* ////////////////////////////////songs table popup////////////////
-   private class PopupSongListener extends MouseAdapter{
-       @Override     
-       public void mousePressed(MouseEvent e) {
-           if (SwingUtilities.isRightMouseButton(e)) {
-               Point p = e.getPoint();// get the coordinates of the mouse click
-               selectedViewRowPlayer = playListTable.rowAtPoint(p);
-               selectedModelRowPlayer = playListTable.convertRowIndexToModel(selectedViewRowPlayer);
-               playListTable.changeSelection(selectedViewRowPlayer, selectedModelRowPlayer, false, false);
-           }
-       }
-       @Override
-       public void mouseReleased(MouseEvent e) {
-           if (e.isPopupTrigger()) {
-        	   popupSong.show(e.getComponent(),e.getX(), e.getY());
-           }
-       }
-  }
-   
-
-
-///////////////////PLAYERFRAME HANDLERS//////////////////////////////////////////////////////////////////
-///////////////////PLAYERFRAME HANDLERS//////////////////////////////////////////////////////////////////
-///////////////////PLAYERFRAME HANDLERS//////////////////////////////////////////////////////////////////
-   private class PauseResumeHandler implements ActionListener {
-
-       public void actionPerformed(ActionEvent e) {
-           mp3Player.pauseResume();
-           if (timerThread!=null) timerThread.paused=!timerThread.paused;
-       }
-   }
-
-   private class StopButtonHandler implements ActionListener {
-
-       public void actionPerformed(ActionEvent e) {
-    	   if (timerThread!=null) timerThread.closed=true;
-           mp3Player.close();
-       }
-   }
-   
-   private class ResetEqHandler implements ActionListener {
-
-       public void actionPerformed(ActionEvent e) {
-           for (int i=0;i<EQ_NUM_BANDS;i++){
-        	   equalizer[i].setValue(0);
-        	   mp3Player.setEq(i,0);
-           }
-       }
-   }
-
-   private class ClosePlayerHandler extends WindowAdapter {
-
-       JFrame frame;
-
-       @Override
-       public void windowClosing(WindowEvent e) {
-           frame = (JFrame) e.getSource();
-           mp3Player.close();
-           Song song;
-           String pathSt;
-           int index;
-           for(int i=0;i<playList.getRowCount();i++){
-        	   song=playList.getSongAtRow(i);
-        	   if (song.change==true){
-                   if (song.path.canWrite()) {
-						index = song.path.getAbsolutePath().indexOf(song.path.getName());
-						pathSt = song.path.getAbsolutePath().substring(0, index);
-                        if (song.path.renameTo(new File(pathSt + song.name+".mp3"))) {
-                            reviewView.append("File renamed succesfully: " + song.name+"\n");
-                        } else  reviewView.append("Can write but not rename file: " + song.name+"\n");
-                   } else reviewView.append("Could not rename file: " + song.name+"\n");
-        	   }
-           }
-          if (timerThread!=null) timerThread.closed=true;
-          if (randomPlayThread!=null) randomPlayThread=null;
-          frame.dispose();
-          frame=null;
-       }
-   } //CLOSEPLAYERHANDLER
-
-   private class PlayThisSongHandler extends MouseAdapter {
-
-       @Override
-       public void mousePressed(MouseEvent e) {
-           if (e.getClickCount() == 2) {
-               Point p = e.getPoint();// get the coordinates of the mouse click
-               int selViewRow = playListTable.rowAtPoint(p);
-               int selModelRow = playListTable.convertRowIndexToModel(selViewRow);
-               int selViewCol = playListTable.columnAtPoint(p);
-               if (selViewCol!=0) mp3Player.playThisSong(selModelRow);
-           }
-       }
-   }//PlayThisSongListener
-   
-   private class SongEditorHandler implements CellEditorListener {
-   
-       public void editingStopped(ChangeEvent e) {
-    	   ListSelectionModel lsm = playListTable.getSelectionModel();
-           if (!lsm.isSelectionEmpty()){
-               int selViewRow = lsm.getMinSelectionIndex();
-               int selModelRow = playListTable.convertRowIndexToModel(selViewRow);
-               playList.getSongAtRow(selModelRow).change=true;
-           }   
-       }
-
-       public void editingCanceled(ChangeEvent e) {}
-   }//END OF CELLEDITOR HANDLER
-   
-   private class PlayingHandler extends PlayingListener{
-
-        @Override
-       public void playingStarted(PlayingEvent evt){
-        	songSlider.setMaximum((int)evt.getTime()/1000000);
-       }
-   }//END OF PLAYINGTIME HANDLER
-   
-   private class SongSliderHandler extends MouseAdapter {
-		private Dimension dim = new Dimension(0,0);
-	   @Override
-		public void mousePressed(MouseEvent arg0) {
-			timerThread.paused=true;
-		}
-
-		@Override
-		public void mouseReleased(MouseEvent arg0) {
-			timerThread.paused=false;
-			
-			int width=((JSlider)arg0.getSource()).getSize(dim).width;
-			int point = arg0.getX()*((JSlider)arg0.getSource()).getMaximum()/width;
-			if (point > ((JSlider)arg0.getSource()).getMaximum()) point = ((JSlider)arg0.getSource()).getMaximum();
-			if (point < 0) point=0;
-			mp3Player.jump(point);
-		}
-	}
-   
-   private class EqSliderHandler implements ChangeListener {
-
-		@Override
-		public void stateChanged(ChangeEvent evt) {
-			JSlider currentBand =(JSlider)evt.getSource();
-			if (currentBand.getValueIsAdjusting()) {return;}
-			int band = Integer.parseInt(currentBand.getName());
-			float value;
-			if (currentBand.getValue()==0) value=0; else value=currentBand.getValue()/new Float(100);
-			mp3Player.setEq(band,value);
-		}
-
-	}
-   */
    
 //////////////////////////////////////END OF HANDLERS/////////////////////////////////////////////////////////////// 
    
@@ -3721,19 +3416,6 @@ public class MultiDB extends JFrame {
 		}
    	}
 
-  /* //GET LYRICS/////////////////////////////////////////////////////////////////////////  
-   public class GetLyricsThread extends Thread {
-	   
-		public GetLyricsThread() {
-			super();
-		}
-
-		@Override
-		public void run() {
-			lyricsView.setText(webMusicInfoExtractor.getLyricsOfDisc(lyricsGroup,lyricsAlbum,"webEM"));	
-		}
-   }*/
-   
    //GET FILM DATA/////////////////////////////////////////////////////////////////////////  
    public class GetFilmDataThread extends Thread {
 	   
@@ -3820,171 +3502,5 @@ public class MultiDB extends JFrame {
 		}
    }
    
-  
-   /*
-   //RANDOM PLAY/////////////////////////////////////////////////////////////////////////  
-   public class RandomPlayThread extends Thread {
-	   
-       public boolean fav;
-       public Double mark=0.0;
-       private File pathDisc;
-       private Random rand = new Random();
-       private int randomDisc=0,randomSong=0;
-       private List<Integer> selectedDiscs = new LinkedList<Integer>();
-       private List<Integer> favSongs = new LinkedList<Integer>();
-       private List<Song> songsInPath = new LinkedList<Song>();
-       private Song currentSong;
-       private String currentGroup, currentAlbum;
-       private int numSongs=0;
-	   
-		public RandomPlayThread() {
-			super();
-		}
-
-		@Override
-		public void run() {
-
-			selectedDiscs=getListOfDiscsByMark(mark);
-			System.out.println(selectedDiscs.size());
-        	
-		    for(int j=0;j<selectedDiscs.size();j++){
-	            	playList.removeAllRows();
-	                playList.numSongs=0;
-	                currentGroup=(String)musicTabModel.getValueAt(selectedDiscs.get(j),Video.COL_GROUP);
-                    currentAlbum=(String)musicTabModel.getValueAt(selectedDiscs.get(j),Video.COL_TITLE);
-                    pathDisc = (File) musicTabModel.getValueAt(selectedDiscs.get(j),Disc.COL_PATH);
-                    try {
-                    	songsInPath=playList.searchFiles(pathDisc,false,currentGroup,currentAlbum);
-                    } catch (MP3FilesNotFound ex) {
-                    	System.out.println(currentGroup+ " "+currentAlbum);
-	                }
-	            } 
-			
-			
-            do{
-            	playList.removeAllRows();
-            	this.numSongs=0;
-            	do {
-            		randomDisc=rand.nextInt(selectedDiscs.size());
-            		favSongs.clear();
-            		pathDisc = (File) musicTabModel.getValueAt(selectedDiscs.get(randomDisc),Disc.COL_PATH);
-            		songsInPath.clear();
-                    currentGroup=(String)musicTabModel.getValueAt(selectedDiscs.get(randomDisc),Video.COL_GROUP);
-                    currentAlbum=(String)musicTabModel.getValueAt(selectedDiscs.get(randomDisc),Video.COL_TITLE);
-                    songsInPath=playList.searchFiles(pathDisc,false,currentGroup,currentAlbum);
-                    if (songsInPath.size()!=0){
-	                     if (!fav){
-		                      randomSong=rand.nextInt(songsInPath.size());
-		                      currentSong=songsInPath.get(randomSong);
-		                      playList.addSong(currentSong);
-		                      this.numSongs++;
-		                 }else{
-		                  	 seekFavSongs(randomDisc,songsInPath);
-		                   	 if (favSongs.size()>0){
-			                   	 randomSong=rand.nextInt(favSongs.size());
-			                     currentSong=songsInPath.get(favSongs.get(randomSong));
-			                     playList.addSong(currentSong);
-			                     this.numSongs++;
-		                   	 }
-		                 }
-                    }
-            	}while(this.numSongs<10);
-                
-               
-                playListTable.setModel(playList);
-                //handler to play the song selected wit doubleclick on list
-                PlayThisSongHandler playThisSongHandler = new PlayThisSongHandler();
-                playListTable.addMouseListener(playThisSongHandler);   
-                
-                if (playFirstTime) {
-                	playFirstTime=false;
-                	managePlayListTable();               
-                }
-                
-                mp3Player.playList(playList);
-                timerThread = new TimerThread();
-                timerThread.setDaemon(true);
-                timerThread.start();
-                playerFrame.setVisible(true);
-                int divLoc=Math.min(400, playListTable.getHeight()+ pauseResumeButton.getHeight()+stopButton.getHeight()+songSlider.getHeight()+songInformation.getHeight()+60);
-                splitPlayer.setDividerLocation(divLoc);
-
-            	synchronized(MP3Player.lock) {
-                   try {
-                		MP3Player.lock.wait();
-                   } catch (InterruptedException ex) {
-                        ex.printStackTrace();
-                   }
-                   
-            	}
-            } while(true);
-		}
-		
-		 //method to return indexes of discs which mark is over than provided
-		public List<Integer> getListOfDiscsByMark(Double mark){
-			   List<Integer> list = new LinkedList<Integer>();
-			   Double currentMark=new Double(0.0);
-			   String sMark=new String("");
-			   for(int currentIndex=0;currentIndex<musicTabModel.getRowCount();currentIndex++){
-				   sMark=(String)musicTabModel.getValueAt(currentIndex, Disc.COL_MARK);
-				   try{
-					   currentMark=Double.parseDouble(sMark);
-					   if (currentMark>=mark) list.add(currentIndex);
-				   }catch(NumberFormatException e){
-					   //nothing to do
-				   }
-			   }
-			   return list;	   
-		}
-		
-		public void seekFavSongs(int index,List<Song> songList){
-			String rev=musicTabModel.getDiscAtRow(selectedDiscs.get(index)).review;
-			String currFav="";
-			boolean added;
-			LevenshteinDistance dist = new LevenshteinDistance();
-			dist.setThreshold(LevenshteinDistance.MED_THRESHOLD);
-			
-			//////////WITH NO REGEX/////////////////
-			while (rev.indexOf("\"") > -1) {
-				rev = rev.substring(rev.indexOf("\"")+"\"".length(),rev.length());
-				if (rev.indexOf("\"")>-1) {
-					currFav= rev.substring(0,rev.indexOf("\""));
-					rev = rev.substring(rev.indexOf("\"")+"\"".length(),rev.length());
-				}
-			
-			
-			Pattern pattern = Pattern.compile("\"[^\"]*?\"");
-			Matcher matcher = pattern.matcher(rev);			
-			
-			while (matcher.find()){
-				currFav=matcher.group();
-				currFav=currFav.substring(1,currFav.length()-1);//removing double quotes
-				
-				for (int ind=0;ind<songList.size();ind++){
-					//System.out.println("probando "+currFav);
-					added=false;
-					if (songList.get(ind).name!=null){		
-						if (dist.compare(currFav, songList.get(ind).name)){
-						//if ((Pattern.compile(Pattern.quote(currFav), Pattern.CASE_INSENSITIVE).matcher(songList.get(ind).name).find())){
-							favSongs.add(ind);
-							added=true;
-							break;
-						}
-					}
-					if (!added){
-						if (dist.compare(currFav, songList.get(ind).tagTitle)){
-						//if (songList.get(ind).tagTitle!=null){							
-							if (Pattern.compile(Pattern.quote(currFav), Pattern.CASE_INSENSITIVE).matcher(songList.get(ind).tagTitle).find()){
-								favSongs.add(ind);
-								break;
-							}
-						}
-					}
-				}
-				
-			}
-		}
-  }
-*/
 }
 	

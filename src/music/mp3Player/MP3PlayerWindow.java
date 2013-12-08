@@ -1,14 +1,14 @@
 package music.mp3Player;
 
+import image.ImageDealer;
+
 import java.awt.Color;
 import java.awt.Component;
-import java.awt.Container;
 import java.awt.Dimension;
 import java.awt.Font;
 import java.awt.Point;
 import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
-import java.awt.event.ComponentAdapter;
 import java.awt.event.ComponentEvent;
 import java.awt.event.ComponentListener;
 import java.awt.event.MouseAdapter;
@@ -16,7 +16,6 @@ import java.awt.event.MouseEvent;
 import java.awt.event.WindowAdapter;
 import java.awt.event.WindowEvent;
 import java.io.File;
-import java.util.ArrayList;
 import java.util.LinkedList;
 import java.util.List;
 import java.util.Random;
@@ -27,7 +26,6 @@ import javax.swing.BorderFactory;
 import javax.swing.DefaultCellEditor;
 import javax.swing.JButton;
 import javax.swing.JFrame;
-import javax.swing.JInternalFrame;
 import javax.swing.JLabel;
 import javax.swing.JMenuItem;
 import javax.swing.JOptionPane;
@@ -35,16 +33,12 @@ import javax.swing.JPanel;
 import javax.swing.JPopupMenu;
 import javax.swing.JScrollPane;
 import javax.swing.JSlider;
-import javax.swing.JSplitPane;
 import javax.swing.JTable;
 import javax.swing.JTextField;
 import javax.swing.ListSelectionModel;
-import javax.swing.ScrollPaneConstants;
 import javax.swing.SwingUtilities;
-import javax.swing.border.BevelBorder;
 import javax.swing.border.Border;
 import javax.swing.border.LineBorder;
-import javax.swing.border.SoftBevelBorder;
 import javax.swing.event.CellEditorListener;
 import javax.swing.event.ChangeEvent;
 import javax.swing.event.ChangeListener;
@@ -76,8 +70,6 @@ public class MP3PlayerWindow {
     public JSlider songSlider;
     public JSlider[] equalizer;
     public JTextField songInformation;
-    public JSplitPane splitEq;
-    public JSplitPane splitPlayer;
     public JScrollPane spPlay,spLyrics;
     public JPanel picPanel, infoPanel;
     public JLabel picLabel, infoLabel;
@@ -88,12 +80,14 @@ public class MP3PlayerWindow {
     public LyricsFrame lyricsFrame;
     public boolean playFirstTime = true;
     private music.db.TabMod musicTabModel;
+    private ImageDealer imageDealer;
   
     public int selectedViewRowPlayer = -1,selectedModelRowPlayer=-1;  
     
     public MP3PlayerWindow(music.db.TabMod mTabModel, music.mp3Player.MP3Player  mp3Player){
     	setMusicTabModel(mTabModel);
     	setPlayer(mp3Player);
+    	imageDealer = new ImageDealer();
     	this.initWindow();
     }
     
@@ -246,8 +240,7 @@ public class MP3PlayerWindow {
         
         //manages the skipping of the song played
         SongSliderHandler songSliderHandler = new SongSliderHandler();
-        songSlider.addMouseListener(songSliderHandler);
-        
+        songSlider.addMouseListener(songSliderHandler);        
         
         //Equalization slider handler
         EqSliderHandler eqSliderHandler = new EqSliderHandler();
@@ -260,44 +253,43 @@ public class MP3PlayerWindow {
 	}
 	
 	 //method to manage layout of playlist table  
-	 private void managePlayListTable(){
-		   ////managing layout
-	       try{
-		       TableColumn c = playListTable.getColumn("t");
-		       	playListTable.removeColumn(c);
-		       	c = playListTable.getColumn("p");
-		       	playListTable.removeColumn(c);
-		       	c = playListTable.getColumn("change");
-		       	playListTable.removeColumn(c);
-		       	c = playListTable.getColumn("currentSong");
-		       	playListTable.removeColumn(c);
-	           c = playListTable.getColumn("File name");
-	           c.setMinWidth(100);
-	           c.setPreferredWidth(180);
-	           c = playListTable.getColumn("Length");
-	           c.setMinWidth(30);
-	           c.setPreferredWidth(35);
-	           c = playListTable.getColumn("Group");
-	           c.setMinWidth(80);
-	           c.setPreferredWidth(100);
-	           c = playListTable.getColumn("Album");
-	           c.setMinWidth(100);
-	           c.setPreferredWidth(100);
-	           c = playListTable.getColumn("Tag title");
-	           c.setMinWidth(100);
-	           c.setPreferredWidth(100);
-	           c = playListTable.getColumn("Bitrate");
-	           c.setMinWidth(40);
-	           c.setPreferredWidth(40);
-	           c = playListTable.getColumn("Sampling Format");
-	           c.setMinWidth(30);
-	           c.setPreferredWidth(30);
-	       }catch(Exception ex){
-	            Errors.showError(Errors.GENERIC_ERROR,"Error managing playlist table "+ex.getMessage());
-	            ex.printStackTrace();
-	       }
-	       
-	   }
+	private void managePlayListTable(){
+		///managing layout
+	   TableColumn c;
+	   try{
+		   c = playListTable.getColumn("t");
+		   playListTable.removeColumn(c);
+		   c = playListTable.getColumn("p");
+		   playListTable.removeColumn(c);
+		   c = playListTable.getColumn("change");
+		   playListTable.removeColumn(c);
+		   c = playListTable.getColumn("currentSong");
+		   playListTable.removeColumn(c);
+		   c = playListTable.getColumn("discPath");
+		   playListTable.removeColumn(c);
+	   }catch(IllegalArgumentException ex){}
+       c = playListTable.getColumn("File name");
+       c.setMinWidth(100);
+       c.setPreferredWidth(180);
+       c = playListTable.getColumn("Length");
+       c.setMinWidth(30);
+       c.setPreferredWidth(35);
+       c = playListTable.getColumn("Group");
+       c.setMinWidth(80);
+       c.setPreferredWidth(100);
+       c = playListTable.getColumn("Album");
+       c.setMinWidth(100);
+       c.setPreferredWidth(100);
+       c = playListTable.getColumn("Tag title");
+       c.setMinWidth(100);
+       c.setPreferredWidth(100);
+       c = playListTable.getColumn("Bitrate");
+       c.setMinWidth(40);
+       c.setPreferredWidth(40);
+       c = playListTable.getColumn("Sampling Format");
+       c.setMinWidth(30);
+       c.setPreferredWidth(30); 
+	}
 	   
 	 
 	 public final class ScrollingTableFix implements ComponentListener {
@@ -307,7 +299,6 @@ public class MP3PlayerWindow {
 		    assert table != null;
 
 		    this.table = table;
-		    System.out.println("here we go");
 		    table.getModel().addTableModelListener(new ColumnAddFix(table, scrollPane));
 		  }
 
@@ -318,8 +309,6 @@ public class MP3PlayerWindow {
 		  public void componentResized(final ComponentEvent event) {
 		    // turn off resize and let the scroll bar appear once the component is smaller than the table
 
-	    	  System.out.println(table.getPreferredSize());
-	    	  System.out.println(event.getComponent().getWidth());
 		    if (event.getComponent().getWidth() < table.getPreferredSize().getWidth()) {
 		        table.setAutoResizeMode(JTable.AUTO_RESIZE_OFF);
 		    }
@@ -420,30 +409,28 @@ public class MP3PlayerWindow {
         playerFrame.setVisible(true);
 	}
 	
-	public static void getAllComponents(final Container c) {
-	    Component[] comps = c.getComponents();
-	    List<Component> compList = new ArrayList<Component>();
-	    for (Component comp : comps) {
-	        compList.add(comp);
-	        if (comp instanceof Container) getAllComponents((Container) comp);
-	        System.out.println(comp.getClass());
-	    }
-	}
 	
 	public void openAndStartPlaying(File pathDisc, String group, String album){
-
-		  playList.removeAllRows();
-          playList.numSongs=0;
-          playList.searchFiles(pathDisc,true,group,album);
-          if (playList.numSongs!=0){
-        	  openAndStartPlaying(playList);
-          }
+		playList.removeAllRows();
+        playList.numSongs=0;
+        playList.searchFiles(pathDisc,true,group,album);
+        if (playList.numSongs!=0){
+            openAndStartPlaying(playList);
+        }
 	}
 	
 	public void openAndStartPlaying(File pathDisc){
 		openAndStartPlaying(pathDisc, "undefined", "undefined");
 	}
 
+	
+    private void setCurrentCover(){
+    	File pathDisc = playList.getSongAtRow(mp3Player.currentSong).discPath;
+		if (!imageDealer.showImage(pathDisc, picLabel,ImageDealer.FRONT_COVER)){
+			picLabel.setIcon(null);
+			picLabel.setText("Image not found");
+		}
+    }
 	
 //////////////////////////HANDLERS//////////////////////////////////////////////
 //////////////////////////HANDLERS//////////////////////////////////////////////
@@ -521,6 +508,8 @@ public class MP3PlayerWindow {
 	       }
 	   }
 	   
+	   
+	   
 	   private class SongEditorHandler implements CellEditorListener {
 	   
 	       public void editingStopped(ChangeEvent e) {
@@ -540,8 +529,18 @@ public class MP3PlayerWindow {
 	        @Override
 	       public void playingStarted(PlayingEvent evt){
 	        	songSlider.setMaximum((int)evt.getTime()/1000000);
+	        	playList.fireTableDataChanged();
+	        	setCurrentCover();
 	       }
+	        @Override
+	       public void playingNextSong(PlayingEvent evt){
+	        	playList.fireTableDataChanged();
+	        	setCurrentCover();
+	       }
+	        
+	   
 	   }
+	   
 	   
 	   private class SongSliderHandler extends MouseAdapter {
 			private Dimension dim = new Dimension(0,0);
@@ -570,7 +569,7 @@ public class MP3PlayerWindow {
 				if (currentBand.getValueIsAdjusting()) {return;}
 				int band = Integer.parseInt(currentBand.getName());
 				float value;
-				if (currentBand.getValue()==0) value=0; else value=currentBand.getValue()/new Float(100);
+				if (currentBand.getValue()==0) value=0; else value=currentBand.getValue()/(new Float(100));
 				mp3Player.setEq(band,value);
 			}
 
@@ -598,7 +597,7 @@ public class MP3PlayerWindow {
 	   private class PopupMenuViewLyricsHandler implements ActionListener{
 		   
 	       public void actionPerformed(ActionEvent e) {
-	    	   lyricsFrame.open(playList.pathFolder,playList.getSongAtRow(selectedModelRowPlayer).group,playList.getSongAtRow(selectedModelRowPlayer).album);
+	    	   lyricsFrame.open(playList.getSongAtRow(selectedModelRowPlayer).discPath,playList.getSongAtRow(selectedModelRowPlayer).group,playList.getSongAtRow(selectedModelRowPlayer).album);
 	    	  
 	       }
 	   }
@@ -631,8 +630,8 @@ public class MP3PlayerWindow {
 			    for(int j=0;j<selectedDiscs.size();j++){
 		            	playList.removeAllRows();
 		                playList.numSongs=0;
-		                currentGroup=(String)musicTabModel.getValueAt(selectedDiscs.get(j),Video.COL_GROUP);
-	                    currentAlbum=(String)musicTabModel.getValueAt(selectedDiscs.get(j),Video.COL_TITLE);
+		                currentGroup=(String)musicTabModel.getValueAt(selectedDiscs.get(j),Disc.COL_GROUP);
+	                    currentAlbum=(String)musicTabModel.getValueAt(selectedDiscs.get(j),Disc.COL_TITLE);
 	                    pathDisc = (File) musicTabModel.getValueAt(selectedDiscs.get(j),Disc.COL_PATH);
 	                    try {
 	                    	songsInPath=playList.searchFiles(pathDisc,false,currentGroup,currentAlbum);
@@ -687,8 +686,6 @@ public class MP3PlayerWindow {
 	                timerThread.setDaemon(true);
 	                timerThread.start();
 	                playerFrame.setVisible(true);
-	                int divLoc=Math.min(400, playListTable.getHeight()+ pauseResumeButton.getHeight()+stopButton.getHeight()+songSlider.getHeight()+songInformation.getHeight()+60);
-	                splitPlayer.setDividerLocation(divLoc);
 
 	            	synchronized(MP3Player.lock) {
 	                   try {
@@ -703,19 +700,19 @@ public class MP3PlayerWindow {
 			
 			 //method to return indexes of discs which mark is over than provided
 			public List<Integer> getListOfDiscsByMark(Double mark){
-				   List<Integer> list = new LinkedList<Integer>();
-				   Double currentMark=new Double(0.0);
-				   String sMark=new String("");
-				   for(int currentIndex=0;currentIndex<musicTabModel.getRowCount();currentIndex++){
-					   sMark=(String)musicTabModel.getValueAt(currentIndex, Disc.COL_MARK);
-					   try{
-						   currentMark=Double.parseDouble(sMark);
-						   if (currentMark>=mark) list.add(currentIndex);
-					   }catch(NumberFormatException e){
-						   //nothing to do
-					   }
+			   List<Integer> list = new LinkedList<Integer>();
+			   Double currentMark=new Double(0.0);
+			   String sMark=new String("");
+			   for(int currentIndex=0;currentIndex<musicTabModel.getRowCount();currentIndex++){
+				   sMark=(String)musicTabModel.getValueAt(currentIndex, Disc.COL_MARK);
+				   try{
+					   currentMark=Double.parseDouble(sMark);
+					   if (currentMark>=mark) list.add(currentIndex);
+				   }catch(NumberFormatException e){
+					   //nothing to do
 				   }
-				   return list;	   
+			   }
+			   return list;	   
 			}
 			
 			public void seekFavSongs(int index,List<Song> songList){

@@ -42,7 +42,11 @@ import web.WebReader;
 
 
 public class ImageDealer {
-
+	
+	public static final int FRONT_COVER = 0;
+	public static final int BACK_COVER = 1;
+	public static final String FRONT_STRING = "front";
+	public static final String BACK_STRING = "back";
     public static final Dimension COVERS_DIM = new Dimension(400,400);
     public static final Dimension MAX_COVERS_DIM = new Dimension(1200,800);
     public static final int SEEK_NUMBER_LOW = 4;
@@ -203,7 +207,7 @@ public class ImageDealer {
 	private class FrameCloseHandler extends WindowAdapter{
 		@Override
 	    public void windowClosing(java.awt.event.WindowEvent windowEvent) {
-			ImageDealer.this.showImage(ImageDealer.this.currentPath, ImageDealer.this.currentLabel, "front");
+			ImageDealer.this.showImage(ImageDealer.this.currentPath, ImageDealer.this.currentLabel, FRONT_COVER);
 		    selectCoverFrame.dispose();
 	    }
 	}
@@ -266,19 +270,22 @@ public class ImageDealer {
 		}
     }
     
-    public boolean showImage(File pathDisc,JLabel labelIn,String type){
+    public boolean showImage(File pathDisc,JLabel labelIn,int type){
     	int indexCover=0;
     	boolean found=false;
     	currentLabel = labelIn;
     	currentPath = pathDisc; 
+    	String stringSearch="";
     	
 		imageList.clear();			
 		imageList=getListOfImages(pathDisc);
 		
 		if (imageList.size()<1) return false;
-			
+		if (type == ImageDealer.FRONT_COVER) stringSearch=FRONT_STRING;
+		if (type == ImageDealer.BACK_COVER) stringSearch=BACK_STRING;		
+		
 		for (int i = 0; i < imageList.size(); i++) {
-			if (imageList.get(i).name.toLowerCase().indexOf(type) > -1) {
+			if (imageList.get(i).name.toLowerCase().indexOf(stringSearch) > -1) {
 				found = true;
 				indexCover = i;
 				break;
@@ -286,7 +293,7 @@ public class ImageDealer {
 		}
 			
 		if (found) {
-			if (type.compareTo("front") == 0) frontCover = true; else frontCover = false;
+			if (type == FRONT_COVER) frontCover = true; else frontCover = false;
 			multiIm.putImage(labelIn, MultiDBImage.FILE_TYPE, imageList.get(indexCover).path.getAbsolutePath());
 		} else  showListOfImages();			
 		return true;

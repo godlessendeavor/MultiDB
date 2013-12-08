@@ -18,6 +18,7 @@ public class Song implements Serializable, Comparable<Object> {
     public String bitrate;
     public String brFormat;
     public File path;
+    public File discPath;
     public Long time;  
     public boolean change;
     public boolean currentSong;

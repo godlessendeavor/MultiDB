@@ -33,7 +33,6 @@ public class TabModelPlayList extends AbstractTableModel {
 	public static final int COL_CHANGE=9;
 	public static final int COL_CURRENT_SONG=10;
 	
-	public File pathFolder;
 	public String group="";
 	public String album="";
 	private String[] labels;
@@ -42,7 +41,7 @@ public class TabModelPlayList extends AbstractTableModel {
     public int numSongs=0;
 
     public TabModelPlayList(){
-    	labels = new String[11];// Se obtiene cada una de las etiquetas para cada columna
+    	labels = new String[12];
         labels[0] = "File name";
         labels[1] = "Length";
         labels[2] = "Group";
@@ -54,13 +53,12 @@ public class TabModelPlayList extends AbstractTableModel {
         labels[8] = "p";
         labels[9] = "change";
         labels[10] = "currentSong";
-        
+        labels[11] = "discPath";        
         data = new ArrayList<Song>();
     }
 
     public List<Song> searchFiles(File pathFolder,boolean addToTable,String group,String album){
     	List<Song> songList = new LinkedList<Song>();
-    	this.pathFolder=pathFolder;
     	String[] files = pathFolder.list();
     	if (files!=null){ 
 	        int tam = files.length;
@@ -73,6 +71,7 @@ public class TabModelPlayList extends AbstractTableModel {
 	                    song.name = files[j].substring(0, index);
 	                    song.time = new Long(0);
 	                    song.path = new File(pathFolder.getAbsolutePath() + File.separator + files[j]);
+	                    song.discPath = new File(pathFolder.getAbsolutePath());
 	                    song.change=false;
 	                    tagReader(song);
 	                    if (song.group==null) song.group=group; 
@@ -117,6 +116,7 @@ public class TabModelPlayList extends AbstractTableModel {
         if (columnIndex == 8) ob = data.get(rowIndex).time;
         if (columnIndex == 9) ob = data.get(rowIndex).change;
         if (columnIndex == 10) ob = data.get(rowIndex).currentSong;
+        if (columnIndex == 11) ob = data.get(rowIndex).discPath;
         return ob;
     }
 
@@ -138,6 +138,7 @@ public class TabModelPlayList extends AbstractTableModel {
         this.setValueAt(song.time, row, 8);
         this.setValueAt(song.change, row, 9);
         this.setValueAt(song.currentSong, row, 10);
+        this.setValueAt(song.discPath, row, 11);
         this.fireTableRowsUpdated(row, row);
     }
 

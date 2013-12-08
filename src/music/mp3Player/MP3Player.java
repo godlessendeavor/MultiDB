@@ -7,6 +7,8 @@ package music.mp3Player;
 import java.io.FileInputStream;
 import java.io.InputStream;
 
+import main.Errors;
+
 import javazoom.jl.decoder.Equalizer;
 import javazoom.jl.decoder.JavaLayerException;
 import javazoom.jl.player.advanced.PlaybackEvent;
@@ -24,7 +26,7 @@ public class MP3Player {
     public TabModelPlayList list;
     public boolean seqPlaying=true;
     public boolean skipping=false;
-    public PlayBackHandler playBackListener= new PlayBackHandler();
+    public PlayBackHandler playBackListener = new PlayBackHandler();
     public PlayingListener playingListener;
     public MP3Player mp3Player;
     public PlayerThread pt;
@@ -155,7 +157,8 @@ public class MP3Player {
                 	player.jump(skipStart,skipEnd);
                 }
             } catch (Exception e) {
-                e.printStackTrace();
+            	Errors.writeError(Errors.GENERIC_ERROR, "Error while playing mp3 file: " + e.getMessage());
+                //e.printStackTrace();
             }
         }
     }
@@ -165,10 +168,11 @@ public class MP3Player {
 
         @Override
         public void playbackFinished(PlaybackEvent evt) {
+        	
             if ((currentSong < list.getRowCount())&&(seqPlaying)) {
                 currentSong++;
                 playList();
-                
+                if (playingListener != null) playingListener.playingNextSong(mp3Player.createEvent(PlayingEvent.NEXT_SONG));
             }
             if ((randomPlay)&&(seqPlaying)&&(currentSong == list.getRowCount())){
             	currentSong=0;
@@ -184,7 +188,6 @@ public class MP3Player {
         		if (i==currentSong) list.setValueAt(true,i,TabModelPlayList.COL_CURRENT_SONG);
         		else list.setValueAt(false,i,TabModelPlayList.COL_CURRENT_SONG);
         	}
-        	list.fireTableDataChanged();
         	if (playingListener != null) playingListener.playingStarted(mp3Player.createEvent(PlayingEvent.STARTED));
         }
     }
