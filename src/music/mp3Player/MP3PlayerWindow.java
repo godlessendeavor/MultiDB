@@ -7,8 +7,10 @@ import java.awt.Component;
 import java.awt.Dimension;
 import java.awt.Font;
 import java.awt.Point;
+import java.awt.Rectangle;
 import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
+import java.awt.event.ComponentAdapter;
 import java.awt.event.ComponentEvent;
 import java.awt.event.ComponentListener;
 import java.awt.event.MouseAdapter;
@@ -56,10 +58,14 @@ import musicmovies.db.Video;
 
 public class MP3PlayerWindow {
 
-    public static final Dimension PLAYER_DIM = new Dimension(1000,600);
+    public static final Dimension PLAYER_DIM = new Dimension(910,630);
     public static final Dimension COVER_DIM = new Dimension(250,250);
     public static final int EQ_NUM_BANDS = 10;
     public final String LYR_PLAYER_NAME="playerLyricsMenu";
+    
+    public static final Rectangle PIC_PANEL_BOUNDS = new Rectangle(634, 53, COVER_DIM.width, COVER_DIM.height);
+    public static final Rectangle INFO_PANEL_BOUNDS = new Rectangle( 634, 315, 249, 154);
+    public static final Rectangle PLAYLIST_TABLE_BOUNDS = new Rectangle(10, 104, 614, 374);
     
     
 	  //PLAYER ELEMENTS
@@ -70,7 +76,6 @@ public class MP3PlayerWindow {
     public JTable playListTable;
     public JSlider songSlider;
     public JSlider[] equalizer;
-    public JTextField songInformation;
     public JScrollPane spPlay,spLyrics;
     public JPanel picPanel, infoPanel;
     public JLabel picLabel, infoLabel;
@@ -119,7 +124,7 @@ public class MP3PlayerWindow {
 		
 		//frames
 	    playerFrame=new JFrame("MP3Player");
-	    playerFrame.setBounds(100, 100, 909, 628);
+	    playerFrame.setBounds(100, 100, PLAYER_DIM.width, PLAYER_DIM.height);
 	    playerFrame.setDefaultCloseOperation(JFrame.HIDE_ON_CLOSE);
 	    playerFrame.getContentPane().setLayout(null);
 	    //playerFrame.setSize(PLAYER_DIM);
@@ -158,7 +163,6 @@ public class MP3PlayerWindow {
 	    songSlider.setPaintTicks(true);
 	    songSlider.setBounds(10, 55, 614, 47);
 	    playerFrame.getContentPane().add(songSlider);
-	    songInformation = new JTextField("");      
 	    
 	    //equalizer
 	    equalizer = new JSlider[EQ_NUM_BANDS];
@@ -186,7 +190,7 @@ public class MP3PlayerWindow {
 	    playListTable.setDefaultRenderer(Object.class,playerTableRenderer);
 	    //playListTable.setBorder(new SoftBevelBorder(BevelBorder.LOWERED, null, null, null, null));
 	    spPlay = new JScrollPane();
-	    spPlay.setBounds(10, 104, 614, 374);
+	    spPlay.setBounds(PLAYLIST_TABLE_BOUNDS);
 	    //spPlay.setHorizontalScrollBarPolicy(ScrollPaneConstants.HORIZONTAL_SCROLLBAR_NEVER);
 	    spPlay.setViewportView(playListTable);
 	    playListTable.setAutoResizeMode(JTable.AUTO_RESIZE_ALL_COLUMNS);
@@ -194,19 +198,19 @@ public class MP3PlayerWindow {
 	    
 		picPanel = new JPanel();
 		picPanel.setBorder(new LineBorder(new Color(0, 0, 0)));
-		picPanel.setBounds(634, 53, COVER_DIM.width, COVER_DIM.height);
+		picPanel.setBounds(PIC_PANEL_BOUNDS);
 		playerFrame.getContentPane().add(picPanel);
 		picPanel.setLayout(null);
 		
 		picLabel = new JLabel("Cover");
 		picLabel.setToolTipText("Cover");
-		picLabel.setBounds(-2, 0, COVER_DIM.width, COVER_DIM.height);
+		picLabel.setBounds(-1, 0, COVER_DIM.width, COVER_DIM.height);
 		picPanel.add(picLabel);
 		picLabel.setBackground(new Color(102, 204, 102));
 		
 		infoPanel = new JPanel();
 		infoPanel.setBorder(new LineBorder(new Color(0, 0, 0)));
-		infoPanel.setBounds(634, 315, 249, 154);
+		infoPanel.setBounds(INFO_PANEL_BOUNDS);
 		playerFrame.getContentPane().add(infoPanel);
 		infoPanel.setLayout(null);
 		
@@ -251,8 +255,9 @@ public class MP3PlayerWindow {
         	equalizer[i].addChangeListener(eqSliderHandler);
         }
         
-        
-        
+        //handler to replace components after resizing the window
+        ResizerHandler resizerHandler = new ResizerHandler();
+        playerFrame.addComponentListener(resizerHandler);        
 	}
 	
 	 //method to manage layout of playlist table  
@@ -604,6 +609,32 @@ public class MP3PlayerWindow {
 	    	  
 	       }
 	   }
+	   
+	   private class ResizerHandler extends ComponentAdapter{
+		   
+		   @Override
+			public void componentResized(ComponentEvent e)
+			{
+				Rectangle compBounds = new Rectangle(); 
+				playerFrame.getBounds(compBounds);
+				int widthDiff = compBounds.width - PLAYER_DIM.width;
+				if (widthDiff > 0){
+					compBounds = new Rectangle(PIC_PANEL_BOUNDS);
+				    compBounds.x = compBounds.x + widthDiff;
+					picPanel.setBounds(compBounds);
+					compBounds = new Rectangle(INFO_PANEL_BOUNDS);
+				    compBounds.x = compBounds.x + widthDiff;
+					infoPanel.setBounds(compBounds);
+					compBounds = new Rectangle(PLAYLIST_TABLE_BOUNDS);
+				    compBounds.width = compBounds.width + widthDiff;
+					spPlay.setBounds(compBounds);
+				}else{
+					picPanel.setBounds(PIC_PANEL_BOUNDS);
+					infoPanel.setBounds(INFO_PANEL_BOUNDS);
+					spPlay.setBounds(PLAYLIST_TABLE_BOUNDS);
+				}
+			}
+		}
 	 
 	   //RANDOM PLAY/////////////////////////////////////////////////////////////////////////  
 	   public class RandomPlayThread extends Thread {
@@ -799,7 +830,7 @@ public class MP3PlayerWindow {
 					              			titleShown=mp3Player.list.getSongAtRow(mp3Player.currentSong).name;
 					              		else titleShown=mp3Player.list.getSongAtRow(mp3Player.currentSong).tagTitle;
 					            	}
-					            	songInformation.setText("Playing: "+ titleShown+"  "+ timeSt);
+					            	infoLabel.setText("Playing: "+ titleShown+"  "+ timeSt);
 					            }
 							}
 							Thread.sleep(1000);
