@@ -36,7 +36,6 @@ import javax.swing.JPopupMenu;
 import javax.swing.JScrollPane;
 import javax.swing.JSlider;
 import javax.swing.JTable;
-import javax.swing.JTextField;
 import javax.swing.ListSelectionModel;
 import javax.swing.SwingUtilities;
 import javax.swing.border.Border;
@@ -66,6 +65,9 @@ public class MP3PlayerWindow {
     public static final Rectangle PIC_PANEL_BOUNDS = new Rectangle(634, 53, COVER_DIM.width, COVER_DIM.height);
     public static final Rectangle INFO_PANEL_BOUNDS = new Rectangle( 634, 315, 249, 154);
     public static final Rectangle PLAYLIST_TABLE_BOUNDS = new Rectangle(10, 104, 614, 374);
+    public static final Rectangle EQ_SLIDERS_BOUNDS= new Rectangle(20, 490, 41, 101);
+    public static final Rectangle RESET_BOUNDS= new Rectangle(342, 487, 89, 23);
+    public static final Rectangle SLIDER_BOUNDS= new Rectangle(10, 55, 614, 47);
     
     
 	  //PLAYER ELEMENTS
@@ -161,25 +163,28 @@ public class MP3PlayerWindow {
 	    songSlider.setMinorTickSpacing(1);
 	    songSlider.setPaintLabels(true);
 	    songSlider.setPaintTicks(true);
-	    songSlider.setBounds(10, 55, 614, 47);
+	    songSlider.setBounds(SLIDER_BOUNDS);
 	    playerFrame.getContentPane().add(songSlider);
 	    
 	    //equalizer
 	    equalizer = new JSlider[EQ_NUM_BANDS];
 	    int i;
+	    Rectangle sliderBounds;  
 	    for(i=0;i<EQ_NUM_BANDS;i++){  	
 	    	equalizer[i]=new JSlider(JSlider.VERTICAL,-100,100,0); 
 	    	equalizer[i].setMinorTickSpacing(10);
 	    	equalizer[i].setPaintLabels(true);
 	    	equalizer[i].setPaintTicks(true);
 	    	equalizer[i].setName(((Integer)i).toString());
-	    	equalizer[i].setBounds(20+30*i, 490, 41, 101);
+	    	sliderBounds = new Rectangle(EQ_SLIDERS_BOUNDS);
+	    	sliderBounds.x = sliderBounds.x + 30*i;
+	    	equalizer[i].setBounds(sliderBounds);
 	    	playerFrame.getContentPane().add(equalizer[i]);
 	    }
 	    resetEqButton=new JButton("Reset");
 	    ResetEqHandler resetEqHandler = new ResetEqHandler();
 	    resetEqButton.addActionListener(resetEqHandler);
-	    resetEqButton.setBounds(342, 487, 89, 23);
+	    resetEqButton.setBounds(RESET_BOUNDS);
 	    playerFrame.getContentPane().add(resetEqButton);
 	    
 	    //songs table        
@@ -618,21 +623,43 @@ public class MP3PlayerWindow {
 				Rectangle compBounds = new Rectangle(); 
 				playerFrame.getBounds(compBounds);
 				int widthDiff = compBounds.width - PLAYER_DIM.width;
+				int heightDiff = compBounds.height - PLAYER_DIM.height;
 				if (widthDiff > 0){
 					compBounds = new Rectangle(PIC_PANEL_BOUNDS);
 				    compBounds.x = compBounds.x + widthDiff;
 					picPanel.setBounds(compBounds);
+					compBounds = new Rectangle(SLIDER_BOUNDS);
+				    compBounds.width = compBounds.width + widthDiff;
+					songSlider.setBounds(compBounds);
 					compBounds = new Rectangle(INFO_PANEL_BOUNDS);
 				    compBounds.x = compBounds.x + widthDiff;
 					infoPanel.setBounds(compBounds);
 					compBounds = new Rectangle(PLAYLIST_TABLE_BOUNDS);
 				    compBounds.width = compBounds.width + widthDiff;
+				    compBounds.height = compBounds.height + heightDiff;
 					spPlay.setBounds(compBounds);
+					for(int i=0;i<EQ_NUM_BANDS;i++){  
+						compBounds = new Rectangle(EQ_SLIDERS_BOUNDS);
+						compBounds.y = compBounds.y + heightDiff;
+					    compBounds.x = compBounds.x + 30*i;
+					    equalizer[i].setBounds(compBounds);
+					}
+					compBounds = new Rectangle(RESET_BOUNDS);
+				    compBounds.y = compBounds.y + heightDiff;
+					resetEqButton.setBounds(compBounds);
 				}else{
 					picPanel.setBounds(PIC_PANEL_BOUNDS);
 					infoPanel.setBounds(INFO_PANEL_BOUNDS);
 					spPlay.setBounds(PLAYLIST_TABLE_BOUNDS);
+					resetEqButton.setBounds(RESET_BOUNDS);
+					songSlider.setBounds(SLIDER_BOUNDS);
+					for(int i=0;i<EQ_NUM_BANDS;i++){  
+						compBounds = new Rectangle(EQ_SLIDERS_BOUNDS);
+					    compBounds.x = compBounds.x + 30*i;
+					    equalizer[i].setBounds(compBounds);
+					}
 				}
+			
 			}
 		}
 	 
