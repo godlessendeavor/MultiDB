@@ -297,6 +297,7 @@ public class ImageDealer {
 		}
 			
 		if (found) {
+			System.out.println(type);
 			if (type == FRONT_COVER) frontCover = true; else frontCover = false;
 			multiIm.putImage(labelIn, MultiDBImage.FILE_TYPE, imageList.get(indexCover).path.getAbsolutePath(), dim);
 		} else  showListOfImages();			

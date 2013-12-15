@@ -1282,32 +1282,7 @@ public class MultiDB extends JFrame {
     	docsTabModel.setValueAt(comments,selectedModelRow,Doc.COL_COMMENTS);
     	docsDataBase.updateCommentsOnly(docsTabModel.getDocAtRow(selectedModelRow));
     }
-/*
-//method to save current lyrics in a file  
-    public void saveCurrentLyrics(){
-    	File fileToWrite;
-		if (lyricsFile==null){    	
-			fileToWrite=new File (lyricsPath.getAbsolutePath()+File.separator+"lyrics.txt");
-			try{
-				fileToWrite.createNewFile();
-			}catch(IOException ex){
-				ex.printStackTrace();
-			}
-		}else fileToWrite=lyricsFile;
-		
-		try{
-			FileWriter fw = new FileWriter(fileToWrite);
-			BufferedWriter bw = new BufferedWriter(fw);
-			bw.write(lyricsView.getText());
-			bw.close();
-			fw.close();
-			JOptionPane.showMessageDialog(lyricsFrame, "File saved successfully");
-		}catch(Exception ex){
-			Errors.showError(Errors.COPYING_IOERROR,ex.toString());
-		}
-    	
-    }
-    */
+
     //method to transform Rows selected in View to Model
     public List<Integer> transformViewSelectedToModel(List<Integer> selectedView){
     	selectedModel.clear();
@@ -1329,47 +1304,6 @@ public class MultiDB extends JFrame {
     	}	
     	return selectedModel;
     }
-  //method to manage layout of playlist table  
-   /*public void managePlayListTable(){
-	   ////managing layout
-       try{
-	       TableColumn c = playListTable.getColumn("t");
-	       	playListTable.removeColumn(c);
-	       	c = playListTable.getColumn("p");
-	       	playListTable.removeColumn(c);
-	       	c = playListTable.getColumn("change");
-	       	playListTable.removeColumn(c);
-	       	c = playListTable.getColumn("currentSong");
-	       	playListTable.removeColumn(c);
-           c = playListTable.getColumn("File name");
-           c.setMinWidth(180);
-           c.setPreferredWidth(180);
-           c = playListTable.getColumn("Length");
-           c.setMinWidth(35);
-           c.setPreferredWidth(35);
-           c = playListTable.getColumn("Group");
-           c.setMinWidth(130);
-           c.setPreferredWidth(130);
-           c = playListTable.getColumn("Album");
-           c.setMinWidth(200);
-           c = playListTable.getColumn("Tag title");
-           c.setMinWidth(200);
-           c.setPreferredWidth(200);
-           c = playListTable.getColumn("Bitrate");
-           c.setMinWidth(40);
-           c.setPreferredWidth(40);
-           c = playListTable.getColumn("Sampling Format");
-           c.setMinWidth(30);
-           c.setPreferredWidth(30);
-       	
-       }catch(Exception ex){
-            Errors.showError(Errors.GENERIC_ERROR,"Error managing playlist table "+ex.getMessage());
-            ex.printStackTrace();
-       }
-       
-   }
-   
-  */
    
    public int uploadBUP(int db,File fbup){
    	
@@ -2172,29 +2106,7 @@ public class MultiDB extends JFrame {
    
    }
    
-   
- /*  
-////////////////////////////////////OTHER BUTTONS HANDLERS\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\
-////////////////////////////////////OTHER BUTTONS HANDLERS\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\
-
-   private class SaveLyricsButtonHandler implements ActionListener {
-
-		@Override
-		public void actionPerformed(ActionEvent arg0) {
-			saveCurrentLyrics();
-		}
-  }//END OF SAVELYRICSHANDLER
-   
-   private class DownloadLyricsButtonHandler implements ActionListener {
-
-		@Override
-		public void actionPerformed(ActionEvent arg0) {
-			GetLyricsThread getLyricsThread = new GetLyricsThread();
-			getLyricsThread.start();
-		}
- }//END OF SAVELYRICSHANDLER
-   */
-
+  
 ///////////////////////////////////////POPUPMENUS ACTIONLISTENERS\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\
 ///////////////////////////////////////POPUPMENUS ACTIONLISTENERS\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\
    
@@ -2257,30 +2169,7 @@ public class MultiDB extends JFrame {
              mp3PlayerWindow.setPlayer(mp3Player);
              
              mp3PlayerWindow.openAndStartPlaying(pathDisc,(String)musicTabModel.getValueAt(selectedModelRow,Disc.COL_GROUP),(String)musicTabModel.getValueAt(selectedModelRow,Disc.COL_TITLE));
-             
-/*             playList.removeAllRows();
-             playList.numSongs=0;
-             playList.searchFiles(pathDisc,true,(String)musicTabModel.getValueAt(selectedModelRow,Disc.COL_GROUP),(String)musicTabModel.getValueAt(selectedModelRow,Disc.COL_TITLE));
-             if (playList.numSongs!=0){
-	             playListTable.setModel(playList);
-	             //handler to play the song selected wit doubleclick on list
-	             PlayThisSongHandler playThisSongHandler = new PlayThisSongHandler();
-	             playListTable.addMouseListener(playThisSongHandler); 
-	             if (playFirstTime) {
-	             	playFirstTime=false;
-	              	managePlayListTable();
-	             }
-	             mp3Player.playList(playList);
-	             timerThread = new TimerThread();
-	             timerThread.setDaemon(true);
-	
-	             timerThread.start();
-	             playerFrame.setVisible(true);
-	             int divLoc=Math.min(400, playListTable.getHeight()+ pauseResumeButton.getHeight()+stopButton.getHeight()+songSlider.getHeight()+songInformation.getHeight()+60);
-	             splitPlayer.setDividerLocation(divLoc);
-            } else {
-                JOptionPane.showMessageDialog(f,"Cannot find playable files\n");
-            }*/
+           
         }
     } //Playing disc
    
@@ -2316,13 +2205,6 @@ public class MultiDB extends JFrame {
 		            	mp3PlayerWindow.setMusicTabModel(musicTabModel);
 		                mp3PlayerWindow.setPlayer(mp3Player);
 		            	mp3PlayerWindow.openAndStartPlaying(mark, fav);
-		            	/*randomPlayThread = new RandomPlayThread(); 
-		            	if (select==JOptionPane.OK_OPTION) randomPlayThread.fav=true;
-		            	else randomPlayThread.fav=false;
-		            	
-		            	randomPlayThread.mark=mark;
-		            	mark=-1.0;
-		            	randomPlayThread.start();*/
 		            }
 	            }            	
         }
@@ -2691,26 +2573,7 @@ public class MultiDB extends JFrame {
        }
    } //TABLEKEYLISTENERHANDLER END
    
-   /*
-   
-   private class CloseLyricsFrameHandler extends WindowAdapter {
-
-       JFrame frame;
-
-       @Override
-       public void windowClosing(WindowEvent e) {
-          frame = (JFrame) e.getSource();
-          int option = JOptionPane.showConfirmDialog(frame,"Do you want to save before closing?");
-          if (option==JOptionPane.YES_OPTION){
-        	  saveCurrentLyrics();
-        	  frame.dispose();
-          }
-          else if(option==JOptionPane.NO_OPTION){
-        	  frame.dispose();
-          }      
-       }
-   } //CLOSEPLAYERHANDLER
-*/   
+     
    private class TabbedPaneListener implements ChangeListener{
 
 	@Override
@@ -2853,11 +2716,10 @@ public class MultiDB extends JFrame {
       public void mousePressed(MouseEvent e) {
           if (SwingUtilities.isLeftMouseButton(e)) {
              if (ImageDealer.frontCover) {
-            	 ImageDealer.frontCover=false;
-                 if (musicFolderConnected) showCover(ImageDealer.FRONT_COVER);
+                 if (musicFolderConnected) showCover(ImageDealer.BACK_COVER);
              }
              else {
-            	 if (musicFolderConnected) showCover(ImageDealer.BACK_COVER);
+            	 if (musicFolderConnected) showCover(ImageDealer.FRONT_COVER);
              }           
           } else if (SwingUtilities.isRightMouseButton(e)){
           	popupCover.show(e.getComponent(),e.getX(), e.getY());         	
