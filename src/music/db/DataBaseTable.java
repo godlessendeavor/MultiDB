@@ -275,7 +275,7 @@ public class DataBaseTable extends AbstractDDBB {
 							+ "\",mark=\"" + disc.mark + "\",copy=\""
 							+ disc.copy + "\",review=\"" + disc.review
 							+ "\" where id=\"" + disc.id + "\"";
-					//System.out.println(myUpd);
+					System.out.println(myUpd);
 					if (update(myUpd) != -1) {
 						tabModel.setDiscAtRow(disc,selectedRow);
 					} else {

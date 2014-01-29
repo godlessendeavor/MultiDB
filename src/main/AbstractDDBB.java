@@ -1,9 +1,12 @@
 package main;
 
 import java.sql.Connection;
+import java.sql.DatabaseMetaData;
 import java.sql.DriverManager;
 import java.sql.ResultSet;
+import java.sql.SQLException;
 import java.sql.Statement;
+
 import main.Errors;
 
 public class AbstractDDBB {
@@ -12,10 +15,10 @@ public class AbstractDDBB {
     public static final String host=MultiDB.host;
     public static final String user=MultiDB.user;
     public static final String pass=MultiDB.pass;
-    public Connection con;
-    public Statement stmt;
-    public String error;
-    public ResultSet rs;
+    private Connection con;
+    private Statement stmt;
+    private String error;
+    private ResultSet rs;
 
     public AbstractDDBB() {
         con = null;
@@ -66,6 +69,27 @@ public class AbstractDDBB {
         }
         return flag;
     }
+    
+//    public void getForeignTableData(String tableName){
+//    	if (con!=null){
+//	    	DatabaseMetaData metaData;
+//			try {
+//				metaData = con.getMetaData();
+//			    ResultSet foreignKeys = metaData.getImportedKeys(con.getCatalog(), null, tableName);
+//		        while (foreignKeys.next()) {
+//		            String fkTableName = foreignKeys.getString("FKTABLE_NAME");
+//		            String fkColumnName = foreignKeys.getString("FKCOLUMN_NAME");
+//		            String pkTableName = foreignKeys.getString("PKTABLE_NAME");
+//		            String pkColumnName = foreignKeys.getString("PKCOLUMN_NAME");
+//		            System.out.println(fkTableName + "." + fkColumnName + " -> " + pkTableName + "." + pkColumnName);
+//		        }
+//			} catch (SQLException e) {
+//				// TODO Auto-generated catch block
+//				e.printStackTrace();
+//			}
+//	       
+//    	}
+//    }
 
     /////////////////////////   CONSULTAS BD
     public int select(String query) {
@@ -75,7 +99,7 @@ public class AbstractDDBB {
             stmt = con.createStatement();
             rs = stmt.executeQuery(query);
         } catch (Exception ex) {
-            //ex.printStackTrace();
+            ex.printStackTrace();
             return Errors.DB_SELECT;
         }
         return flag;

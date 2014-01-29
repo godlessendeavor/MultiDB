@@ -10,6 +10,8 @@ import javax.sound.sampled.AudioFileFormat;
 import javax.sound.sampled.AudioSystem;
 import javax.swing.table.AbstractTableModel;
 
+import music.db.Song;
+
 
 /**
  *
@@ -190,7 +192,7 @@ public class TabModelPlayList extends AbstractTableModel {
             key="mp3.vbr";
             Boolean br = (Boolean) properties.get(key);
             if (br) song.brFormat="VBR"; else song.brFormat="CBR";
-            
+          
         } catch (Exception ex) {
             ex.printStackTrace();
         }

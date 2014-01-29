@@ -158,6 +158,7 @@ public class MultiDB extends JFrame {
     public static String logPath=null;
     public static String musicTable="music";
     public static String musicMoviesTable="videos";
+    public static String musicFavoritesTable="favorites";
     public static String moviesTable="movies";
     public static String docsTable="docs";
     public static boolean isMusicInCSV=false;
@@ -201,6 +202,8 @@ public class MultiDB extends JFrame {
     public musicmovies.db.TabMod videosTabModel;     
     public musicmovies.db.DataBaseTable videosDataBase;
     public TableRowSorter<musicmovies.db.TabMod> videosTableSorter;
+    
+    public music.db.DataBaseFavorites favoritesDataBase;
     
   
     //MUSIC VARS
@@ -369,6 +372,8 @@ public class MultiDB extends JFrame {
             moviesDataBase.setTabModel(moviesTabModel);
         	docsDataBase = new docs.db.DataBaseTable();
             docsDataBase.setTabModel(docsTabModel);
+            favoritesDataBase = new music.db.DataBaseFavorites(musicDataBase);
+            favoritesDataBase.getSong(0);
         }else isdb=false;
         
         sysClipboard = Toolkit.getDefaultToolkit().getSystemClipboard();
@@ -1207,7 +1212,7 @@ public class MultiDB extends JFrame {
 						Disc previousDisc=musicDataBase.getDisc(newDisc.id);
 				        //adding the undo/redo effect object
 				        undoManager.addEdit(new music.db.UnReUpdate(musicDataBase,newDisc,previousDisc,selectedModel.get(i)));		        
-				        musicDataBase.updateDisc(newDisc,selectedModel.get(i));	
+				        musicDataBase.updateDiscWithoutReview(newDisc,selectedModel.get(i));	
 						break;
 					case IND_VIDEOS_TAB:
 						videosTabModel.setValueAt(data, selectedModel.get(i), selectedModelColumn);

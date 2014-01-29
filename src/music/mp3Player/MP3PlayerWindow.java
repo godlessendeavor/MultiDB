@@ -51,6 +51,7 @@ import javax.swing.table.TableColumn;
 import main.Errors;
 import main.utils.LevenshteinDistance;
 import music.db.Disc;
+import music.db.Song;
 import music.lyrics.LyricsFrame;
 import musicmovies.db.Video;
 

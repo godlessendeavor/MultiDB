@@ -11644,3 +11644,75 @@ File already exists while trying to copy: I:\MUSIC\3 Mile Scream\2006 - A prelud
 02-nov-2013 19:36:25 main.Errors showError
 GRAVE: Error while copying file, file already exists
 File already exists while trying to copy: I:\MUSIC\!T.O.O.H!\1999 - z vyssi vule
+09-nov-2013 0:02:29 main.Errors showError
+GRAVE: Error while copying file, file already exists
+File already exists while trying to copy: I:\MUSIC\!T.O.O.H!\1999 - z vyssi vule
+09-nov-2013 0:02:36 main.Errors showError
+GRAVE: Error while copying file, file already exists
+File already exists while trying to copy: I:\MUSIC\3 Mile Scream\2006 - A prelude to our demise
+28-nov-2013 22:18:26 main.Errors showError
+GRAVE: Error, see log for details
+Error managing playlist table Identifier not found
+30-nov-2013 20:11:33 main.Errors showError
+GRAVE: Error, see log for details
+Error managing playlist table Identifier not found
+30-nov-2013 20:36:58 main.Errors showError
+GRAVE: Error, see log for details
+Error managing playlist table Identifier not found
+30-nov-2013 20:56:37 main.Errors showError
+GRAVE: Error, see log for details
+Error managing playlist table Identifier not found
+21-dic-2013 19:09:53 main.Errors showError
+GRAVE: Error on select sentence on database
+21-dic-2013 19:09:53 main.Errors writeError
+GRAVE: Error on select sentence on database
+select * from favorites where id="0"
+
+21-dic-2013 19:18:30 main.Errors showError
+GRAVE: Error on select sentence on database
+21-dic-2013 19:18:30 main.Errors writeError
+GRAVE: Error on select sentence on database
+select * from favorites where id="0"
+
+21-dic-2013 19:35:52 main.Errors showError
+GRAVE: Error on select sentence on database
+21-dic-2013 19:35:52 main.Errors writeError
+GRAVE: Error on select sentence on database
+select * from favorites where id="0"
+
+21-dic-2013 19:39:31 main.Errors showError
+GRAVE: Error on select sentence on database
+21-dic-2013 19:39:32 main.Errors writeError
+GRAVE: Error on select sentence on database
+select * from favorites where id="0"
+
+21-dic-2013 19:46:53 main.Errors showError
+GRAVE: Error on select sentence on database
+21-dic-2013 19:46:53 main.Errors writeError
+GRAVE: Error on select sentence on database
+java.lang.Integer cannot be cast to java.lang.Long
+
+21-dic-2013 19:49:16 main.Errors showError
+GRAVE: Error on select sentence on database
+21-dic-2013 19:49:16 main.Errors writeError
+GRAVE: Error on select sentence on database
+java.lang.Integer cannot be cast to java.lang.Long
+
+21-dic-2013 19:50:48 main.Errors showError
+GRAVE: Error on select sentence on database
+21-dic-2013 19:50:48 main.Errors writeError
+GRAVE: Error on select sentence on database
+null
+
+21-dic-2013 19:51:13 main.Errors showError
+GRAVE: Error on select sentence on database
+21-dic-2013 19:51:13 main.Errors writeError
+GRAVE: Error on select sentence on database
+java.lang.Integer cannot be cast to java.lang.Long
+
+21-dic-2013 19:59:37 main.Errors showError
+GRAVE: Error on select sentence on database
+21-dic-2013 19:59:37 main.Errors writeError
+GRAVE: Error on select sentence on database
+null
+
