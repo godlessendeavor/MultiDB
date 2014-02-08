@@ -195,15 +195,11 @@ public abstract class Errors {
 		String fileName = "multidb.log";
 		
 		String os = System.getProperty("os.name").toLowerCase();
-		if((os.indexOf( "win" ) >= 0)){
-			if (MultiDB.logPath!=null) dirName=MultiDB.logPath; 
-			else{
-				String appPath = System.getProperties().getProperty("user.dir"); 
-				dirName=appPath+File.separator+fileName;
-				}
-		}else if(os.indexOf( "nix") >=0 || os.indexOf( "nux") >=0){
-			dirName="/var/log/multidb.log";
-		}else { return;}
+		if (MultiDB.logPath!=null) dirName=MultiDB.logPath; 
+		else{
+			String appPath = System.getProperties().getProperty("user.dir"); 
+			dirName=appPath+File.separator+fileName;
+			}
 		
 		try {
 		
