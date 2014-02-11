@@ -1111,7 +1111,7 @@ public class MultiDB extends JFrame {
 /////////////////////////////////////////////////////////////////////////////////////////////////////
 
   
-    //método que procesa las variables de configuración
+    //mï¿½todo que procesa las variables de configuraciï¿½n
     public void processConfig(String fileName) {
     	String appPath = System.getProperties().getProperty("user.dir"); 
     	File fi=new File(appPath+File.separator+fileName);
@@ -2675,14 +2675,11 @@ public class MultiDB extends JFrame {
   	   			selectedModelColumn = currentTable.convertColumnIndexToModel(selectedViewColumn);
   	   			currentTable.changeSelection(selectedViewRow, selectedViewColumn, false, false);              
            }
-       }
-
-       @Override
-       public void mouseReleased(MouseEvent e) {
            if (e.isPopupTrigger()) {
                popupTable.show(e.getComponent(),e.getX(), e.getY());
            }
        }
+
    } //POPUPLISTENER HANDLER END
 
    ////////////////////////////////review popup////////////////////////////////

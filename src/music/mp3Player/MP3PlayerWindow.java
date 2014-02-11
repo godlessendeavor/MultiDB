@@ -599,9 +599,6 @@ public class MP3PlayerWindow {
 	               selectedModelRowPlayer = playListTable.convertRowIndexToModel(selectedViewRowPlayer);
 	               playListTable.changeSelection(selectedViewRowPlayer, selectedModelRowPlayer, false, false);
 	           }
-	       }
-	       @Override
-	       public void mouseReleased(MouseEvent e) {
 	           if (e.isPopupTrigger()) {
 	        	   popupSong.show(e.getComponent(),e.getX(), e.getY());
 	           }
