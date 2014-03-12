@@ -1,12 +1,21 @@
 package image;
 
 import java.awt.Dimension;
+import java.awt.Graphics;
 import java.awt.Graphics2D;
+import java.awt.GraphicsConfiguration;
+import java.awt.GraphicsDevice;
+import java.awt.GraphicsEnvironment;
+import java.awt.HeadlessException;
 import java.awt.Image;
 import java.awt.RenderingHints;
 import java.awt.Toolkit;
+import java.awt.Transparency;
 import java.awt.image.BufferedImage;
+import java.awt.image.ColorModel;
+import java.awt.image.PixelGrabber;
 import java.io.File;
+import java.io.FileNotFoundException;
 import java.io.IOException;
 import java.io.InputStream;
 import java.net.HttpURLConnection;
@@ -17,6 +26,7 @@ import java.util.Iterator;
 import javax.imageio.ImageIO;
 import javax.imageio.ImageReader;
 import javax.imageio.event.IIOReadProgressListener;
+import javax.imageio.stream.FileImageInputStream;
 import javax.imageio.stream.ImageInputStream;
 import javax.swing.ImageIcon;
 import javax.swing.JFrame;
@@ -146,8 +156,31 @@ public class MultiDBImage{
 	} 
 	
 	public static Image getImageFromFile(String path){
-		ImageIcon icon = new ImageIcon(path);
-    	return icon.getImage();
+		Image tempIm = null;
+	 	File file = new File(path);
+	 	ImageInputStream iis;
+		try {
+			iis = new FileImageInputStream(file);
+			 try {
+	    	     for (Iterator<ImageReader> i = ImageIO.getImageReaders(iis); tempIm == null && i.hasNext(); ) {
+	    	         ImageReader r = i.next();
+	    	         try {
+	    	             r.setInput(iis);
+	    	             tempIm = r.read(0);
+	    	         } catch (IOException e) {
+	    	        	 Errors.writeError(Errors.FILE_IO_ERROR, path);
+	    	         }
+	    	     }
+	    	 } finally {
+	    	     iis.close();
+	    	 }
+		} catch (FileNotFoundException e1) {
+			Errors.writeError(Errors.FILE_NOT_FOUND, path);
+		} catch (IOException e2) {
+			Errors.writeError(Errors.FILE_IO_ERROR, path);
+		}
+		
+    	return tempIm;
 	} 
 	
 	public void setThumbNailFromUrl(String urlstring){
@@ -248,8 +281,7 @@ public class MultiDBImage{
     	try {
 			ImageIO.write(bufferedImage,type,file);
 		} catch (IOException e) {
-			Errors.writeError(Errors.IMAGE_NOT_SAVED,"Error writing image to file");
-			e.printStackTrace();
+			Errors.writeError(Errors.IMAGE_NOT_SAVED,": "+file.getAbsolutePath());
 		}
     	
  
@@ -286,20 +318,7 @@ public class MultiDBImage{
         return Toolkit.getDefaultToolkit().createImage(bufferedImage.getSource());
     }
     
-    public static BufferedImage toBufferedImage(Image image) {
-    	if (image instanceof BufferedImage) {
-             return (BufferedImage)image;
-        }
-	    BufferedImage bimage = new BufferedImage(image.getWidth(null), image.getHeight(null), BufferedImage.TYPE_INT_ARGB);
-	
-	    // Draw the image on to the buffered image
-	    Graphics2D bGr = bimage.createGraphics();
-	    bGr.drawImage(image, 0, 0, null);
-	    bGr.dispose();
-	
-	    // Return the buffered image
-	    return bimage;
-    }
+
     
     private class MultiIIOReadProgressListener implements IIOReadProgressListener{
     	
@@ -395,14 +414,10 @@ public class MultiDBImage{
     			}else{
 	    			switch(this.type){
 	    			case(FILE_TYPE):
-	    				origIcon = new ImageIcon(sourceName);
-	   		     		tempIm = origIcon.getImage();
-	   		     		//imageThread = imagen.getScaledInstance(dim.width, dim.height, Image.SCALE_FAST);
-	   		     		imageThread = MultiDBImage.getScaledImage(tempIm,dim.width, dim.height);
+	   		     		imageThread = MultiDBImage.getScaledImage(getImageFromFile(sourceName),dim.width, dim.height);
 	    				break;
 	    			case(URL_TYPE):
 	    				tempIm=MultiDBImage.this.getImageFromUrl(this.sourceName,true);
-		    			//imageThread = imagen.getScaledInstance(dim.width, dim.height, Image.SCALE_FAST);
 	   		     		imageThread = MultiDBImage.getScaledImage(tempIm,dim.width, dim.height);  		    	
 	    				break;
 	    			case(IMAGE_TYPE):
@@ -410,7 +425,6 @@ public class MultiDBImage{
 	        				Errors.writeError(Errors.VAR_NULL,"Error in MultiDBImage when putting image on label");
 	        			}
 	    				tempIm=imageThread;
-	    				//imageThread = imagen.getScaledInstance(dim.width, dim.height, Image.SCALE_FAST);
 	   		     		imageThread = MultiDBImage.getScaledImage(tempIm,dim.width, dim.height);
 	    				break;
 	    			}
@@ -423,10 +437,23 @@ public class MultiDBImage{
     }
     
     
-    
+    /*    public static BufferedImage toBufferedImage(Image image) {
+	if (image instanceof BufferedImage) {
+         return (BufferedImage)image;
+    }
+    BufferedImage bimage = new BufferedImage(image.getWidth(null), image.getHeight(null), BufferedImage.TYPE_INT_ARGB);
+
+    // Draw the image on to the buffered image
+    Graphics2D bGr = bimage.createGraphics();
+    bGr.drawImage(image, 0, 0, null);
+    bGr.dispose();
+
+    // Return the buffered image
+    return bimage;
+	}*/
     
 
-    /* // This method returns a buffered image with the contents of an image
+   /*  // This method returns a buffered image with the contents of an image
     public static BufferedImage toBufferedImage2(Image image) {
         if (image instanceof BufferedImage) {
             return (BufferedImage)image;

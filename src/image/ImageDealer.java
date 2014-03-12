@@ -225,23 +225,21 @@ public class ImageDealer {
     
     private ArrayList<MultiDBImage> getListOfImages(File pathDisc){
     	int numArchivos;    
-    	String[] listaArchivos;
+    	String[] imageNamesList;
     	MultiDBImage tempIm;
     	ArrayList<MultiDBImage> imList = new ArrayList<MultiDBImage>();
     
-    	listaArchivos = pathDisc.list();
-		if (listaArchivos!=null){
-			numArchivos = listaArchivos.length;
+    	imageNamesList = pathDisc.list();
+		if (imageNamesList!=null){
+			numArchivos = imageNamesList.length;
 			imList.clear();
 			
 			for (int i = 0; i < numArchivos; i++) {
-				listaArchivos[i] = listaArchivos[i].toLowerCase();
-				if (((listaArchivos[i].indexOf(".jpg") > -1) || (listaArchivos[i].indexOf(".gif") > -1)|| (listaArchivos[i].indexOf(".png")) > -1)) {
+				String currentImageName = imageNamesList[i].toLowerCase();
+				if (((currentImageName.indexOf(".jpg") > -1) || (currentImageName.indexOf(".gif") > -1)|| (currentImageName.indexOf(".png")) > -1)) {
 					tempIm=new MultiDBImage();
-					//System.out.println(pathDisc.getAbsolutePath() + File.separator + listaArchivos[i]);
-					tempIm.path = new File(pathDisc.getAbsolutePath() + File.separator + listaArchivos[i]);
-					tempIm.name = listaArchivos[i];
-					//System.out.println(tempIm.width);
+					tempIm.path = new File(pathDisc.getAbsolutePath() + File.separator + imageNamesList[i]);
+					tempIm.name = imageNamesList[i];
 					imList.add(tempIm);					
 				}
 			}
@@ -289,7 +287,8 @@ public class ImageDealer {
 		if (type == ImageDealer.BACK_COVER) stringSearch=BACK_STRING;		
 		
 		for (int i = 0; i < imageList.size(); i++) {
-			if (imageList.get(i).name.toLowerCase().indexOf(stringSearch) > -1) {
+			String currentImageName = imageList.get(i).name.toLowerCase();
+			if (currentImageName.indexOf(stringSearch) > -1) {
 				found = true;
 				indexCover = i;
 				break;
@@ -297,7 +296,6 @@ public class ImageDealer {
 		}
 			
 		if (found) {
-			System.out.println(type);
 			if (type == FRONT_COVER) frontCover = true; else frontCover = false;
 			multiIm.putImage(labelIn, MultiDBImage.FILE_TYPE, imageList.get(indexCover).path.getAbsolutePath(), dim);
 		} else  showListOfImages();			

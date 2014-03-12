@@ -42,6 +42,7 @@ public abstract class Errors {
     public static final Integer WRITING_IOERROR=-207;
     public static final Integer FILE_DELETE_ERROR=-208;
     public static final Integer FILE_NOT_POSIBLE_TO_CREATE=-209;
+    public static final Integer FILE_IO_ERROR=-210;
     
     //ERROR SAVING REVIEW
     public static final Integer SAVING_REVIEW=-300;
@@ -95,6 +96,7 @@ public abstract class Errors {
     	errorsMap.put(COPYING_FILE_EXISTS,"Error while copying file, file already exists");
     	errorsMap.put(FILE_NOT_FOUND,"Error, file not found");
     	errorsMap.put(FILE_NOT_POSIBLE_TO_CREATE, "Error trying to create folder or file");
+    	errorsMap.put(FILE_IO_ERROR, "Error trying to read or write file, IOError");
     	errorsMap.put(COPYING_IOERROR,"Error copying file, IOError");
     	errorsMap.put(WRITING_IOERROR,"Error writing to file, IOError");
     	errorsMap.put(FILE_DELETE_ERROR,"Error deleting file");
