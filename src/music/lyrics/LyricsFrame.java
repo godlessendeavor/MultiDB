@@ -17,6 +17,7 @@ import java.io.IOException;
 import javax.swing.BoxLayout;
 import javax.swing.JButton;
 import javax.swing.JFrame;
+import javax.swing.JMenuItem;
 import javax.swing.JOptionPane;
 import javax.swing.JScrollPane;
 import javax.swing.JTextArea;
@@ -44,6 +45,11 @@ public class LyricsFrame {
     public TimerThread timerThread;
     public JScrollPane spLyrics;
     public File lyricsFile;  
+    
+    
+    public LyricsFrame(){
+    	this.initFrame();    	
+    }
 
 	
 	public void initFrame(){
@@ -82,7 +88,7 @@ public class LyricsFrame {
 		lyricsGroup = group;
 		lyricsAlbum = album;
 		lyricsView.setText("");
-  	   if ((lyricsFile=DealMusicFiles.searchLyricsFile(lyricsPath))!=null){
+  	    if ((lyricsFile=DealMusicFiles.searchLyricsFile(lyricsPath))!=null){
   		   try{
   			   FileReader fr = new FileReader(lyricsFile);
   			   BufferedReader bf = new BufferedReader(fr);
@@ -97,10 +103,10 @@ public class LyricsFrame {
   		   }catch(Exception ex){
   			   Errors.showError(Errors.WRITING_IOERROR,"File: "+ lyricsFile);
   		   }
-  	   }
-  	   lyricsView.setCaretPosition(0); //to place the scroll on the top
-  	   lyricsFrame.setVisible(true);
-		
+  	    }
+  	    lyricsView.setCaretPosition(0); //to place the scroll on the top
+  	    lyricsFrame.setVisible(true);
+  	   
 	}
 	
 	

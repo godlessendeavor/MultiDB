@@ -88,6 +88,7 @@ import movies.web.WebMoviesInfoExtractor;
 import music.db.Disc;
 import music.db.NewDiscTabMod;
 import music.dealfiles.DealMusicFiles;
+import music.lyrics.LyricsFrame;
 import music.mp3Player.MP3Player;
 import music.mp3Player.MP3PlayerWindow;
 import music.mp3Player.TabModelPlayList;
@@ -286,14 +287,6 @@ public class MultiDB extends JFrame {
     public JScrollPane spPlay,spLyrics;
     public JPopupMenu popupSong;
     public PlayerTableRenderer playerTableRenderer;
-    //LYRICS ELEMENTS
-    public JFrame lyricsFrame;
-    public JTextArea lyricsView;
-    public JButton saveLyricsButton;
-    public JButton downloadLyricsButton;
-    public String lyricsGroup;
-    public String lyricsAlbum;
-    public File lyricsPath;
        
         ///////////////////////////////////HERE WE GO!!!!\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\
     	///////////////////////////////////HERE WE GO!!!!\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\
@@ -997,7 +990,7 @@ public class MultiDB extends JFrame {
 		//newDiscs Frame
 		newDiscsFrame = new JFrame("New Discs");
         newDiscsFrame.add(newDiscsSp);
-
+        
         ///////////////////////////for every table/////////////////////////////////////
         //n-tuplas where needed
 
@@ -2225,35 +2218,22 @@ public class MultiDB extends JFrame {
    private class PopupMenuViewLyricsHandler implements ActionListener{
 	   
        public void actionPerformed(ActionEvent e) {
-    	   lyricsView.setText("");
+    	   File lyricsPath=new File("");
+    	   String lyricsGroup="";
+    	   String lyricsAlbum="";
+    	   
     	   if (((JMenuItem)e.getSource()).getName().compareTo(LYR_PLAYER_NAME)==0) {
     	    	lyricsPath = playList.getSongAtRow(selectedModelRowPlayer).discPath;
     	    	lyricsGroup = playList.getSongAtRow(selectedModelRowPlayer).group;
     	    	lyricsAlbum = playList.getSongAtRow(selectedModelRowPlayer).album;
     	   }
-    	    else if (((JMenuItem)e.getSource()).getName().compareTo(LYR_MENU_NAME)==0)  {
+    	   else if (((JMenuItem)e.getSource()).getName().compareTo(LYR_MENU_NAME)==0)  {
     	    	lyricsPath = musicTabModel.getDiscAtRow(selectedModelRow).path;
     	    	lyricsGroup=musicTabModel.getDiscAtRow(selectedModelRow).group;
     	    	lyricsAlbum=musicTabModel.getDiscAtRow(selectedModelRow).title; 	    	
-    	    }
-    	   if ((lyricsFile=DealMusicFiles.searchLyricsFile(lyricsPath))!=null){
-    		   try{
-    			   FileReader fr = new FileReader(lyricsFile);
-    			   BufferedReader bf = new BufferedReader(fr);
-    			   String text="";
-    			   String cad;
-    			   while ((cad=bf.readLine())!=null) {
-    				   text=text+"\n"+cad;
-    			   } 
-    			   lyricsView.setText(text);
-    			   bf.close();
-    			   fr.close();
-    		   }catch(Exception ex){
-    			   Errors.showError(Errors.WRITING_IOERROR,"File: "+ lyricsFile);
-    		   }
     	   }
-    	   lyricsView.setCaretPosition(0); //to place the scroll on the top
-    	   lyricsFrame.setVisible(true);
+    	   LyricsFrame lyricsFrame = new LyricsFrame();
+    	   lyricsFrame.open(lyricsPath, lyricsGroup, lyricsAlbum);
        }
    }
    
