@@ -727,7 +727,7 @@ public class MP3PlayerWindow {
 			                   	 }
 			                 }
 	                    }
-	            	}while(this.numSongs<10);
+	            	}while(this.numSongs<20);
 	                
 	               
 	                playListTable.setModel(playList);
