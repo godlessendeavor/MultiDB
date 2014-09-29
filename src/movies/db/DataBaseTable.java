@@ -109,7 +109,7 @@ public class DataBaseTable extends AbstractDDBB {
 				if (open("jdbc:mysql://" + host + ":" + port+ "/" + database, user, pass)>-1) {
 					// System.out.println(myInsert);
 					movie.check();
-					if ((insert(myInsert)) != -1) {
+					if ((insert(myInsert)) > -1) {
 						movie.id = lastInsertID();
 						tabModel.addMovie(movie);
 					} else {
@@ -135,7 +135,7 @@ public class DataBaseTable extends AbstractDDBB {
 				if (open("jdbc:mysql://" + host + ":" + port+ "/" + database, user, pass)>-1) {
 					
 					myDel = "delete from movies where id=\"" + id + "\"";
-					if (delete(myDel) != -1) {
+					if (delete(myDel) > -1) {
 						// System.out.println("Deleting succesful!!!");
 						tabModel.deleteMovie(row);
 					} else {
@@ -165,7 +165,7 @@ public class DataBaseTable extends AbstractDDBB {
 							+ "\",other=\"" + movie.other 
 							+ "\" where id=\"" + movie.id + "\"";
 					//System.out.println(movie.title);
-					if (update(myUpd) != -1) {
+					if (update(myUpd) > -1) {
 						tabModel.setMovieAtRow(movie,selectedRow);
 					} else {
 						reviewView.append("Error updating fields\n");

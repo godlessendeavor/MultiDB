@@ -183,7 +183,7 @@ public class DataBaseTable extends AbstractDDBB {
 		return vid;
 	}
 	
-	// INSERT DISC IN DATABASE AND TABLEMODEL
+	// INSERT VIDEO IN DATABASE AND TABLEMODEL
 	public void insertNewVideo(Video vid) {
 		String myInsert = "insert into "+table+" (groupName,title,year,style,loc,copy,type,mark,review) values (\""
 				+ vid.group + "\",\"" + vid.title + "\",\"" + vid.year+ "\",\"" + vid.style + "\",\"" + vid.loc
@@ -192,7 +192,7 @@ public class DataBaseTable extends AbstractDDBB {
 		try {
 			if (cargaControlador()>-1) {
 				if (open("jdbc:mysql://" + host + ":" + port+ "/" + database, user, pass)>-1) {
-					if (insert(myInsert) != -1) {
+					if (insert(myInsert) > -1) {
 						vid.id = new Long(lastInsertID());
 						tabModel.addVideo(vid);
 					} else {
@@ -207,7 +207,7 @@ public class DataBaseTable extends AbstractDDBB {
 		}
 	}
 
-	// DELETE DISC FROM DATABASE AND TABLEMODEL
+	// DELETE VIDEO FROM DATABASE AND TABLEMODEL
 	public void deleteVideo(int row) {
 		int id = (Integer) tabModel.getValueAt(row, Video.COL_ID);
 		try {
@@ -215,7 +215,7 @@ public class DataBaseTable extends AbstractDDBB {
 				if (open("jdbc:mysql://" + host + ":" + port+ "/" + database, user, pass)>-1) {
 					String myDel;
 					myDel = "delete from "+table+" where id=\"" + id + "\"";
-					if (delete(myDel) != -1) {
+					if (delete(myDel) > -1) {
 						// System.out.println("Deleting succesful!!!");
 						tabModel.deleteVideo(row);
 					} else {
@@ -229,7 +229,7 @@ public class DataBaseTable extends AbstractDDBB {
 		}
 	}
 
-	// UPDATE DISC FROM DATABASE AND TABLEMODEL
+	// UPDATE VIDEO FROM DATABASE AND TABLEMODEL
 	public void updateVideo(Video vid,int selectedRow) {
 		String myUpd = "";
 		try {
@@ -244,7 +244,7 @@ public class DataBaseTable extends AbstractDDBB {
 							+ vid.copy + "\",review=\"" + vid.review
 							+ "\" where id=\"" + vid.id + "\"";
 					//System.out.println(myUpd);
-					if (update(myUpd) != -1) {
+					if (update(myUpd) > -1) {
 						tabModel.setVideoAtRow(vid,selectedRow);
 					} else {
 						reviewView.append("Error updating fields\n");
@@ -265,7 +265,7 @@ public class DataBaseTable extends AbstractDDBB {
                     String myUpd;
                     myUpd = "update "+table+" set review=\"" + disc.review + "\" where id=\"" + disc.id + "\"";
                     //System.out.println(myUpd);
-                    if (update(myUpd) != -1) {
+                    if (update(myUpd) > -1) {
                         //System.out.println("Updating succesful!!!");
                     } else {
                         reviewView.append("Error updating fields\n");

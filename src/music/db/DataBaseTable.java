@@ -217,7 +217,7 @@ public class DataBaseTable extends AbstractDDBB {
 		try {
 			if (cargaControlador()>-1) {
 				if (open("jdbc:mysql://" + host + ":" + port+ "/" + database, user, pass)>-1) {
-					if ((row = insert(myInsert)) != -1) {
+					if ((row = insert(myInsert)) > -1) {
 						disc.id = lastInsertID();
 						row = tabModel.addDisc(disc);
 						tabModel.setValueAt("?", row, Disc.COL_PRESENT);
@@ -245,7 +245,7 @@ public class DataBaseTable extends AbstractDDBB {
 				if (open("jdbc:mysql://" + host + ":" + port+ "/" + database, user, pass)>-1) {
 					
 					myDel = "delete from "+table+" where id=\"" + id + "\"";
-					if (delete(myDel) != -1) {
+					if (delete(myDel) > -1) {
 						// System.out.println("Deleting succesful!!!");
 						tabModel.deleteDisc(row);
 					} else {
@@ -275,8 +275,7 @@ public class DataBaseTable extends AbstractDDBB {
 							+ "\",mark=\"" + disc.mark + "\",copy=\""
 							+ disc.copy + "\",review=\"" + disc.review
 							+ "\" where id=\"" + disc.id + "\"";
-					System.out.println(myUpd);
-					if (update(myUpd) != -1) {
+					if (update(myUpd) > -1) {
 						tabModel.setDiscAtRow(disc,selectedRow);
 					} else {
 						Errors.showError(Errors.DB_UPDATE);
@@ -304,7 +303,7 @@ public class DataBaseTable extends AbstractDDBB {
 							+ "\",loc=\"" + disc.loc + "\",type=\"" + disc.type
 							+ "\",mark=\"" + disc.mark + "\",copy=\""
 							+ disc.copy + "\" where id=\"" + disc.id + "\"";
-					if (update(myUpd) != -1) {
+					if (update(myUpd) > -1) {
 						tabModel.setDiscAtRow(disc,selectedRow);
 					} else {
 						reviewView.append("Error updating fields\n");
@@ -327,7 +326,7 @@ public class DataBaseTable extends AbstractDDBB {
                     disc.check();
                     myUpd = "update "+table+" set review=\"" + disc.review + "\" where id=\"" + disc.id + "\"";
                     //System.out.println(myUpd);
-                    if (update(myUpd) != -1) {
+                    if (update(myUpd) > -1) {
                         //System.out.println("Updating succesful!!!");
                     } else {
                         reviewView.append("Error updating fields\n");

@@ -125,9 +125,10 @@ public class AbstractDDBB {
             stmt = con.createStatement();
             rs = stmt.executeQuery("select LAST_INSERT_ID()");
             rs.next();
-            id=((Long)rs.getObject(1)).intValue();
+            id=rs.getInt(1);
         } catch (Exception ex) {
-        	//ex.printStackTrace();
+        	ex.printStackTrace();
+        	Errors.writeError(Errors.DB_INSERT, "Error trying to get last insert id\n");
         	return Errors.DB_INSERT;            
         }
         return id;
