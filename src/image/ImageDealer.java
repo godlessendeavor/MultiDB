@@ -62,7 +62,7 @@ public class ImageDealer {
 	private static final String bingUrl1=MultiDB.webBing1;
 	private static final String bingUrl2=MultiDB.webBing2;
 	private static final String coverParadiesURL="http://ecover.to/";
-	private static final String coverParadiesURLSearch=coverParadiesURL+"?Module=SimpleSearch";
+	private static final String coverParadiesURLSearch=coverParadiesURL+"Lookup.html";
 	
 
 	public static boolean frontCover=true;
@@ -401,6 +401,7 @@ public class ImageDealer {
  			    String data = URLEncoder.encode("Page", "UTF-8") + "=" + URLEncoder.encode(page.toString(), "UTF-8");
  			    data += "&" + URLEncoder.encode("SearchString", "UTF-8") + "=" + URLEncoder.encode(name, "UTF-8");
  			    //data += "&" + URLEncoder.encode("Sektion", "UTF-8") + "=" + URLEncoder.encode("", "UTF-8");
+ 			    System.out.println("Data to send to coverparadies "+data);
  				HTMLText=WebReader.postHTMLfromURL(coverParadiesURLSearch,data);
  				pw.setPer(1, "Downloading results...");
  				if (HTMLText.compareTo("Error")==0)  Errors.showError(Errors.WEB_MALF_URL);
