@@ -149,7 +149,6 @@ public class WebFilmaffinity {
 		
 		try {
 			String HTMLText = WebReader.getHTMLfromURL(WEFAURLSearchMovieInfo+URLEncoder.encode(title,"UTF-8"),"ISO-8859-1");
-				System.out.println("get movie info done");
 				parser = new Parser(HTMLText);
 				NodeList nl = parser.parse(null);
 				NodeList ndl = WebReader.getTagNodesOfType(nl,"dl",true);
@@ -162,7 +161,7 @@ public class WebFilmaffinity {
 		 		 				  if ((nodeb=j.nextNode()) instanceof TagNode){
 		 		 					  if (((TagNode)nodeb).toPlainTextString()!=null){
 		 		 						  str=((TagNode)nodeb).toPlainTextString();
-		 		 						  if (str.contains("A&ntilde;o")){
+		 		 						  if (str.contains("AÃ±o")){
 		 		 							 j.nextNode(); //pass blank text node
 		 		 							 if ((nodeb=j.nextNode()) instanceof TagNode){
 		 		 		 		 				 if (((TagNode)nodeb).toPlainTextString()!=null){
