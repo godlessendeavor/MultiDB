@@ -156,6 +156,7 @@ public class MultiDB extends JFrame {
     public static String videosUpload;
     public static String moviesUpload;
     public static String docsUpload;
+    public static String defaultMusicPath;
     public static String logPath=null;
     public static String musicTable="music";
     public static String musicMoviesTable="videos";
@@ -1171,6 +1172,8 @@ public class MultiDB extends JFrame {
  				   		   moviesUpload=param;
  				   	   }else if (cad.indexOf("<docsUpload>")>-1){
  				   		   docsUpload=param;
+ 				   	   }else if (cad.indexOf("<defaultMusicPath>")>-1){
+ 				   		   defaultMusicPath=param;
  				   	   }else if (cad.indexOf("<logPath>")>-1){
  				   		   logPath=param;
  				   	   }
@@ -1524,20 +1527,32 @@ public class MultiDB extends JFrame {
   
   
    private class RelDBBUHandler implements ActionListener {
-      
+	   private int select=JOptionPane.OK_OPTION;	   
+	   
        public void actionPerformed(ActionEvent evento) {
-    	   backUpPath=FileDealer.selectPath(f,"Select path for music");
-	    	if (backUpPath!=null) {
-	           String[] grupos = backUpPath.list();
-	           Integer tam = grupos.length;
-	           if (tam == 0) {
-	               Errors.showWarning(Errors.WRONG_DIRECTORY,backUpPath.toString());
-	           } else{              //para todos los grupos de la carpeta
-	        	    RelateDBBUPThread relThread = new RelateDBBUPThread();
-	        	    relThread.setDaemon(true);
-	        	    relThread.start();
-		       	}
-	       }
+    	   Object[] options = {"Yes","No"};
+           select = JOptionPane.showOptionDialog(f,"Would you like to use default path?","Question",JOptionPane.YES_NO_OPTION,JOptionPane.QUESTION_MESSAGE,
+           		null,     //do not use a custom Icon
+           		options,  //the titles of buttons
+           		options[0]); //default button title
+           if (select!=JOptionPane.CLOSED_OPTION){
+	           	if (select==JOptionPane.OK_OPTION) backUpPath = new File(defaultMusicPath);
+	           	else backUpPath=FileDealer.selectPath(f,"Select path for music");
+	           	if (backUpPath!=null) {
+    	           String[] grupos = backUpPath.list();
+    	           Integer tam = grupos.length;
+    	           if (tam == 0) {
+    	               Errors.showWarning(Errors.WRONG_DIRECTORY,backUpPath.toString());
+    	           } else{              //para todos los grupos de la carpeta
+    	        	    RelateDBBUPThread relThread = new RelateDBBUPThread();
+    	        	    relThread.setDaemon(true);
+    	        	    relThread.start();
+    		       	}
+	    	    }
+           }
+    	   
+    	   
+    	   
        }
    } //FIN HANDLER RELDBBU
    
