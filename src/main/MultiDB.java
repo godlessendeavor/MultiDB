@@ -1107,7 +1107,7 @@ public class MultiDB extends JFrame {
   
     //m�todo que procesa las variables de configuraci�n
     public void processConfig(String fileName) {
-    	String appPath = System.getProperties().getProperty("user.dir"); 
+    	String appPath = System.getProperties().getProperty("user.home"); 
     	File fi=new File(appPath+File.separator+fileName);
 		if (fi!=null){
  		   try{
