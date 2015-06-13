@@ -30,6 +30,7 @@ public abstract class ErrorBase {
     public static final Integer UPLOADING_BUP=-101;
     public static final Integer GROUP_NOT_FOUND=-102;
     public static final Integer MOVIE_NOT_FOUND=-103;
+    public static final Integer WEB_IMAGE_ERROR=-104;
     
     //FILE ERRORS
     public static final Integer COPYING_FILE_EXISTS=-204;
@@ -89,6 +90,7 @@ public abstract class ErrorBase {
     	errorsMap.put(UPLOADING_BUP,"Error while uploading backup to web");
     	errorsMap.put(GROUP_NOT_FOUND,"Error while looking for band name on web");
     	errorsMap.put(MOVIE_NOT_FOUND,"Film not found");
+    	errorsMap.put(WEB_IMAGE_ERROR,"Some error while trying to download image");
     	errorsMap.put(COPYING_FILE_EXISTS,"Error while copying file, file already exists");
     	errorsMap.put(FILE_NOT_FOUND,"Error, file not found");
     	errorsMap.put(FILE_NOT_POSIBLE_TO_CREATE, "Error trying to create folder or file");

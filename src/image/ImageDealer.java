@@ -31,12 +31,6 @@ import main.MultiDB;
 import main.ProgressBarWindow;
 import music.db.Disc;
 
-import org.htmlparser.Node;
-import org.htmlparser.Parser;
-import org.htmlparser.nodes.TagNode;
-import org.htmlparser.util.NodeIterator;
-import org.htmlparser.util.NodeList;
-
 import web.WebReader;
 
 
@@ -52,7 +46,6 @@ public class ImageDealer {
     public static final int SEEK_NUMBER_LOW = 4;
     public static final int SEEK_NUMBER_MAX = 8;
     public static final String BING_SEARCH = "Bing";
-    public static final String COVER_PARADIES_SEARCH = "Paradies";
     
     private static final String NORTH = SpringLayout.NORTH;
     private static final String SOUTH = SpringLayout.SOUTH;
@@ -61,8 +54,6 @@ public class ImageDealer {
     
 	private static final String bingUrl1=MultiDB.webBing1;
 	private static final String bingUrl2=MultiDB.webBing2;
-	private static final String coverParadiesURL="http://ecover.to/";
-	private static final String coverParadiesURLSearch=coverParadiesURL+"Lookup.html";
 	
 
 	public static boolean frontCover=true;
@@ -317,7 +308,7 @@ public class ImageDealer {
     	public SearchImageInternet(String name) {
     		super();
     		this.name=name;
-    		this.type=COVER_PARADIES_SEARCH;
+    		this.type=BING_SEARCH;
     	}
     	
     	public SearchImageInternet(String name,String type) {
@@ -334,7 +325,8 @@ public class ImageDealer {
     	    imageList.clear();
     	   
     	    if (type.compareTo(BING_SEARCH)==0) searchBing();
-    	    else searchCoverParadies(0);	
+    	    //TODO: add more search engines
+    	    // else 	
     	    if (imageList.size()>0){
     	    	spinnerCoversM.setList(imageList);
 				tempIm=new MultiDBImage();
@@ -382,163 +374,17 @@ public class ImageDealer {
 						}
 						
 					} catch (JSONException e) {
-						// TODO Auto-generated catch block
-					e.printStackTrace();
+						Errors.writeError(Errors.WEB_IMAGE_ERROR, e.getMessage());
+						e.printStackTrace();
 				}
 			}
 			} catch (Exception e) {
-					// TODO Auto-generated catch block
+				Errors.writeError(Errors.WEB_IMAGE_ERROR, e.getMessage());
 				e.printStackTrace();
 			}
     	}
     	
     	
-    	private void searchCoverParadies(Integer page){
-    		Disc disc;
-    		ArrayList<Disc> discList = new ArrayList<Disc>();
-    		try{
- 				pw.setPer(0, "Searching...");
- 			    String data = URLEncoder.encode("Page", "UTF-8") + "=" + URLEncoder.encode(page.toString(), "UTF-8");
- 			    data += "&" + URLEncoder.encode("SearchString", "UTF-8") + "=" + URLEncoder.encode(name, "UTF-8");
- 			    //data += "&" + URLEncoder.encode("Sektion", "UTF-8") + "=" + URLEncoder.encode("", "UTF-8");
-
- 				HTMLText=WebReader.postHTMLfromURL(coverParadiesURLSearch,data);
- 				pw.setPer(1, "Downloading results...");
- 				if (HTMLText.compareTo("Error")==0)  Errors.showError(Errors.WEB_MALF_URL);
- 				else{
- 					Parser parser;
- 					parser = new Parser(HTMLText);		 				
-		 			NodeList nl = parser.parse(null); 
- 					//System.out.println(HTMLText);
- 					NodeList tableNodes=WebReader.getTagNodesOfType(nl,"table",true);
-		 			Node node;
-		 			NodeList links;
-		 			String classTd="";
-		 			for (NodeIterator i = tableNodes.elements (); i.hasMoreNodes ();){
-		 				node=i.nextNode();
-		 				if ((node) instanceof TagNode){
-			 				classTd=((TagNode)node).getAttribute("class");
-			 				if (classTd!=null)
-				 				if (classTd.contains("Table_SimpleSearchResult")) { 					
-				 					if (((TagNode)node).getChildren()!=null){
-				 						links=WebReader.getTagNodesOfType(((TagNode)node).getChildren(),"a",false);
-				 						if (links.size()>0){  		 			    		
-				 							for (NodeIterator itlinks = links.elements (); itlinks.hasMoreNodes (); ){
-				 								String href = ((TagNode)itlinks.nextNode()).getAttribute("href");
-				 								if (href!=null){
-				 									if (href.contains("Cover")){
-				 										//more than  1 result
-				 										String link = coverParadiesURL+href.substring(1);//get rid of /
-				 										boolean found = false;
-				 										for (int di=0;di<discList.size();di++){
-				 											if (discList.get(di).link.equalsIgnoreCase(link)){
-				 												found = true;
-				 												break;
-				 											}
-				 										}
-				 										if (!found){
-					 										disc = new Disc();
-					 										disc.setLink(link); 
-				 											discList.add(disc);			
-				 										}
-				 									}	
-				 								}	
-				 							}
-				 							break;
-				 						}	
-			 					}
-				 				
-			 				}
-		 				}
-		 			}
-
-		 			if (discList.size()>0){
-		 				for (int it=0;it<discList.size();it++){
-							disc = discList.get(it);
-							imageList.addAll(getImageFromLinkCoverParadies(WebReader.getHTMLfromURL(disc.getLink())));
-						}
-		 				if (discList.size()==12) searchCoverParadies(page+1);
-		 			}else { //web goes directly to the unique result
-		 				imageList.addAll(getImageFromLinkCoverParadies(HTMLText));
-		 			}
- 			}
- 			} catch (Exception e) {
- 					// TODO Auto-generated catch block
- 				e.printStackTrace();
- 			}
-    	}
-    	
-    	private ArrayList<MultiDBImage> getImageFromLinkCoverParadies(String HTMLText){
-    		ArrayList<MultiDBImage> listTi = new ArrayList<MultiDBImage>();
-    		MultiDBImage ti=null;
-    		try{
- 				if (HTMLText.compareTo("Error")==0)  Errors.showError(Errors.WEB_MALF_URL);
- 				else{
- 					Parser parser;
- 					parser = new Parser(HTMLText);		 				
-		 			NodeList nl = parser.parse(null); 
- 					//System.out.println(HTMLText);
- 					NodeList tableNodes=WebReader.getTagNodesOfType(nl,"div",true);
-		 			Node node,nodeImg;
-		 			NodeList links,divChildren,itImg;
-		 			String classTd="";
-		 			boolean filter=false;
-		 			for (NodeIterator i = tableNodes.elements (); i.hasMoreNodes ();){
-		 				node=i.nextNode();
-		 				if (node instanceof TagNode){
-			 				classTd=((TagNode)node).getAttribute("class");
-			 				filter=false;
-			 				if (classTd!=null){
-				 				if (classTd.contains("ThumbDetails")) filter=true;
-				 				else filter=false;
-			 				}
-			 				if (filter){ 
-			 					divChildren=((TagNode)node).getChildren();
-			 					if (divChildren!=null){
-			 						links=WebReader.getTagNodesOfType(((TagNode)node).getChildren(),"a",false);
-			 						if (links.size()>0){  		 			    		
-			 							for (NodeIterator itlinks = links.elements (); itlinks.hasMoreNodes (); ){
-			 								String href = ((TagNode)itlinks.nextNode()).getAttribute("href");
-			 								if (href!=null){
-			 									ti=new MultiDBImage();
-			 									if (!href.contains("Type=Test.JPG")){
-				 									itImg=WebReader.getTagNodesOfType(((TagNode)node).getChildren(),"img",false);
-				 									for (NodeIterator iterImg = itImg.elements (); iterImg.hasMoreNodes (); ){
-				 										nodeImg=iterImg.nextNode();
-				 										if (nodeImg instanceof TagNode){
-				 											String img=((TagNode)nodeImg).getAttribute("src");
-				 											if (img!=null){
-				 												ti.setThumbNailFromUrl(coverParadiesURL+img.substring(1));
-				 												break;
-				 											}
-				 										}
-				 									}
-								 					//System.out.println(href);
-				 									href=coverParadiesURL+href.substring(1);
-				 									ti.url=href;
-				 									ti.name=href.substring(href.lastIndexOf("/")+1);
-				 									//System.out.println("URL =" + ti.url);
-				 									//System.out.println("URL =" + ti.name);
-				 									if (ti.thumbNail!=null){
-				 										ti.path=new File(ImageDealer.this.currentDisc.path+File.separator+ti.name);
-				 										listTi.add(ti);
-				 									}
-			 									}
-			 								}	
-			 								}	
-			 							}
-			 						}	
-			 					}	
-			 				}
-		 				}
-		 			}
-
- 			} catch (Exception e) {
- 				Errors.showWarning(Errors.GENERIC_ERROR, e.getMessage());
- 				e.printStackTrace();
- 			}
-    		return listTi;
-    	}
     }
     
     

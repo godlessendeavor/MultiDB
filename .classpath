@@ -6,7 +6,6 @@
 	<classpathentry kind="lib" path="/home/thrasher/git/MultiDB/CLASSPATH/htmllexer.jar"/>
 	<classpathentry kind="lib" path="/home/thrasher/git/MultiDB/CLASSPATH/htmlparser.jar"/>
 	<classpathentry kind="lib" path="/home/thrasher/git/MultiDB/CLASSPATH/javacsv.jar"/>
-	<classpathentry kind="lib" path="/home/thrasher/git/MultiDB/CLASSPATH/jl1.0.1.zip"/>
 	<classpathentry kind="lib" path="/home/thrasher/git/MultiDB/CLASSPATH/jsoup-1.6.0.jar"/>
 	<classpathentry kind="lib" path="/home/thrasher/git/MultiDB/CLASSPATH/jvftp.jar"/>
 	<classpathentry kind="lib" path="/home/thrasher/git/MultiDB/CLASSPATH/mp3spi1.9.4.jar"/>

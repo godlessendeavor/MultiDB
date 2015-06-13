@@ -579,12 +579,7 @@ public class MultiDB extends JFrame {
 		menuDownloadCoverViaBing.setName("Bing");
 		PopupMenuDownloadCover popupMenuDownloadCoverViaBing = new PopupMenuDownloadCover();
 		menuDownloadCoverViaBing.addActionListener(popupMenuDownloadCoverViaBing);
-		menuDownloadCoverViaCoverParadies = new JMenuItem("Download cover via CoverParadies");
-		menuDownloadCoverViaCoverParadies.setName("Paradies");
-		PopupMenuDownloadCover popupMenuDownloadCoverViaCoverParadies = new PopupMenuDownloadCover();
-		menuDownloadCoverViaCoverParadies.addActionListener(popupMenuDownloadCoverViaCoverParadies);
 		menuDownloadCover.add(menuDownloadCoverViaBing);
-		menuDownloadCover.add(menuDownloadCoverViaCoverParadies);
 		
 		JMenuItem menuPastePopup = new JMenuItem("Paste");
 		PopupMenuPasteHandler popupMenuPasteHandler = new PopupMenuPasteHandler();
