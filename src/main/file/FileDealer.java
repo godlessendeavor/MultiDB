@@ -64,7 +64,7 @@ public class FileDealer {
 
         File newDir = new File(toFile+File.separator+fromFile.getName());
         if (!newDir.mkdir()){
-        	Errors.showError(Errors.FILE_NOT_POSIBLE_TO_CREATE,"File not found: "+ newDir.getName());
+        	Errors.showError(Errors.FILE_NOT_POSIBLE_TO_CREATE,"File not possible to create: "+ newDir.getName());
         	return true;
         }
         else return copyFiles(fromFile,newDir);

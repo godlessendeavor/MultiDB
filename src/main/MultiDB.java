@@ -3114,26 +3114,28 @@ public class MultiDB extends JFrame {
                 	 pw.closeProgBar();
                 	 break;
                  }
-                 String nombreGrupo = folders[j];                
-                 pw.setPer(j+1, "Adding discs of "+nombreGrupo);
-                 File discosGrupoF = new File(path + sep + nombreGrupo);
-                 if (discosGrupoF.isDirectory() == false) {
-                      Errors.errorSint(path + sep + nombreGrupo);
+                 String bandName = folders[j];                
+                 pw.setPer(j+1, "Adding discs of "+bandName);
+                 File bandNameFolder = new File(path + sep + bandName);
+                 if (bandNameFolder.isDirectory() == false) {
+                      Errors.errorSint(path + sep + bandName);
                  } else {
-                     String[] discosGrupo = discosGrupoF.list();
+                     String[] discosGrupo = bandNameFolder.list();
                      Integer numeroDiscos = discosGrupo.length;
-                     File groupBUpPath=DealMusicFiles.buscarGrupo(nombreGrupo,backUpPath);
+                     File groupBUpPath=DealMusicFiles.buscarGrupo(bandName,backUpPath);
                      exists=false;
                      if (groupBUpPath!=null){
                         //group folder already exists in backup
-                         exists=FileDealer.copyFiles(discosGrupoF.getAbsoluteFile(),groupBUpPath.getAbsoluteFile());
+                         exists=FileDealer.copyFiles(bandNameFolder.getAbsoluteFile(),groupBUpPath.getAbsoluteFile());
                          if (!exists){
-                        	 reviewView.append("Added folder "+discosGrupoF.getAbsolutePath()+" to "+groupBUpPath.getAbsolutePath()+"\n");
+                        	 reviewView.append("Added folder "+bandNameFolder.getAbsolutePath()+" to "+groupBUpPath.getAbsolutePath()+"\n");
                          }
+                         //to avoid lower case or other non-primary mismatches in between names
+                    	 bandName = groupBUpPath.getName();
                      }else {
-                         exists=FileDealer.copyFolder(discosGrupoF.getAbsoluteFile(),backUpPath.getAbsoluteFile());
+                         exists=FileDealer.copyFolder(bandNameFolder.getAbsoluteFile(),backUpPath.getAbsoluteFile());
                          if (!exists){
-                        	 reviewView.append("Added folder "+discosGrupoF.getAbsolutePath()+" to "+backUpPath.getAbsolutePath()+"\n");
+                        	 reviewView.append("Added folder "+bandNameFolder.getAbsolutePath()+" to "+backUpPath.getAbsolutePath()+"\n");
                          }
                      }
                      reviewView.revalidate();
@@ -3141,7 +3143,7 @@ public class MultiDB extends JFrame {
 
                      if (!exists) {
 							for (int k = 0; k < numeroDiscos; k++) {
-								currentDisc = new File(path + sep+ nombreGrupo + sep+ discosGrupo[k]);
+								currentDisc = new File(path + sep+ bandName + sep+ discosGrupo[k]);
 								if (currentDisc.isDirectory() == false) {
 									Errors.errorSint(currentDisc.getAbsolutePath());
 								} else {
@@ -3159,13 +3161,13 @@ public class MultiDB extends JFrame {
 											// creamos nuevo disco con los datos leidos
 											disco.reset();
 											disco.title = nombreDisco.trim();
-											disco.group = nombreGrupo;
+											disco.group = bandName;
 											disco.year = anho;
 											disco.review=" ";
 											disco.path = currentDisc;
 											if (groupBUpPath!=null){
 												//copiamos la procedencia del grupo de algun elemento ya existente de ese grupo
-												disco.loc=musicDataBase.getDiscByGroupName(nombreGrupo).loc;												
+												disco.loc=musicDataBase.getDiscByGroupName(bandName).loc;												
 											}
 											// anhadimos el disco tanto al backup como a la base de datos
 											musicDataBase.insertNewDisc(disco);
@@ -3176,7 +3178,7 @@ public class MultiDB extends JFrame {
 								}
 							}
 						}else{							
-			                 if (Errors.confirmDialog("Existing file or some error while copying, continue with the rest?")==JOptionPane.NO_OPTION){
+			                 if (Errors.confirmDialog("Existing file or some error while copying, continue with the rest?"+bandNameFolder.getAbsoluteFile())==JOptionPane.NO_OPTION){
 			                    break;
 			                 }			                    	
 			             }

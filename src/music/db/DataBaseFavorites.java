@@ -1,8 +1,6 @@
 package music.db;
 
-import java.io.File;
 import java.sql.ResultSet;
-import java.util.ArrayList;
 
 import javax.swing.JTextArea;
 
