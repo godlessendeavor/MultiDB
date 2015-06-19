@@ -1,6 +1,7 @@
 package music.db;
 
 import java.sql.ResultSet;
+import java.util.ArrayList;
 
 import javax.swing.JTextArea;
 
@@ -64,7 +65,7 @@ public class DataBaseFavorites extends AbstractDDBB {
 						song.tagTitle = (String) rs.getObject(Song.COL_TITLE + 1);
 						song.album = disc.title;
 						if ((Long)rs.getObject(Song.COL_NO+1)!=null) song.trackNo=((Long)rs.getObject(Song.COL_NO+1)).intValue();
-						song.mark=(String)rs.getObject(Song.COL_MARK+1);
+						song.score=(Float)rs.getObject(Song.COL_SCORE+1);
 					} else {
 						Errors.writeError(Errors.DB_SELECT, mySelect + "\n");
 					}
@@ -78,16 +79,69 @@ public class DataBaseFavorites extends AbstractDDBB {
 		return song;
 	}
 	
+	// GET FAVORITE SONGS FROM DISC BY DISC ID
+	public ArrayList<Song> getSongsFromDiscByDiscId(int id) {
+		Song song = null;
+		Disc disc = null;
+		ArrayList<Song> songList = new ArrayList<Song>();
+		ResultSet rs;
+		String mySelect = "select * from "+table+" where disc_id=\"" + id + "\"";
+		try {
+			if (cargaControlador()>-1) {
+				if (open("jdbc:mysql://" + host + ":" + port+ "/" + database, user, pass)>-1) {
+					if (select(mySelect)>-1) {
+						rs = getRs();
+						while (rs.next()){							
+							rs.next();
+							song = new Song();
+							song.id = id;
+							disc = musicDatabase.getDisc(((Integer)rs.getObject(Song.COL_DISC_ID + 1)).intValue());
+							song.group = disc.group;
+							song.tagTitle = (String) rs.getObject(Song.COL_TITLE + 1);
+							song.album = disc.title;
+							if ((Long)rs.getObject(Song.COL_NO+1)!=null) song.trackNo=((Long)rs.getObject(Song.COL_NO+1)).intValue();
+							song.score=(Float)rs.getObject(Song.COL_SCORE+1);
+							songList.add(song);
+						}
+					} else {
+						Errors.writeError(Errors.DB_SELECT, mySelect + "\n");
+					}
+					close();
+				}
+			}
+		} catch (Exception ex) {
+			Errors.showError(Errors.DB_SELECT);
+			Errors.writeError(Errors.DB_SELECT, ex.getMessage() + "\n");
+		}
+		return songList;
+	}
+	
+	public boolean insertNewSongIfNotExistent(Song song, int discId){
+		ArrayList<Song> songList = new ArrayList<Song>();
+		songList = getSongsFromDiscByDiscId(discId);
+		if (songList!=null){
+			for (int ind=0;ind>songList.size();ind++){
+				Song currentSongInList = songList.get(ind);
+				if (currentSongInList.name.compareTo(song.name)==0){
+					return false;
+				}
+			}
+			insertNewSong(song,discId);
+		}
+		return true;
+	}
+	
 	
 	
 	// INSERTS SONG IN DATABASE 
 	public void insertNewSong(Song song, int discId) {
 		String myInsert = "insert into "+table+" (track_title,track_no,mark,disc_id) values (\""
-				+ song.tagTitle + "\",\"" + song.trackNo + "\",\"" + song.mark+ "\",\"" + discId + "\")";
+				+ song.tagTitle + "\",\"" + song.trackNo + "\",\"" + song.score+ "\",\"" + discId + "\")";
 		try {
 			if (cargaControlador()>-1) {
 				if (open("jdbc:mysql://" + host + ":" + port+ "/" + database, user, pass)>-1) {
 					if (insert(myInsert) != -1) {
+						System.out.println("Inserted song "+song.tagTitle+" from band "+song.group+" and album "+song.album);
 						song.id = lastInsertID();
 					} else {
 						Errors.showError(Errors.DB_INSERT);
@@ -132,7 +186,7 @@ public class DataBaseFavorites extends AbstractDDBB {
 			if (cargaControlador()>-1) {
 				if (open("jdbc:mysql://" + host + ":" + port+ "/" + database, user, pass)>-1) {
 					myUpd = "update "+table+" set track_title=\"" + song.tagTitle + "\",track_no=\""
-							+ song.trackNo + "\",mark=\"" + song.mark + "\",disc_id=\""
+							+ song.trackNo + "\",mark=\"" + song.score + "\",disc_id=\""
 							+ discId + "\" where id=\"" + song.id + "\"";
 					//System.out.println(myUpd);
 					if (update(myUpd) != -1) {

@@ -182,7 +182,6 @@ public class MultiDB extends JFrame {
     public List<Integer> selectedView = new LinkedList<Integer>();//selected Rows in table (View)
     public List<Integer> selectedModel = new LinkedList<Integer>();//selected Rows in table (Model)   
     public TimerThread timerThread;
-    //public RandomPlayThread randomPlayThread;
     public Clipboard sysClipboard;
     public long lastTime;
     public int currentCharPos;
@@ -367,7 +366,6 @@ public class MultiDB extends JFrame {
         	docsDataBase = new docs.db.DataBaseTable();
             docsDataBase.setTabModel(docsTabModel);
             favoritesDataBase = new music.db.DataBaseFavorites(musicDataBase);
-            favoritesDataBase.getSong(0);
         }else isdb=false;
         
         sysClipboard = Toolkit.getDefaultToolkit().getSystemClipboard();
@@ -2212,7 +2210,7 @@ public class MultiDB extends JFrame {
 		            	else fav=false;
 		            	mp3PlayerWindow.setMusicTabModel(musicTabModel);
 		                mp3PlayerWindow.setPlayer(mp3Player);
-		            	mp3PlayerWindow.openAndStartPlaying(mark, fav);
+		            	mp3PlayerWindow.openAndStartPlaying(mark, fav, favoritesDataBase);
 		            }
 	            }            	
         }

@@ -1,9 +1,13 @@
 package main.file;
 
+import java.io.BufferedWriter;
 import java.io.File;
 import java.io.FileInputStream;
 import java.io.FileOutputStream;
+import java.io.FileWriter;
 import java.io.IOException;
+import java.io.OutputStreamWriter;
+import java.io.Writer;
 import java.util.ArrayList;
 import java.util.List;
 
@@ -133,6 +137,16 @@ public class FileDealer {
 	        if (!file.isDirectory()) return null;
 	        return file;
         }else return null;    	
+    }
+    
+    public static Writer openTextFileForAppend(String fileName){
+    	Writer writer = null;
+    	try {
+    	    writer = new BufferedWriter(new FileWriter(fileName, true));
+    	} catch (IOException ex) {
+        	Errors.showError(Errors.FILE_NOT_POSIBLE_TO_CREATE,"File not possible to create: "+ fileName);
+    	} 
+    	return writer;
     }
     
     //////////////////////////////////////WORKARAOUND FOR BUGS IN XP AND VISTA FOR JFILECHOOSER///////////////

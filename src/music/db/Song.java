@@ -17,7 +17,7 @@ public class Song implements Serializable, Comparable<Object> {
     public String album;
     public String tagTitle;
     public int trackNo;
-    public String mark;
+    public float score;
     public String bitrate;
     public String brFormat;
     public File path;
@@ -33,7 +33,7 @@ public class Song implements Serializable, Comparable<Object> {
 	public static final int COL_ID=0;
 	public static final int COL_TITLE=1;
 	public static final int COL_NO=2;
-	public static final int COL_MARK=3;
+	public static final int COL_SCORE=3;
 	public static final int COL_DISC_ID=4;
 	
 	

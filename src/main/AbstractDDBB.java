@@ -1,13 +1,9 @@
 package main;
 
 import java.sql.Connection;
-import java.sql.DatabaseMetaData;
 import java.sql.DriverManager;
 import java.sql.ResultSet;
-import java.sql.SQLException;
 import java.sql.Statement;
-
-import main.Errors;
 
 public class AbstractDDBB {
 
@@ -17,13 +13,11 @@ public class AbstractDDBB {
     public static final String pass=MultiDB.pass;
     private Connection con;
     private Statement stmt;
-    private String error;
     private ResultSet rs;
 
     public AbstractDDBB() {
         con = null;
         stmt = null;
-        error = "";
         rs = null;
     }
     ////////// METODOS BASE DE DATOS
