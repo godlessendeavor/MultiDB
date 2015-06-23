@@ -673,18 +673,17 @@ public class MP3PlayerWindow {
 	       public Double mark=0.0;
 	       private File pathDisc;
 	       private Random rand = new Random();
-	       private int randomDisc=0,randomSong=0;
+	       private int randomDiscTableId=0,randomSong=0;
 	       private List<Integer> selectedDiscs = new LinkedList<Integer>();
 	       private List<Integer> favSongs = new LinkedList<Integer>();
 	       private List<Song> songsInPath = new LinkedList<Song>();
 	       private Song currentSong;
-	       private String currentGroup, currentAlbum;
 	       private int numSongs=0;
 	       public music.db.DataBaseFavorites musicFavoritesDataBase;
 		   
-			public RandomPlayThread() {
+		   public RandomPlayThread() {
 				super();
-			}
+		   }
 
 			@Override
 			public void run() {
@@ -710,14 +709,13 @@ public class MP3PlayerWindow {
 	            	playList.removeAllRows();
 	            	this.numSongs=0;
 	            	do {
-	            		randomDisc=rand.nextInt(selectedDiscs.size());
+	            		randomDiscTableId=rand.nextInt(selectedDiscs.size());
 	            		favSongs.clear();
-	            		pathDisc = (File) musicTabModel.getValueAt(selectedDiscs.get(randomDisc),Disc.COL_PATH);
+	            		System.out.println("Seleccionando disco con id "+randomDiscTableId);
+	            		Disc randomDisc = musicTabModel.getDiscAtRow(randomDiscTableId);
+	            		System.out.println("Seleccionando disco de grupo "+randomDisc.group+ " : "+randomDisc.title);
 	            		songsInPath.clear();
-	                    currentGroup=(String)musicTabModel.getValueAt(selectedDiscs.get(randomDisc),Disc.COL_GROUP);
-	                    currentAlbum=(String)musicTabModel.getValueAt(selectedDiscs.get(randomDisc),Disc.COL_TITLE);
-	                    int discId = (Integer)musicTabModel.getValueAt(selectedDiscs.get(randomDisc),Disc.COL_ID);
-	                    songsInPath=playList.searchFiles(pathDisc,false,currentGroup,currentAlbum);
+	                    songsInPath=playList.searchFiles(randomDisc.path,false,randomDisc.group,randomDisc.title);
 	                    if (songsInPath.size()!=0){
 	                    	///playing no favorites
 		                     if (!fav){
@@ -728,15 +726,24 @@ public class MP3PlayerWindow {
 			                 }else
 			                //playing favorites only	 
 			                 {
-			                  	 seekFavSongs(randomDisc,songsInPath);
+			                  	 seekFavSongs(randomDiscTableId,songsInPath);
 			                   	 if (favSongs.size()>0){
 				                   	 randomSong=rand.nextInt(favSongs.size());
 				                     currentSong=songsInPath.get(favSongs.get(randomSong));
-				                     if (musicFavoritesDataBase.insertNewSongIfNotExistent(currentSong, discId))
+				                     //TODO remove taking score when an interface to set from user is created
+				                     //how to get song number
+				                     try{
+				                    	 currentSong.score = Float.valueOf(randomDisc.mark);
+				                     }catch(NullPointerException ex){
+				                    	 Errors.writeError(Errors.GENERIC_ERROR, "Null score in disc with id "+randomDisc.id);
+				                     }
+				                     
+				                     if (musicFavoritesDataBase.insertNewSongIfNotExistent(currentSong, randomDisc.id))
 				                     {
 				                    	 playList.addSong(currentSong);
 				                     }			
 				                     else{
+				                    	 Errors.writeError(Errors.GENERIC_ERROR, "Already played song: "+currentSong.name+" from "+currentSong.group+" and album "+currentSong.album);
 				                    	 System.out.println("Already played song: "+currentSong.name+" from "+currentSong.group+" and album "+currentSong.album);
 				                     }
 				                     this.numSongs++;
@@ -790,7 +797,7 @@ public class MP3PlayerWindow {
 			}
 			
 			public void seekFavSongs(int index,List<Song> songList){
-				Disc disc = musicTabModel.getDiscAtRow(selectedDiscs.get(index));
+				Disc disc = musicTabModel.getDiscAtRow(index);
 				String rev = disc.review;
 				String currFav="";
 				boolean added;
@@ -819,20 +826,22 @@ public class MP3PlayerWindow {
 						//System.out.println("probando "+currFav);
 						//first compare with name of file
 						Song currentSong = songList.get(ind);
-						if (currentSong.name!=null){		
+						if (currentSong.name!=null){	
+							//System.out.println("comparando con "+currentSong.name);
 							if (dist.compare(currFav, currentSong.name)){
 								favSongs.add(ind);								
 								added=true;
 								break;		
 							}
 						}
-						//otherwise compare with tag title
-						if (dist.compare(currFav, currentSong.tagTitle)){				
-							if (Pattern.compile(Pattern.quote(currFav), Pattern.CASE_INSENSITIVE).matcher(songList.get(ind).tagTitle).find()){
-								favSongs.add(ind);										
-								added=true;
-								break;
-							}
+						//comparing with tagTitle as well
+						if (dist.compare(currFav, currentSong.tagTitle)){	
+							//System.out.println("ahora comparando con "+currentSong.tagTitle);
+							//if (Pattern.compile(Pattern.quote(currFav), Pattern.CASE_INSENSITIVE).matcher(songList.get(ind).tagTitle).find()){
+							favSongs.add(ind);										
+							added=true;
+							break;
+							//}
 						}
 					}
 					//Temporary writing no found songs

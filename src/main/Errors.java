@@ -53,7 +53,8 @@ public class Errors extends ErrorBase{
 
 public class LogFormatter extends Formatter {
     private final DateFormat df = new SimpleDateFormat("yyyy/MM/dd hh:mm:ss.SSS");
-    private int callerLevel = 8;
+    //TODO: find correct level for ultimate function caller level
+    //private int callerLevel = 8;
  
     public String format(LogRecord record) {
         StringBuilder builder = new StringBuilder(1000);
@@ -61,8 +62,10 @@ public class LogFormatter extends Formatter {
         //builder.append("[").append(record.getSourceClassName()).append(".");
         //builder.append(record.getSourceMethodName()).append("] - ");
         StackTraceElement[] stackTraceElements = Thread.currentThread().getStackTrace();
-        StackTraceElement stTrace = stackTraceElements[callerLevel];
-        builder.append("[").append(stTrace.getClassName()).append(".").append(stTrace.getMethodName()).append(".").append(stTrace.getLineNumber()).append("]");
+        for (int i = 0; i < stackTraceElements.length; i++){
+        	StackTraceElement stTrace = stackTraceElements[i];
+        	builder.append("[").append(stTrace.getClassName()).append(".").append(stTrace.getMethodName()).append(".").append(stTrace.getLineNumber()).append("]");        
+        }        
         builder.append("[").append(record.getLevel()).append("] - ");
         builder.append(formatMessage(record));
         builder.append("\n");

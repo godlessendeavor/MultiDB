@@ -6,10 +6,12 @@ import java.util.Collections;
 import java.util.LinkedList;
 import java.util.List;
 import java.util.Map;
+
 import javax.sound.sampled.AudioFileFormat;
 import javax.sound.sampled.AudioSystem;
 import javax.swing.table.AbstractTableModel;
 
+import main.Errors;
 import music.db.Song;
 
 
@@ -169,38 +171,85 @@ public class TabModelPlayList extends AbstractTableModel {
         this.fireTableDataChanged();
     }
 
-    private void tagReader(Song song) {
-        File file = song.path;
-        String key = new String();
-        AudioFileFormat baseFileFormat = null;
-        try {
-            baseFileFormat = AudioSystem.getAudioFileFormat(file);
-            Map<?, ?> properties = baseFileFormat.properties();
-            key = "duration";
-            song.time = (Long) properties.get(key);
-            song.convertTime();
-            key = "author";
-            song.group = (String) properties.get(key);
-            key = "album";
-            song.album = (String) properties.get(key);
-            key = "title";
-            song.tagTitle = (String) properties.get(key);
-            key="mp3.bitrate.nominal.bps";
-            Integer bitrate = (Integer) properties.get(key);
-            bitrate=(bitrate/1000);
-            song.bitrate=bitrate.toString()+" kbps";
-            key="mp3.vbr";
-            Boolean br = (Boolean) properties.get(key);
-            if (br) song.brFormat="VBR"; else song.brFormat="CBR";
-          
-        } catch (Exception ex) {
-            ex.printStackTrace();
-        }
-    /*   
-     * "author" (String): Name of the author of the file
-     * "title" (String): Title of the file
-     * "copyright" (String): Copyright message
-     * "comment" (String): Arbitrary text
+    private Song tagReader(Song song) {
+    	if (song!=null){
+	        File file = song.path;
+	        String key = new String();
+	        AudioFileFormat baseFileFormat = null;
+	        try {
+	            baseFileFormat = AudioSystem.getAudioFileFormat(file);
+	            Map<?, ?> properties = baseFileFormat.properties();
+	            key = "duration";
+	            song.time = (Long) properties.get(key);
+	            song.convertTime();
+	            key = "author";
+	            song.group = (String) properties.get(key);
+	            key = "album";
+	            song.album = (String) properties.get(key);
+	            key = "title";
+	            song.tagTitle = (String) properties.get(key);
+	            key="mp3.bitrate.nominal.bps";
+	            Integer bitrate = (Integer) properties.get(key);
+	            bitrate=(bitrate/1000);
+	            song.bitrate=bitrate.toString()+" kbps";
+	            key="mp3.vbr";
+	            Boolean br = (Boolean) properties.get(key);
+	            if (br) song.brFormat="VBR"; else song.brFormat="CBR";
+	          
+	        } catch (Exception ex) {
+	        	Errors.writeError(Errors.FILE_IO_ERROR, "Error when reading MP3 file "+song.path);
+	            ex.printStackTrace();
+	        }
+    	}
+        return song;
+    /*   Available keys from http://www.javazoom.net/mp3spi/docs/doc1.9.4/index.html
+duration [Long], duration in microseconds.
+title [String], Title of the stream.
+author [String], Name of the artist of the stream.
+album [String], Name of the album of the stream.
+date [String], The date (year) of the recording or release of the stream.
+copyright [String], Copyright message of the stream.
+comment [String], Comment of the stream.
+
+And 
+MP3 parameters.
+mp3.version.mpeg [String], mpeg version : 1,2 or 2.5
+mp3.version.layer [String], layer version 1, 2 or 3
+mp3.version.encoding [String], mpeg encoding : MPEG1, MPEG2-LSF, MPEG2.5-LSF
+mp3.channels [Integer], number of channels 1 : mono, 2 : stereo.
+mp3.frequency.hz [Integer], sampling rate in hz.
+mp3.bitrate.nominal.bps [Integer], nominal bitrate in bps.
+mp3.length.bytes [Integer], length in bytes.
+mp3.length.frames [Integer], length in frames.
+mp3.framesize.bytes [Integer], framesize of the first frame. framesize is not constant for VBR streams.
+mp3.framerate.fps [Float], framerate in frames per seconds.
+mp3.header.pos [Integer], position of first audio header (or ID3v2 size).
+mp3.vbr [Boolean], vbr flag.
+mp3.vbr.scale [Integer], vbr scale.
+mp3.crc [Boolean], crc flag.
+mp3.original [Boolean], original flag.
+mp3.copyright [Boolean], copyright flag.
+mp3.padding [Boolean], padding flag.
+mp3.mode [Integer], mode 0:STEREO 1:JOINT_STEREO 2:DUAL_CHANNEL 3:SINGLE_CHANNEL
+mp3.id3tag.genre [String], ID3 tag (v1 or v2) genre.
+mp3.id3tag.track [String], ID3 tag (v1 or v2) track info.
+mp3.id3tag.encoded [String], ID3 tag v2 encoded by info.
+mp3.id3tag.composer [String], ID3 tag v2 composer info.
+mp3.id3tag.grouping [String], ID3 tag v2 grouping info.
+mp3.id3tag.disc [String], ID3 tag v2 track info.
+mp3.id3tag.publisher [String], ID3 tag v2 publisher info.
+mp3.id3tag.orchestra [String], ID3 tag v2 orchestra info.
+mp3.id3tag.length [String], ID3 tag v2 file length in seconds.
+mp3.id3tag.v2 [InputStream], ID3v2 frames.
+mp3.id3tag.v2.version [String], ID3v2 major version (2=v2.2.0, 3=v2.3.0, 4=v2.4.0).
+mp3.shoutcast.metadata.key [String], Shoutcast meta key with matching value. 
+For instance : 
+mp3.shoutcast.metadata.icy-irc=#shoutcast 
+mp3.shoutcast.metadata.icy-metaint=8192 
+mp3.shoutcast.metadata.icy-genre=Trance Techno Dance 
+mp3.shoutcast.metadata.icy-url=http://www.di.fm 
+and so on ...
+
      */
     }
 

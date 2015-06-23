@@ -91,11 +91,9 @@ public class DataBaseFavorites extends AbstractDDBB {
 				if (open("jdbc:mysql://" + host + ":" + port+ "/" + database, user, pass)>-1) {
 					if (select(mySelect)>-1) {
 						rs = getRs();
-						while (rs.next()){							
-							rs.next();
+						while (rs.next()){	
 							song = new Song();
-							song.id = id;
-							disc = musicDatabase.getDisc(((Integer)rs.getObject(Song.COL_DISC_ID + 1)).intValue());
+							disc = musicDatabase.getDisc(((Long)rs.getObject(Song.COL_DISC_ID + 1)).intValue());
 							song.group = disc.group;
 							song.tagTitle = (String) rs.getObject(Song.COL_TITLE + 1);
 							song.album = disc.title;
@@ -122,7 +120,7 @@ public class DataBaseFavorites extends AbstractDDBB {
 		if (songList!=null){
 			for (int ind=0;ind>songList.size();ind++){
 				Song currentSongInList = songList.get(ind);
-				if (currentSongInList.name.compareTo(song.name)==0){
+				if (currentSongInList.tagTitle.compareTo(song.name)==0){
 					return false;
 				}
 			}
@@ -135,17 +133,16 @@ public class DataBaseFavorites extends AbstractDDBB {
 	
 	// INSERTS SONG IN DATABASE 
 	public void insertNewSong(Song song, int discId) {
-		String myInsert = "insert into "+table+" (track_title,track_no,mark,disc_id) values (\""
+		String myInsert = "insert into "+database+"."+table+" (track_title,track_no,score,disc_id) values (\""
 				+ song.tagTitle + "\",\"" + song.trackNo + "\",\"" + song.score+ "\",\"" + discId + "\")";
 		try {
 			if (cargaControlador()>-1) {
 				if (open("jdbc:mysql://" + host + ":" + port+ "/" + database, user, pass)>-1) {
-					if (insert(myInsert) != -1) {
-						System.out.println("Inserted song "+song.tagTitle+" from band "+song.group+" and album "+song.album);
+					if (insert(myInsert) > -1) {
 						song.id = lastInsertID();
 					} else {
 						Errors.showError(Errors.DB_INSERT);
-						Errors.writeError(Errors.DB_INSERT, myInsert + "\n");
+						Errors.writeError(Errors.DB_INSERT, myInsert +"\n");
 					}
 					close();
 				}
@@ -165,7 +162,7 @@ public class DataBaseFavorites extends AbstractDDBB {
 				if (open("jdbc:mysql://" + host + ":" + port+ "/" + database, user, pass)>-1) {
 					
 					myDel = "delete from "+table+" where id=\"" + id + "\"";
-					if (delete(myDel) != -1) {
+					if (delete(myDel) > -1) {
 					} else {
 						Errors.showError(Errors.DB_DELETE);
 						Errors.writeError(Errors.DB_DELETE, myDel + "\n");
@@ -189,7 +186,7 @@ public class DataBaseFavorites extends AbstractDDBB {
 							+ song.trackNo + "\",mark=\"" + song.score + "\",disc_id=\""
 							+ discId + "\" where id=\"" + song.id + "\"";
 					//System.out.println(myUpd);
-					if (update(myUpd) != -1) {
+					if (update(myUpd) > -1) {
 					} else {
 						Errors.showError(Errors.DB_UPDATE);
 						Errors.writeError(Errors.DB_UPDATE, myUpd + "\n");

@@ -3,6 +3,7 @@ package main;
 import java.sql.Connection;
 import java.sql.DriverManager;
 import java.sql.ResultSet;
+import java.sql.SQLWarning;
 import java.sql.Statement;
 
 public class AbstractDDBB {
@@ -11,6 +12,7 @@ public class AbstractDDBB {
     public static final String host=MultiDB.host;
     public static final String user=MultiDB.user;
     public static final String pass=MultiDB.pass;
+    public static SQLWarning lastWarning;
     private Connection con;
     private Statement stmt;
     private ResultSet rs;
@@ -92,6 +94,7 @@ public class AbstractDDBB {
         try {
             stmt = con.createStatement();
             rs = stmt.executeQuery(query);
+            lastWarning = rs.getWarnings();
         } catch (Exception ex) {
             ex.printStackTrace();
             return Errors.DB_SELECT;
@@ -106,11 +109,12 @@ public class AbstractDDBB {
         try {
             stmt = con.createStatement();
             row = stmt.executeUpdate(query);
+            lastWarning = stmt.getWarnings();
+            return row;
         } catch (Exception ex) {
-        	//ex.printStackTrace();
+        	ex.printStackTrace();
         	return Errors.DB_INSERT;
         }
-        return row;
     }
     public int lastInsertID() {
         int id = -1;
@@ -134,11 +138,12 @@ public class AbstractDDBB {
         try {
             stmt = con.createStatement();
             row = stmt.executeUpdate(query);
+            lastWarning = stmt.getWarnings();
+            return row;
         } catch (Exception ex) {
         	//ex.printStackTrace();
         	return Errors.DB_DELETE;
         }
-        return row;
     }
 
     public int update(String query) {
@@ -147,11 +152,12 @@ public class AbstractDDBB {
         try {  
             stmt = con.createStatement();
             row=stmt.executeUpdate(query);
+            lastWarning = stmt.getWarnings();
+            return row;
         } catch (Exception ex) {
         	ex.printStackTrace();
             return Errors.DB_UPDATE;
         }
-        return row;
     }
 
     
