@@ -712,7 +712,7 @@ public class MP3PlayerWindow {
 	            		randomDiscTableId=rand.nextInt(selectedDiscs.size());
 	            		favSongs.clear();
 	            		System.out.println("Seleccionando disco con id "+randomDiscTableId);
-	            		Disc randomDisc = musicTabModel.getDiscAtRow(randomDiscTableId);
+	            		Disc randomDisc = musicTabModel.getDiscAtRow(selectedDiscs.get(randomDiscTableId));
 	            		System.out.println("Seleccionando disco de grupo "+randomDisc.group+ " : "+randomDisc.title);
 	            		songsInPath.clear();
 	                    songsInPath=playList.searchFiles(randomDisc.path,false,randomDisc.group,randomDisc.title);
@@ -726,7 +726,7 @@ public class MP3PlayerWindow {
 			                 }else
 			                //playing favorites only	 
 			                 {
-			                  	 seekFavSongs(randomDiscTableId,songsInPath);
+			                  	 seekFavSongs(selectedDiscs.get(randomDiscTableId),songsInPath);
 			                   	 if (favSongs.size()>0){
 				                   	 randomSong=rand.nextInt(favSongs.size());
 				                     currentSong=songsInPath.get(favSongs.get(randomSong));
