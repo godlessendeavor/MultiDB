@@ -228,15 +228,15 @@ public class MultiDB extends JFrame {
     public JMenuBar menuBar;
     //menu items
     public JMenu menuDataBase;
-    public JMenuItem menuRelDBBU,menuLoadTempFolder,menuAddItem,menuDelItem,menuMakeBUP,menuRestoreBUP,menuAddBUDB, menuUploadBackup,menuUploadAllBackup;
+    public JMenuItem menuRelDBBU,menuAddItem,menuDelItem,menuMakeBUP,menuRestoreBUP,menuAddBUDB, menuUploadBackup,menuUploadAllBackup;
     public JMenuItem menuOpenCSVDB, menuSaveCSVDB;
     public JMenu menuEdit;
     public JMenuItem menuUndo,menuRedo,menuPaste,menuFilter;
     public JMenu menuMusicOptions;
     public JMenu menuMoviesOptions;
     public JMenuItem menuOpcionesCovers,menuOpcionesGuardar,menuOpcionesCopiarPortadas,menuOpcionesCoverBackup,menuCopyReviews2BUP;
-    public JMenu menuViewNewDiscsViaWeb;  
-    public JMenuItem menuLoadGroupData,menuPlayRandom,menuViaEM,menuViaMB;
+    public JMenu menuViewNewDiscsViaWeb, menuLoadTempFolder;  
+    public JMenuItem menuLoadGroupData,menuPlayRandom,menuViaEM,menuViaMB, menuTempFolderToCurrentTable, menuTempFolderClearTable;
     public JTabbedPane multiPane;
     //popupmenus
     public JPopupMenu popupTable,popupComments;
@@ -385,12 +385,6 @@ public class MultiDB extends JFrame {
         RelDBBUHandler relHandler = new RelDBBUHandler();
         menuRelDBBU.addActionListener(relHandler);
         menuDataBase.add(menuRelDBBU);
-        //item LOAD TEMP FOLDER
-        menuLoadTempFolder = new JMenuItem("Load temp music folder");
-        menuLoadTempFolder.setMnemonic('l');
-        LoadFolderTempHandler loadHandler = new LoadFolderTempHandler();
-        menuLoadTempFolder.addActionListener(loadHandler);
-        menuDataBase.add(menuLoadTempFolder);
         
         //item ADD SEVERAL ITEMS TO THE DATABASE
         menuAddItem = new JMenuItem("Add items to the data base");
@@ -512,6 +506,18 @@ public class MultiDB extends JFrame {
         CopyReviewsHandler copyReviewsHandler = new CopyReviewsHandler();
         menuCopyReviews2BUP.addActionListener(copyReviewsHandler);
         menuMusicOptions.add(menuCopyReviews2BUP);
+        //item LOAD TEMP FOLDER
+        menuLoadTempFolder = new JMenu("Load temp music folder");
+        menuLoadTempFolder.setMnemonic('l');
+        LoadFolderTempHandler loadTempFolderHandlerToCurrentTable = new LoadFolderTempHandler(false);
+        LoadFolderTempHandler loadTempFolderHandlerClearTable = new LoadFolderTempHandler(true);
+        menuTempFolderToCurrentTable = new JMenuItem("Append to current music table");
+        menuTempFolderToCurrentTable.addActionListener(loadTempFolderHandlerToCurrentTable);
+        menuLoadTempFolder.add(menuTempFolderToCurrentTable);
+        menuTempFolderClearTable = new JMenuItem("Clear current music table");
+        menuTempFolderClearTable.addActionListener(loadTempFolderHandlerClearTable);
+        menuLoadTempFolder.add(menuTempFolderClearTable);
+        menuMusicOptions.add(menuLoadTempFolder);
         //item VIEWNEWDISCS
         menuViewNewDiscsViaWeb = new JMenu("Search new discs via web");
         menuViewNewDiscsViaWeb.setMnemonic('v');
@@ -525,7 +531,7 @@ public class MultiDB extends JFrame {
         menuViewNewDiscsViaWeb.add(menuViaMB);
         menuMusicOptions.add(menuViewNewDiscsViaWeb);
         //item PLAYRANDOM
-        menuLoadGroupData = new JMenuItem("Load group data");
+        menuLoadGroupData = new JMenuItem("Load band data");
         MenuLoadGroupDataHandler menuLoadGroupDataHandler = new MenuLoadGroupDataHandler();
         menuLoadGroupData.addActionListener(menuLoadGroupDataHandler);
         menuLoadGroupData.setMnemonic('l');
@@ -1552,7 +1558,12 @@ public class MultiDB extends JFrame {
    } //FIN HANDLER RELDBBU
    
    private class LoadFolderTempHandler implements ActionListener {
-	      
+	   private boolean clearTable = false;
+	   
+	   LoadFolderTempHandler(boolean clearTable){
+		   this.clearTable = clearTable;
+	   }
+	   
        public void actionPerformed(ActionEvent evento) {
     	   File tempFolder=FileDealer.selectPath(f,"Select path for music");
 	    	if (tempFolder!=null){
@@ -1561,8 +1572,9 @@ public class MultiDB extends JFrame {
 	           if (tam == 0) {
 	               Errors.showWarning(Errors.WRONG_DIRECTORY,tempFolder.toString());
 	           } else{              //para todos los grupos de la carpeta
-	        	    LoadFolderTempThread loadThread = new LoadFolderTempThread();
+	        	    LoadTempFolderThread loadThread = new LoadTempFolderThread();
 	        	    loadThread.musicPath=tempFolder;
+	        	    loadThread.clearTable = this.clearTable;
 	        	    loadThread.setDaemon(true);
 	        	    loadThread.start();
 		       	}
@@ -2943,6 +2955,92 @@ public class MultiDB extends JFrame {
                                    menuOpcionesCoverBackup.setEnabled(true);
                                    menuDownloadCover.setEnabled(true);
                                    
+                               } catch (NumberFormatException e) {
+                                   Errors.errorSint(musicPath + sep + nombreGrupo + sep + discosGrupo[k]);
+                               }
+
+                             }
+                          }
+                       }
+                   infoText.setText(discsNF);
+                   }
+               }
+           pw.closeProgBar();
+      	   if (infoText.getText().length()>0) infoFrame.setVisible(true);
+		}		
+  }
+   
+   
+   
+   //LOAD FOLDER TEMP /////////////////////////////////////////////////////////////////////////
+   public class LoadTempFolderThread extends Thread {
+	   private int posGuion = -1, longNombre = -1;
+	   private String discsNF = "";
+	   private String sep = File.separator;
+       public File musicPath;
+       public boolean clearTable = false;
+       
+		public LoadTempFolderThread() {
+			super();
+		}
+
+		@Override
+		public void run() {
+     	   String[] grupos = musicPath.list();
+           Integer tam = grupos.length;
+           ProgressBarWindow pw = new ProgressBarWindow();
+           pw.setFrameSize(pw.dimRelate);
+	       if (pw.startProgBar(tam)<0) {
+	        	Errors.showError(Errors.GENERIC_ERROR);
+	        	return;
+	       }
+           if (clearTable){
+        	    musicTabModel.clearData();
+	    	    musicFolderConnected=true;
+	            menuPlay.setEnabled(true);
+	            menuPlayRandom.setEnabled(true);
+	            menuViewLyrics.setEnabled(true);
+	            menuOpcionesCovers.setEnabled(true);
+	            menuOpcionesCopiarPortadas.setEnabled(true);
+	            menuOpcionesCoverBackup.setEnabled(true);
+	            menuDownloadCover.setEnabled(true);
+           }
+           for (int j = 0; j < tam; j++) {
+               String nombreGrupo = grupos[j];
+               File discosGrupoF = new File(musicPath + sep + nombreGrupo);   
+               pw.setPer(j,"Discs of "+nombreGrupo);
+               if (discosGrupoF.isDirectory() == false) {
+               	   Errors.errorSint(musicPath + sep + nombreGrupo);
+               } else {
+                   String[] discosGrupo = discosGrupoF.list();
+                   Integer numeroDiscos = discosGrupo.length;
+
+                   //para todos los discos de este grupo
+
+                   for (int k = 0; k < numeroDiscos; k++) {
+                       File discoF = new File(musicPath + sep + nombreGrupo +sep + discosGrupo[k]);
+                       if (discoF.isDirectory() == false) {
+                       } else {
+                           posGuion = discosGrupo[k].indexOf("-");
+
+                           if (posGuion < 0) {
+                               Errors.errorSint(musicPath + sep + nombreGrupo + sep + discosGrupo[k]);
+                           } else {
+                               Disc disco = new Disc();
+                               String anho = discosGrupo[k].substring(0, posGuion);
+                               anho = anho.trim();
+                               try {
+                                   //Long anhoLong = Long.decode(anho);
+                                   longNombre = discosGrupo[k].length();
+                                   String nombreDisco = discosGrupo[k].substring(posGuion + 1, longNombre);
+                                   //creamos nuevo disco con los datos leidos
+                                   disco.reset();
+                                   disco.title = nombreDisco.trim();
+                                   disco.group = nombreGrupo;
+                                   disco.year = anho;
+                                   disco.path = discoF;
+                                   disco.present="YES";
+                                   musicTabModel.addDisc(disco);                                   
                                } catch (NumberFormatException e) {
                                    Errors.errorSint(musicPath + sep + nombreGrupo + sep + discosGrupo[k]);
                                }
