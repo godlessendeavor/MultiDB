@@ -546,6 +546,8 @@ public class MultiDB extends JFrame {
 		menuLoadFilmData.addActionListener(menuLoadFilmDataHandler);
 		menuLoadFilmData.setMnemonic('v');
 		menuMoviesOptions.add(menuLoadFilmData);
+		//at initialization only music options are enabled
+		menuMoviesOptions.setEnabled(false);
             
 
         menuBar.add(menuDataBase);
@@ -2577,7 +2579,7 @@ public class MultiDB extends JFrame {
 					menuMusicOptions.setEnabled(true);
 	   	   			menuRelDBBU.setEnabled(true);
 	   	   			menuAddBUDB.setEnabled(true);
-	   	   			menuLoadFilmData.setEnabled(false);	
+	   	   			menuMoviesOptions.setEnabled(false);	
 	   	   			if (musicFolderConnected) menuPlay.setEnabled(true);
 	   	   		    if (musicFolderConnected) menuViewLyrics.setEnabled(true);
 	   	   		    if (musicFolderConnected) menuPlayRandom.setEnabled(true);
@@ -2586,7 +2588,7 @@ public class MultiDB extends JFrame {
 	   	   		    if (musicFolderConnected) menuDownloadCover.setEnabled(true);
 	   	   			break;
 	   	   		case IND_MOVIES_TAB:
-	   	   			menuLoadFilmData.setEnabled(true);	
+	   	   			menuMoviesOptions.setEnabled(true);	
 	   	   			break;
 	   	   		default:
 	   	   			menuMusicOptions.setEnabled(false);
@@ -2595,7 +2597,7 @@ public class MultiDB extends JFrame {
 	   	   			menuPlay.setEnabled(false);
 	   	   			menuViewLyrics.setEnabled(false);
 	   	   		    menuPlayRandom.setEnabled(false);
-	   	   		    menuLoadFilmData.setEnabled(false);
+	   	   		    menuMoviesOptions.setEnabled(false);
 	   	   		    menuDownloadCover.setEnabled(false);
 	   	   			break;
 	  			}
