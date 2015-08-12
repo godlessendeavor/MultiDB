@@ -120,7 +120,8 @@ public class DataBaseFavorites extends AbstractDDBB {
 		if (songList!=null){
 			for (int ind=0;ind>songList.size();ind++){
 				Song currentSongInList = songList.get(ind);
-				if (currentSongInList.tagTitle.compareTo(song.name)==0){
+				if (currentSongInList.tagTitle.compareTo(song.tagTitle)==0){
+					Errors.writeError(Errors.DB_INSERT, "Random favorite song already added: "+ song.tagTitle+ " from band " + song.group + " and disc "+song.album+"\n");
 					return false;
 				}
 			}

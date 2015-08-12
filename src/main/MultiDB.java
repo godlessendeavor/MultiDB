@@ -635,7 +635,6 @@ public class MultiDB extends JFrame {
         
         popupComments.add(menuSaveComments);
 		
-        menuLoadFilmData.setEnabled(false);	
         if (!isdb){
         	menuSaveReview.setEnabled(false);
         	menuSaveVideoReview.setEnabled(false);
@@ -1541,14 +1540,18 @@ public class MultiDB extends JFrame {
 	           	else backUpPath=FileDealer.selectPath(f,"Select path for music");
 	           	if (backUpPath!=null) {
     	           String[] grupos = backUpPath.list();
-    	           Integer tam = grupos.length;
-    	           if (tam == 0) {
-    	               Errors.showWarning(Errors.WRONG_DIRECTORY,backUpPath.toString());
-    	           } else{              //para todos los grupos de la carpeta
-    	        	    RelateDBBUPThread relThread = new RelateDBBUPThread();
-    	        	    relThread.setDaemon(true);
-    	        	    relThread.start();
-    		       	}
+    	           if (grupos!=null){
+	    	           Integer tam = grupos.length;
+	    	           if (tam == 0) {
+	    	               Errors.showWarning(Errors.WRONG_DIRECTORY,backUpPath.toString());
+	    	           } else{              //para todos los grupos de la carpeta
+	    	        	    RelateDBBUPThread relThread = new RelateDBBUPThread();
+	    	        	    relThread.setDaemon(true);
+	    	        	    relThread.start();
+	    		       	}
+    	           }else{
+    	        	   Errors.showError(Errors.FILE_IO_ERROR,"Back up path is not valid: "+backUpPath.getPath());
+    	           }
 	    	    }
            }
     	   
@@ -2135,19 +2138,19 @@ public class MultiDB extends JFrame {
         public void actionPerformed(ActionEvent e) {
 			switch(multiPane.getSelectedIndex()){
   	   		case IND_MUSIC_TAB:
-	  	   		Disc.caseCompare=0;
+	  	   		Disc.caseCompare=Disc.COL_ID;
 	            musicTabModel.sort();         
   	   			break;
   	   		case IND_VIDEOS_TAB:
-	  	   		Video.caseCompare=0;
+	  	   		Video.caseCompare=Video.COL_ID;
 	            videosTabModel.sort();         
   	   			break;
   	   		case IND_MOVIES_TAB:
-  	   			Movie.caseCompare=0;
+  	   			Movie.caseCompare=Movie.COL_ID;
   	   			moviesTabModel.sort(); 
   	   			break;
   	   		case IND_DOCS_TAB:
-  	   			Doc.caseCompare=0;
+  	   			Doc.caseCompare=Doc.COL_ID;
   	   			docsTabModel.sort(); 
   	   			break;
 			}
@@ -2186,8 +2189,7 @@ public class MultiDB extends JFrame {
         public void actionPerformed(ActionEvent e) {
              pathDisc = (File) musicTabModel.getValueAt(selectedModelRow,Disc.COL_PATH);
              mp3PlayerWindow.setMusicTabModel(musicTabModel);
-             mp3PlayerWindow.setPlayer(mp3Player);
-             
+             mp3PlayerWindow.setPlayer(mp3Player);             
              mp3PlayerWindow.openAndStartPlaying(pathDisc,(String)musicTabModel.getValueAt(selectedModelRow,Disc.COL_GROUP),(String)musicTabModel.getValueAt(selectedModelRow,Disc.COL_TITLE));
            
         }
@@ -2885,92 +2887,7 @@ public class MultiDB extends JFrame {
 		}		
   }
    
-   
-   
-   //LOAD FOLDER TEMP /////////////////////////////////////////////////////////////////////////
-   public class LoadFolderTempThread extends Thread {
-	   private int posGuion = -1, longNombre = -1;
-	   private String discsNF = "";
-	   private String sep = File.separator;
-       public File musicPath;
-       
-		public LoadFolderTempThread() {
-			super();
-		}
-
-		@Override
-		public void run() {
-     	   String[] grupos = musicPath.list();
-           Integer tam = grupos.length;
-           ProgressBarWindow pw = new ProgressBarWindow();
-           pw.setFrameSize(pw.dimRelate);
-	       if (pw.startProgBar(tam)<0) {
-	        	Errors.showError(Errors.GENERIC_ERROR);
-	        	return;
-	       }
-           musicTabModel.clearData();
-           for (int j = 0; j < tam; j++) {
-               String nombreGrupo = grupos[j];
-               File discosGrupoF = new File(musicPath + sep + nombreGrupo);   
-               pw.setPer(j,"Discs of "+nombreGrupo);
-               if (discosGrupoF.isDirectory() == false) {
-               	   Errors.errorSint(musicPath + sep + nombreGrupo);
-               } else {
-                   String[] discosGrupo = discosGrupoF.list();
-                   Integer numeroDiscos = discosGrupo.length;
-
-                   //para todos los discos de este grupo
-
-                   for (int k = 0; k < numeroDiscos; k++) {
-                       File discoF = new File(musicPath + sep + nombreGrupo +sep + discosGrupo[k]);
-                       if (discoF.isDirectory() == false) {
-                       } else {
-                           posGuion = discosGrupo[k].indexOf("-");
-
-                           if (posGuion < 0) {
-                               Errors.errorSint(musicPath + sep + nombreGrupo + sep + discosGrupo[k]);
-                           } else {
-                               Disc disco = new Disc();
-                               String anho = discosGrupo[k].substring(0, posGuion);
-                               anho = anho.trim();
-                               try {
-                                   //Long anhoLong = Long.decode(anho);
-                                   longNombre = discosGrupo[k].length();
-                                   String nombreDisco = discosGrupo[k].substring(posGuion + 1, longNombre);
-                                   //creamos nuevo disco con los datos leidos
-                                   disco.reset();
-                                   disco.title = nombreDisco.trim();
-                                   disco.group = nombreGrupo;
-                                   disco.year = anho;
-                                   disco.path = discoF;
-                                   disco.present="YES";
-                                   musicTabModel.addDisc(disco);
-
-                                   musicFolderConnected=true;
-                                   menuPlay.setEnabled(true);
-                                   menuPlayRandom.setEnabled(true);
-                                   menuViewLyrics.setEnabled(true);
-                                   menuOpcionesCovers.setEnabled(true);
-                                   menuOpcionesCopiarPortadas.setEnabled(true);
-                                   menuOpcionesCoverBackup.setEnabled(true);
-                                   menuDownloadCover.setEnabled(true);
-                                   
-                               } catch (NumberFormatException e) {
-                                   Errors.errorSint(musicPath + sep + nombreGrupo + sep + discosGrupo[k]);
-                               }
-
-                             }
-                          }
-                       }
-                   infoText.setText(discsNF);
-                   }
-               }
-           pw.closeProgBar();
-      	   if (infoText.getText().length()>0) infoFrame.setVisible(true);
-		}		
-  }
-   
-   
+    
    
    //LOAD FOLDER TEMP /////////////////////////////////////////////////////////////////////////
    public class LoadTempFolderThread extends Thread {
@@ -3040,7 +2957,9 @@ public class MultiDB extends JFrame {
                                    disco.year = anho;
                                    disco.path = discoF;
                                    disco.present="YES";
-                                   musicTabModel.addDisc(disco);                                   
+                                   int posDisco = musicTabModel.addDisc(disco);  
+                                   musicTabModel.greyOutRow(posDisco);
+                                   
                                } catch (NumberFormatException e) {
                                    Errors.errorSint(musicPath + sep + nombreGrupo + sep + discosGrupo[k]);
                                }

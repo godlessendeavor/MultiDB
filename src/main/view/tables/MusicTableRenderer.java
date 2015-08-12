@@ -11,6 +11,7 @@ import javax.swing.border.Border;
 import javax.swing.table.TableCellRenderer;
 
 import music.db.Disc;
+import music.db.TabMod;
 
 public class MusicTableRenderer extends JLabel implements TableCellRenderer {
 	   
@@ -30,7 +31,8 @@ public class MusicTableRenderer extends JLabel implements TableCellRenderer {
 		
 		Font font;		
 		int modelCol=table.convertColumnIndexToModel(col);
-		
+		TabMod model = (TabMod) table.getModel();
+
 		switch (modelCol){
 			case Disc.COL_GROUP:
 				this.setBackground(Color.CYAN);
@@ -72,6 +74,9 @@ public class MusicTableRenderer extends JLabel implements TableCellRenderer {
 				this.setBackground(Color.getHSBColor(50,147,1635));
 				font= new Font("Garamond",Font.BOLD,13);
 				break;
+		}
+		if (model.rowInGreyedOut(row)){
+			this.setBackground(Color.GRAY);
 		}
 		this.setFont(font);
 		this.setOpaque(true);

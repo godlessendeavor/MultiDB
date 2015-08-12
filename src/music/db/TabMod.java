@@ -9,6 +9,7 @@ import java.util.Collections;
 import javax.swing.table.AbstractTableModel;
 
 import main.AbstractDDBB;
+import main.Errors;
 import main.MultiDB;
 import db.CSV.CSV;
 
@@ -23,6 +24,7 @@ public class TabMod extends AbstractTableModel{
     private AbstractDDBB dataBase = new AbstractDDBB();
     private ResultSet rs = null;
     private Disc disc;
+	private ArrayList<Integer> greyedOutRows = new ArrayList<Integer>();
     public static int port=MultiDB.port;
     public static String host=MultiDB.host;
     public static String user=MultiDB.user;
@@ -99,14 +101,11 @@ public class TabMod extends AbstractTableModel{
             }         
         }catch (com.mysql.jdbc.exceptions.jdbc4.CommunicationsException comex)
 	    {
-        	System.out.println("Excepcion durante el acceso a la base de datos");
-        	
+        	Errors.showError(Errors.DB_ACCESS, "Exception during access to DB "+comex.getMessage());        	
         } catch (Exception ex) {
-        //System.out.println("Excepcion durante el acceso a la base de datos");
+        	Errors.showError(Errors.DB_ACCESS, "Exception during access to DB "+ex.getMessage());  
         	ex.printStackTrace();
-        }
-        
-
+        }     
     }
     
     public void setAllData(ArrayList<Disc> data){
@@ -150,6 +149,20 @@ public class TabMod extends AbstractTableModel{
     public int getColumnCount() {
         return labels.length;
     }
+    
+	public void greyOutRows(ArrayList<Integer> greyedOutRows){
+		for (int i=0;i<this.greyedOutRows.size();i++){
+			this.greyOutRow(this.greyedOutRows.get(i));
+		} 
+	}
+	public void greyOutRow(int row){
+		this.greyedOutRows.add(row);
+		fireTableRowsUpdated(row, row);
+	}
+	
+	public boolean rowInGreyedOut(int row){
+		return this.greyedOutRows.contains(new Integer(row));
+	}
 
     public Object getValueAt(int rowIndex, int columnIndex) {
     	Object ob = new Object();

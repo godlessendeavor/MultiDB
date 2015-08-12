@@ -25,6 +25,7 @@ public abstract class ErrorBase {
     public static final Integer DB_UNDEFINED = -8;
     public static final Integer DB_BUP = -9;
     public static final Integer DB_RESTORE = -10;
+    public static final Integer DB_ACCESS = -11;
     
     //WEB READER ERRORS
     public static final Integer UPLOADING_BUP=-101;
@@ -86,6 +87,7 @@ public abstract class ErrorBase {
     	errorsMap.put(DB_UPDATE,"Error on update sentence on database");
     	errorsMap.put(DB_UNDEFINED,"Error on database. "+SEE_LOG);
     	errorsMap.put(DB_BUP,"Error while making backup of database");
+    	errorsMap.put(DB_ACCESS,"Error when accessing to database");
     	errorsMap.put(DB_RESTORE,"Error while restoring backup of database");
     	errorsMap.put(UPLOADING_BUP,"Error while uploading backup to web");
     	errorsMap.put(GROUP_NOT_FOUND,"Error while looking for band name on web");
