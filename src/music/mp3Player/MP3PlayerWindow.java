@@ -737,8 +737,10 @@ public class MP3PlayerWindow {
 				                     }catch(NullPointerException ex){
 				                    	 Errors.writeError(Errors.GENERIC_ERROR, "Null score in disc with id "+randomDisc.id);
 				                     }
-				                     
-				                     if (musicFavoritesDataBase.insertNewSongIfNotExistent(currentSong, randomDisc.id))
+				                     //TODO: verify if this is working
+				                     //boolean insertFav = musicFavoritesDataBase.insertNewSongIfNotExistent(currentSong, randomDisc.id);
+				                     boolean insertFav = true;
+				                     if (insertFav)
 				                     {
 				                    	 playList.addSong(currentSong);
 				                     }			
