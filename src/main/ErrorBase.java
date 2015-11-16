@@ -11,6 +11,7 @@ public abstract class ErrorBase {
 	
 	public static MultiDB f;
     protected static Logger logger = Logger.getLogger("MultiDBlog");
+    protected static Logger infoLogger = Logger.getLogger("MultiDBlogInfo");
 	private static Map<Integer, String> errorsMap= new HashMap<Integer,String>();
 	private static Map<Integer, String> warningsMap= new HashMap<Integer,String>();
 	//Codes for definition of errors
@@ -185,6 +186,16 @@ public abstract class ErrorBase {
 	
 	public void log(Level level,String message){
 		logger.log(level,message);
+	}
+	
+	//with logging message but no alert window
+	public static void writeInfoLog(int code,String message){
+		if (errorsMap.containsKey(code)) {
+			infoLogger.log(Level.INFO,errorsMap.get(code)+"\n"+message);
+		}			
+		else {
+			infoLogger.log(Level.INFO,message);
+		}		
 	}
 	
 ///////////////////////////////////////////////////////////////////////////////////

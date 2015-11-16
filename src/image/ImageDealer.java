@@ -352,7 +352,10 @@ public class ImageDealer {
 				pw.setPer(0, "Searching...");
 				HTMLText=WebReader.getHTMLfromURLHTTPS(searchString,MultiDB.webBingAccountKey);
 				pw.setPer(1, "Downloading results...");
-				if (HTMLText.compareTo("Error")==0)  Errors.showError(Errors.WEB_MALF_URL);
+				if (HTMLText.compareTo("Error")==0)  
+				{
+					Errors.showError(Errors.WEB_MALF_URL);
+				}
 				else{
 					try {
 						job = new JSONObject(HTMLText);

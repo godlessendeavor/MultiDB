@@ -51,7 +51,7 @@ public class DataBaseFavorites extends AbstractDDBB {
 		Song song = null;
 		Disc disc = null;
 		ResultSet rs;
-		String mySelect = "select * from "+table+" where id=\"" + id + "\"";
+		String mySelect = "select * from "+database+"."+table+" where id=\"" + id + "\"";
 		try {
 			if (cargaControlador()>-1) {
 				if (open("jdbc:mysql://" + host + ":" + port+ "/" + database, user, pass)>-1) {
@@ -85,7 +85,7 @@ public class DataBaseFavorites extends AbstractDDBB {
 		Disc disc = null;
 		ArrayList<Song> songList = new ArrayList<Song>();
 		ResultSet rs;
-		String mySelect = "select * from "+table+" where disc_id=\"" + id + "\"";
+		String mySelect = "select * from "+database+"."+table+" where disc_id=\"" + id + "\"";
 		try {
 			if (cargaControlador()>-1) {
 				if (open("jdbc:mysql://" + host + ":" + port+ "/" + database, user, pass)>-1) {
@@ -118,7 +118,7 @@ public class DataBaseFavorites extends AbstractDDBB {
 		ArrayList<Song> songList = new ArrayList<Song>();
 		songList = getSongsFromDiscByDiscId(discId);
 		if (songList!=null){
-			for (int ind=0;ind>songList.size();ind++){
+			for (int ind=0;ind<songList.size();ind++){
 				Song currentSongInList = songList.get(ind);
 				if (currentSongInList.tagTitle.compareTo(song.tagTitle)==0){
 					Errors.writeError(Errors.DB_INSERT, "Random favorite song already added: "+ song.tagTitle+ " from band " + song.group + " and disc "+song.album+"\n");

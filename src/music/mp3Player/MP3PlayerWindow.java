@@ -711,9 +711,8 @@ public class MP3PlayerWindow {
 	            	do {
 	            		randomDiscTableId=rand.nextInt(selectedDiscs.size());
 	            		favSongs.clear();
-	            		System.out.println("Seleccionando disco con id "+randomDiscTableId);
 	            		Disc randomDisc = musicTabModel.getDiscAtRow(selectedDiscs.get(randomDiscTableId));
-	            		System.out.println("Seleccionando disco de grupo "+randomDisc.group+ " : "+randomDisc.title);
+	            		//System.out.println("Seleccionando disco de grupo "+randomDisc.group+ " : "+randomDisc.title);
 	            		songsInPath.clear();
 	                    songsInPath=playList.searchFiles(randomDisc.path,false,randomDisc.group,randomDisc.title);
 	                    if (songsInPath.size()!=0){
@@ -731,24 +730,33 @@ public class MP3PlayerWindow {
 				                   	 randomSong=rand.nextInt(favSongs.size());
 				                     currentSong=songsInPath.get(favSongs.get(randomSong));
 				                     //TODO remove taking score when an interface to set from user is created
-				                     //how to get song number
+				                     //TODO how to get song number
 				                     try{
 				                    	 currentSong.score = Float.valueOf(randomDisc.mark);
 				                     }catch(NullPointerException ex){
 				                    	 Errors.writeError(Errors.GENERIC_ERROR, "Null score in disc with id "+randomDisc.id);
 				                     }
 				                     //TODO: verify if this is working
-				                     //boolean insertFav = musicFavoritesDataBase.insertNewSongIfNotExistent(currentSong, randomDisc.id);
-				                     boolean insertFav = true;
-				                     if (insertFav)
+				                     if (currentSong.tagTitle != null)
 				                     {
-				                    	 playList.addSong(currentSong);
-				                     }			
-				                     else{
-				                    	 Errors.writeError(Errors.GENERIC_ERROR, "Already played song: "+currentSong.name+" from "+currentSong.group+" and album "+currentSong.album);
-				                    	 System.out.println("Already played song: "+currentSong.name+" from "+currentSong.group+" and album "+currentSong.album);
+				                    	 boolean insertFav = musicFavoritesDataBase.insertNewSongIfNotExistent(currentSong, randomDisc.id);
+					                     //boolean insertFav = true;
+					                     if (insertFav)
+					                     {
+					                    	 playList.addSong(currentSong);
+						                     this.numSongs++;
+					                     }			
+					                     else{
+					                    	 Errors.writeInfoLog(Errors.GENERIC_ERROR, "Already played song: "+currentSong.name+" from "+currentSong.group+" and album "+currentSong.album);
+					                    	 System.out.println("Already played song: "+currentSong.name+" from "+currentSong.group+" and album "+currentSong.album);
+					                     }
 				                     }
-				                     this.numSongs++;
+				                     else
+				                     {
+				                    	 Errors.writeInfoLog(Errors.GENERIC_ERROR, "Song with tag_title null: "+currentSong.name+" from "+currentSong.group+" and album "+currentSong.album);
+				                    	 System.out.println("Song with tag_title null: "+currentSong.name+" from "+currentSong.group+" and album "+currentSong.album);
+				                     }
+				                    
 			                   	 }
 			                 }
 	                    }

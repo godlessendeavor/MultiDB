@@ -24,7 +24,7 @@ public class MP3Player {
     public InputStream is;
     public int currentSong=0,skipStart,skipEnd;
     public TabModelPlayList list;
-    public boolean seqPlaying=true;
+    public boolean seqPlaying=true; //used to symbolize when player is in skipping mode
     public boolean skipping=false;
     public PlayBackHandler playBackListener = new PlayBackHandler();
     public PlayingListener playingListener;
@@ -90,14 +90,13 @@ public class MP3Player {
     }
     public void playList(){
         try {
-        	//System.out.println("num of Rows: "+list.getRowCount());
-        	//System.out.println("currentsong: "+currentSong);
         	setFile(list.getSongAtRow(currentSong).path.getAbsolutePath());
             player = new ExtendedPlayer(is);
             player.setPlayBackListener(playBackListener);
             playFile();
         } catch (Exception ex) {
-        	ex.printStackTrace();
+        	Errors.writeError(Errors.GENERIC_ERROR, "Error while playing mp3 file: " + ex.getMessage());
+        	//ex.printStackTrace();
         }
     }
 
@@ -116,7 +115,8 @@ public class MP3Player {
 		try {
 			player = new ExtendedPlayer(is);
 		} catch (JavaLayerException e) {
-			e.printStackTrace();
+			Errors.writeError(Errors.GENERIC_ERROR, "Error while playing mp3 file: " + e.getMessage());
+			//e.printStackTrace();
 		}
         player.setPlayBackListener(playBackListener);
 		skipping = true;
@@ -169,11 +169,14 @@ public class MP3Player {
         @Override
         public void playbackFinished(PlaybackEvent evt) {
         	
-            if ((currentSong < list.getRowCount())&&(seqPlaying)) {
-                currentSong++;
+            if ((currentSong < list.getRowCount() -1)&&(seqPlaying)) {                
+            	currentSong++;
                 playList();
                 if (playingListener != null) playingListener.playingNextSong(mp3Player.createEvent(PlayingEvent.NEXT_SONG));
             }
+            else if ((currentSong == list.getRowCount() -1)&&(seqPlaying)){
+            	currentSong++;
+            } 
             if ((randomPlay)&&(seqPlaying)&&(currentSong == list.getRowCount())){
             	currentSong=0;
             	synchronized (lock) {
