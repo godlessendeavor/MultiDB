@@ -13,11 +13,11 @@ public class DealMusicFiles {
 
 
 	//METODO QUE DEVUELVE PATH DE UN DISCO DETERMINADO
-    public static String buscarDisco(String nombreGrupo, String nombreDisco, String pathDisco) {
+    public static String searchDiscInFolder(String nombreGrupo, String nombreDisco, String pathDisco) {
         String resul = "";
         File fPathDisc;
-        String currentGroup, currentDisc;
-        int posGuion = -1, longNombre = 0, group = -1, disc = -1;
+        String currentBand, currentDisc;
+        int posGuion = -1, longNombre = 0, band = -1, disc = -1;
 
 
         fPathDisc = new File(pathDisco);
@@ -31,10 +31,11 @@ public class DealMusicFiles {
                 //para todos los grupos de la carpeta
 
                 for (int j = 0; j < tam; j++) {
-                    currentGroup = grupos[j];
+                    currentBand = grupos[j];
 
                     File discosGrupoF = new File(pathDisco + File.separator + nombreGrupo);
                     if (discosGrupoF.isDirectory() == false) {
+                    	Errors.writeError(Errors.WRONG_DIRECTORY,discosGrupoF.toString());
                     } else {
                         String[] discosGrupo = discosGrupoF.list();
                         Integer numeroDiscos = discosGrupo.length;
@@ -44,6 +45,7 @@ public class DealMusicFiles {
                         for (int k = 0; k < numeroDiscos; k++) {
                             File discoF = new File(pathDisco + File.separator + nombreGrupo + File.separator + discosGrupo[k]);
                             if (discoF.isDirectory() == false) {
+                            	Errors.writeError(Errors.WRONG_DIRECTORY,discoF.toString());
                             } else {
                                 posGuion = discosGrupo[k].indexOf("-");
 
@@ -53,9 +55,9 @@ public class DealMusicFiles {
                                     currentDisc = discosGrupo[k].substring(posGuion + 1, longNombre);
                                     Collator comparador = Collator.getInstance();
                                     comparador.setStrength(Collator.PRIMARY);
-                                    group = comparador.compare(currentGroup, nombreGrupo);
+                                    band = comparador.compare(currentBand, nombreGrupo);
                                     disc = comparador.compare(currentDisc, nombreDisco);
-                                    if ((group == 0) && (disc == 0)) {
+                                    if ((band == 0) && (disc == 0)) {
                                         resul = discoF.getAbsolutePath();
                                         break;
                                     }
@@ -71,34 +73,34 @@ public class DealMusicFiles {
     
     
     //METODO QUE DEVUELVE EL DIRECTORIO DE UN GRUPO DETERMINADO
-    public static File buscarGrupo(String nombreGrupo, File pathDisco) {
-        File resul = null;
+    public static File searchBand(String bandName, File discPath) {
+        File returnPath = null;
  
-        String currentGroup;
-        int group = -1;
+        String currentBand;
+        int comparisonResult = -1;
 
-        if (pathDisco.isDirectory() == false) {
-            Errors.showWarning(Errors.WRONG_DIRECTORY,pathDisco.toString());
+        if (discPath.isDirectory() == false) {
+            Errors.showWarning(Errors.WRONG_DIRECTORY, discPath.toString());
         } else {
-            String[] grupos = pathDisco.list();
+            String[] grupos = discPath.list();
             Integer tam = grupos.length;
             if (tam == 0) {
-            	Errors.showWarning(Errors.WRONG_DIRECTORY,pathDisco.toString());
+            	Errors.showWarning(Errors.WRONG_DIRECTORY, discPath.toString());
             } else {
                 for (int j = 0; j < tam; j++) {
-                    currentGroup = grupos[j];
-                    File discosGrupoF = new File(pathDisco + File.separator + nombreGrupo);                
+                    currentBand = grupos[j];
+                    File bandDiscsPath = new File(discPath + File.separator + bandName);                
                     Collator comparador = Collator.getInstance();
                     comparador.setStrength(Collator.PRIMARY);
-                    group = comparador.compare(currentGroup, nombreGrupo);
-                    if (group == 0) {
-                        resul = discosGrupoF.getAbsoluteFile();
+                    comparisonResult = comparador.compare(currentBand, bandName);
+                    if (comparisonResult == 0) {
+                        returnPath = bandDiscsPath.getAbsoluteFile();
                         break;
                     }
                 }
             }
         }
-        return resul;
+        return returnPath;
     }
     /////////method that searches for lyrics file in music folder
     public static File searchLyricsFile(File lyricsPath){

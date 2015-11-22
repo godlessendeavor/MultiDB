@@ -1,19 +1,11 @@
 package image;
 
 import java.awt.Dimension;
-import java.awt.Graphics;
 import java.awt.Graphics2D;
-import java.awt.GraphicsConfiguration;
-import java.awt.GraphicsDevice;
-import java.awt.GraphicsEnvironment;
-import java.awt.HeadlessException;
 import java.awt.Image;
 import java.awt.RenderingHints;
 import java.awt.Toolkit;
-import java.awt.Transparency;
 import java.awt.image.BufferedImage;
-import java.awt.image.ColorModel;
-import java.awt.image.PixelGrabber;
 import java.io.File;
 import java.io.FileNotFoundException;
 import java.io.IOException;
@@ -54,12 +46,11 @@ public class MultiDBImage{
 	public String name;
 
 
-	private ImageIcon origIcon, scaledIcon;
+	private ImageIcon scaledIcon;
 	
 	
     public MultiDBImage() {
 		super();
-		this.origIcon = new ImageIcon();
 		this.scaledIcon = new ImageIcon();
 		this.width = COVERS_DIM.width;
 		this.height = COVERS_DIM.height;
@@ -238,7 +229,7 @@ public class MultiDBImage{
     	putImage(labelFrom,this,dim);
     }
     public Dimension putImage(JLabel labelFrom) {
-    	Dimension dim = new Dimension(image.getWidth(null),image.getHeight(null));
+    	Dimension dim = new Dimension(this.image.getWidth(null),this.image.getHeight(null));
     	putImage(labelFrom,this,dim);
     	return dim;
     }
@@ -247,6 +238,12 @@ public class MultiDBImage{
     	PutImage putImageThread = new PutImage(labelFrom,image,COVERS_DIM);
     	putImageThread.start();
     }
+    
+    public void putImageMaxDim(JLabel labelFrom,Image image) {
+    	PutImage putImageThread = new PutImage(labelFrom,image,MAX_COVERS_DIM);
+    	putImageThread.start();
+    }
+    
     
     public void putImage(JLabel labelFrom,Image image,Dimension dim) {
     	PutImage putImageThread = new PutImage(labelFrom,image,dim);

@@ -43,8 +43,9 @@ public abstract class ErrorBase {
     public static final Integer FILE_NOT_POSIBLE_TO_CREATE=-209;
     public static final Integer FILE_IO_ERROR=-210;
     
-    //ERROR SAVING REVIEW
-    public static final Integer SAVING_REVIEW=-300;
+    //ERROR GUI
+    public static final Integer SAVING_REVIEW = -300;
+    public static final Integer PROGRESS_BAR_ABORTED = -301;
     
     
     //WEB ERRORS
@@ -57,6 +58,7 @@ public abstract class ErrorBase {
    
     //FORMAT ERRORS
     public static final Integer NEGATIVE_NUMBER=-601;
+    public static final Integer WRONG_SYNTAX = -602;
 
     //NULL ERRORS
     public static final Integer VAR_NULL=-701;
@@ -108,7 +110,9 @@ public abstract class ErrorBase {
     	errorsMap.put(WEB_ERROR_NOT_FOUND,"Error, web server returns no expected data");
     	errorsMap.put(IMAGE_NOT_SAVED,"Couldn't save image");   
     	errorsMap.put(VAR_NULL,"Error with some var null");
-    	errorsMap.put(GENERIC_ERROR,"Error, see log for details"); 	
+    	errorsMap.put(GENERIC_ERROR,"Generic error, see log for details"); 	
+    	errorsMap.put(PROGRESS_BAR_ABORTED, "Current operation aborted"); 
+    	errorsMap.put(WRONG_SYNTAX, "Syntax is wrong"); 
     }
     
     public static void setWarnings(){
@@ -155,6 +159,7 @@ public abstract class ErrorBase {
 	//syntax warning
 	public static void errorSint(String dir) {
         //logger.log(Level.WARNING,"El directorio no responde a las especificaciones habituales: "+ dir);
+		showError(WRONG_SYNTAX,"Directory "+ dir);
 		f.reviewView.append("Syntax error, directory wrong: "+ dir + "\n");
 	}
 	

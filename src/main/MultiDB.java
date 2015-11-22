@@ -1252,7 +1252,7 @@ public class MultiDB extends JFrame {
 
 		if (musicFolderConnected && present) {
 			pathDisc = (File) musicTabModel.getValueAt(selectedModelRow, Disc.COL_PATH);
-			if (!imageDealer.showImage(pathDisc, coversView,type)){
+			if (!imageDealer.showImage(pathDisc, coversView, type)){
 				coversView.setIcon(null);
 				coversView.setText(COVERS_NOT_FOUND_MSG);
 			}
@@ -1589,18 +1589,18 @@ public class MultiDB extends JFrame {
    private class AddBUDBHandler implements ActionListener {
 
 	   Integer tam=0;
-       public void actionPerformed(ActionEvent evento) {
+       public void actionPerformed(ActionEvent event) {
     	   auxPath=FileDealer.selectPath(f,"Path for folder with discs");
     	   reviewView.setText("");
     	   if (auxPath!=null) {
-	            String[] grupos = auxPath.list();
-	            if (grupos!=null) tam = grupos.length;
+	            String[] groups = auxPath.list();
+	            if (groups!=null) tam = groups.length;
 	            if (tam == 0) {
 	                Errors.showWarning(Errors.WRONG_DIRECTORY,auxPath.getAbsolutePath());
 	            } else {
 	            	CopyThread copyThread = new CopyThread();
 	            	copyThread.path=auxPath.getAbsolutePath();
-	                copyThread.folders=grupos;
+	                copyThread.folders=groups;
 	                copyThread.size=tam;
 	                copyThread.start();
 	            }
@@ -1940,7 +1940,7 @@ public class MultiDB extends JFrame {
 		                           } else {
 		                        	   nombreDisco = left.substring(0,posGuion2);
 		                               nombreDisco = nombreDisco.trim();
-		                               pathDisc = DealMusicFiles.buscarDisco(nombreGrupo, nombreDisco, dirDisc);
+		                               pathDisc = DealMusicFiles.searchDiscInFolder(nombreGrupo, nombreDisco, dirDisc);
 		                               if (pathDisc.compareTo("") != 0) {
 		                                   if (currentCover.canWrite()) {
 		                                       if (currentCover.renameTo(new File(pathDisc + sep + portadas[i]))) {
@@ -2301,8 +2301,8 @@ public class MultiDB extends JFrame {
 	        if (((String) musicTabModel.getValueAt(selectedModelRow, Disc.COL_PRESENT)).compareTo("YES") == 0) present = true;
 
 			if (musicFolderConnected && present) {
-				Dimension dim =imageDealer.showCurrentImageInLabel(bigCoversView);
-				bigCoversFrame.setSize(dim.width+10,dim.height+50);
+				//Dimension dim = imageDealer.showImage((File)musicTabModel.getValueAt(selectedModelRow,Disc.COL_PATH), bigCoversView);
+				//bigCoversFrame.setSize(dim.width+10,dim.height+50);
 				bigCoversFrame.setVisible(true);
 			}
 	   }
@@ -2814,7 +2814,7 @@ public class MultiDB extends JFrame {
                infoText.setText("Loking for titles of "+nombreGrupo);
                File discosGrupoF = new File(backUpPath + sep + nombreGrupo);               
                if (discosGrupoF.isDirectory() == false) {
-               	   Errors.errorSint(backUpPath + sep + nombreGrupo);
+               	   //Errors.writeError(Errors.WRONG_SYNTAX, backUpPath + sep + nombreGrupo);
                } else {
                    String[] discosGrupo = discosGrupoF.list();
                    Integer numeroDiscos = discosGrupo.length;
@@ -2824,11 +2824,12 @@ public class MultiDB extends JFrame {
                    for (int k = 0; k < numeroDiscos; k++) {
                        File discoF = new File(backUpPath + sep + nombreGrupo +sep + discosGrupo[k]);
                        if (discoF.isDirectory() == false) {
+                    	   //Errors.writeError(Errors.WRONG_SYNTAX, "Following file is not a directory: " + discoF.toString());
                        } else {
                            posGuion = discosGrupo[k].indexOf("-");
 
                            if (posGuion < 0) {
-                               Errors.errorSint(backUpPath + sep + nombreGrupo + sep + discosGrupo[k]);
+                        	   Errors.writeError(Errors.WRONG_SYNTAX, "Following item does not follow standard YEAR - TITLE: " + backUpPath + sep + nombreGrupo + sep + discosGrupo[k]);
                            } else {
                                Disc disco = new Disc();
                                String anho = discosGrupo[k].substring(0, posGuion);
@@ -2842,20 +2843,6 @@ public class MultiDB extends JFrame {
                                    disco.group = nombreGrupo;
                                    disco.year = anho;
                                    disco.path = discoF;
-                                   //OPCIONAL!!
-                                   //busqueda de carpetas llamadas cover para avisar que las portadas estan ahi
-                                   /*files = discoF.list();
-                                   numberFiles = files.length;
-                                   for (int i = 0; i < numberFiles; i++) {
-                                       File fileArchivo = new File(backUpPath + sep + nombreGrupo + sep + discosGrupo[k] + "//" + files[i]);
-                                       if (fileArchivo.isDirectory()) {
-                                           files[i] = files[i].toLowerCase();
-
-                                           if (files[i].indexOf("cover") > -1) {
-                                               disCover.add(disco);
-                                           }
-                                       }
-                                   }*/
                                    int pos;
                                    if((pos=musicTabModel.searchDisc(disco.group,disco.title))!=-1){
                                        musicTabModel.setValueAt("YES",pos,Disc.COL_PRESENT);
@@ -2874,7 +2861,7 @@ public class MultiDB extends JFrame {
                                    menuDownloadCover.setEnabled(true);
                                    
                                } catch (NumberFormatException e) {
-                                   Errors.errorSint(backUpPath + sep + nombreGrupo + sep + discosGrupo[k]);
+                            	   Errors.writeError(Errors.WRONG_SYNTAX, "Following item might have an error in name convention: " + backUpPath + sep + nombreGrupo + sep + discosGrupo[k]);
                                }
 
                              }
@@ -2891,7 +2878,7 @@ public class MultiDB extends JFrame {
    
    //LOAD FOLDER TEMP /////////////////////////////////////////////////////////////////////////
    public class LoadTempFolderThread extends Thread {
-	   private int posGuion = -1, longNombre = -1;
+	   private int dashPosition = -1, nameLenght = -1;
 	   private String discsNF = "";
 	   private String sep = File.separator;
        public File musicPath;
@@ -2927,7 +2914,7 @@ public class MultiDB extends JFrame {
                File discosGrupoF = new File(musicPath + sep + nombreGrupo);   
                pw.setPer(j,"Discs of "+nombreGrupo);
                if (discosGrupoF.isDirectory() == false) {
-               	   Errors.errorSint(musicPath + sep + nombreGrupo);
+            	   Errors.showError(Errors.WRONG_SYNTAX, "Error loading: " + musicPath + sep + nombreGrupo);
                } else {
                    String[] discosGrupo = discosGrupoF.list();
                    Integer numeroDiscos = discosGrupo.length;
@@ -2937,19 +2924,19 @@ public class MultiDB extends JFrame {
                    for (int k = 0; k < numeroDiscos; k++) {
                        File discoF = new File(musicPath + sep + nombreGrupo +sep + discosGrupo[k]);
                        if (discoF.isDirectory() == false) {
+                    	   Errors.writeError(Errors.WRONG_SYNTAX, discoF + " is not a directory");
                        } else {
-                           posGuion = discosGrupo[k].indexOf("-");
-
-                           if (posGuion < 0) {
-                               Errors.errorSint(musicPath + sep + nombreGrupo + sep + discosGrupo[k]);
+                           dashPosition = discosGrupo[k].indexOf("-");
+                           if (dashPosition < 0) {
+                               Errors.showError(Errors.WRONG_SYNTAX, "Error loading: " + musicPath + sep + nombreGrupo + sep + discosGrupo[k]);
                            } else {
                                Disc disco = new Disc();
-                               String anho = discosGrupo[k].substring(0, posGuion);
+                               String anho = discosGrupo[k].substring(0, dashPosition);
                                anho = anho.trim();
                                try {
                                    //Long anhoLong = Long.decode(anho);
-                                   longNombre = discosGrupo[k].length();
-                                   String nombreDisco = discosGrupo[k].substring(posGuion + 1, longNombre);
+                                   nameLenght = discosGrupo[k].length();
+                                   String nombreDisco = discosGrupo[k].substring(dashPosition + 1, nameLenght);
                                    //creamos nuevo disco con los datos leidos
                                    disco.reset();
                                    disco.title = nombreDisco.trim();
@@ -2961,7 +2948,7 @@ public class MultiDB extends JFrame {
                                    musicTabModel.greyOutRow(posDisco);
                                    
                                } catch (NumberFormatException e) {
-                                   Errors.errorSint(musicPath + sep + nombreGrupo + sep + discosGrupo[k]);
+                            	   Errors.showError(Errors.WRONG_SYNTAX, "Error loading: " + musicPath + sep + nombreGrupo + sep + discosGrupo[k]);
                                }
 
                              }
@@ -3105,7 +3092,7 @@ public class MultiDB extends JFrame {
 	   public boolean end = false;
 	   public String[] folders;
 	   public String path;
-	   public int size;
+	   public int size = -1;
        int posGuion = -1, longNombre = -1;
        String[] files;
        File currentDisc;
@@ -3121,25 +3108,26 @@ public class MultiDB extends JFrame {
 
 			 ProgressBarWindow pw = new ProgressBarWindow(true,false);
 	         pw.setFrameSize(pw.dimRelate);
-		     if (pw.startProgBar(size)<0) {
-		       	Errors.showError(Errors.GENERIC_ERROR);
+		     if (pw.startProgBar(size) == Errors.NEGATIVE_NUMBER) {
+		       	Errors.showError(Errors.NEGATIVE_NUMBER, "Number of elements from the list to copy is not valid");
 		       	return;
 		     }
      
 			 for (int j = 0; j < size; j++) {
 				 if (pw.aborted) {
                 	 pw.closeProgBar();
+                	 Errors.showError(Errors.PROGRESS_BAR_ABORTED, "Copy is aborted by user");
                 	 break;
                  }
                  String bandName = folders[j];                
                  pw.setPer(j+1, "Adding discs of "+bandName);
                  File bandNameFolder = new File(path + sep + bandName);
                  if (bandNameFolder.isDirectory() == false) {
-                      Errors.errorSint(path + sep + bandName);
+                      Errors.showWarning(Errors.WRONG_SYNTAX, "Files are present in the root folder to copy from: "+ bandNameFolder.toString());
                  } else {
                      String[] discosGrupo = bandNameFolder.list();
                      Integer numeroDiscos = discosGrupo.length;
-                     File groupBUpPath=DealMusicFiles.buscarGrupo(bandName,backUpPath);
+                     File groupBUpPath=DealMusicFiles.searchBand(bandName, backUpPath);
                      exists=false;
                      if (groupBUpPath!=null){
                         //group folder already exists in backup

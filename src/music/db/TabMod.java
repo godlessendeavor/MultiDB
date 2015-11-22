@@ -216,6 +216,15 @@ public class TabMod extends AbstractTableModel{
 
     public void sort(){
         Collections.sort(data);
+        //clear greyed out list
+        if (this.greyedOutRows.size() > 0){
+        	 this.greyedOutRows.clear();
+             for (int i = 0; i < data.size(); i++){
+            	 if (((Disc)data.get(i)).id < 0){
+            		 this.greyOutRow(i);
+            	 }
+             }
+        }       
         this.fireTableDataChanged();
     }
    

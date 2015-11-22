@@ -34,7 +34,7 @@ public class Disc implements Serializable, Comparable<Object> {
 	
 	private static final long serialVersionUID = 1L;
 	static public int caseCompare = 0;
-    public int id;
+    public int id = -1;
     public String group;
     public String title;
     public String year;
@@ -314,7 +314,7 @@ public class Disc implements Serializable, Comparable<Object> {
 	}
 
 	public void reset(){
-    	this.id=0;
+    	this.id = -1;
         this.group="";
         this.title="";
         this.year="0";
