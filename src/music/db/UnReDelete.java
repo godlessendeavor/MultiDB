@@ -22,9 +22,9 @@ public class UnReDelete  extends AbstractUndoableEdit {
 	private static final long serialVersionUID = 1L;
 	public Disc disc;
     public DataBaseTable dataBase;
-    public TabMod tabModel;
+    public DiscTableModel tabModel;
 
-    public UnReDelete(DataBaseTable dataBase,Disc disc,TabMod tabModel) {
+    public UnReDelete(DataBaseTable dataBase,Disc disc,DiscTableModel tabModel) {
         this.disc=disc;
         this.dataBase=dataBase;
         this.tabModel=tabModel;

@@ -11,7 +11,7 @@ import javax.swing.border.Border;
 import javax.swing.table.TableCellRenderer;
 
 import music.db.Disc;
-import music.db.TabMod;
+import music.db.DiscTableModel;
 
 public class MusicTableRenderer extends JLabel implements TableCellRenderer {
 	   
@@ -31,7 +31,7 @@ public class MusicTableRenderer extends JLabel implements TableCellRenderer {
 		
 		Font font;		
 		int modelCol=table.convertColumnIndexToModel(col);
-		TabMod model = (TabMod) table.getModel();
+		DiscTableModel model = (DiscTableModel) table.getModel();
 
 		switch (modelCol){
 			case Disc.COL_GROUP:

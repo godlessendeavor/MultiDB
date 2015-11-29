@@ -24,14 +24,14 @@ public class DataBaseTable extends AbstractDDBB {
     //public static final String mysqlPath=MultiDB.mysqlPath;
     
 
-    public TabMod tabModel;
+    public DiscTableModel tabModel;
     public JTextArea reviewView;
 
-	public TabMod getTabModel() {
+	public DiscTableModel getTabModel() {
 		return tabModel;
 	}
 
-	public void setTabModel(TabMod tabModel) {
+	public void setTabModel(DiscTableModel tabModel) {
 		this.tabModel = tabModel;
 	}
 

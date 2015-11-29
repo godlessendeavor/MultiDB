@@ -92,12 +92,12 @@ public class MP3PlayerWindow {
     public RandomPlayThread randomPlayThread; 
     public LyricsFrame lyricsFrame;
     public boolean playFirstTime = true;
-    private music.db.TabMod musicTabModel;
+    private music.db.DiscTableModel musicTabModel;
     private ImageDealer imageDealer;
   
     public int selectedViewRowPlayer = -1,selectedModelRowPlayer=-1;  
     
-    public MP3PlayerWindow(music.db.TabMod mTabModel, music.mp3Player.MP3Player  mp3Player){
+    public MP3PlayerWindow(music.db.DiscTableModel mTabModel, music.mp3Player.MP3Player  mp3Player){
     	setMusicTabModel(mTabModel);
     	setPlayer(mp3Player);
     	imageDealer = new ImageDealer();
@@ -109,7 +109,7 @@ public class MP3PlayerWindow {
     }
     
     
-    public void setMusicTabModel(music.db.TabMod mTabModel){
+    public void setMusicTabModel(music.db.DiscTableModel mTabModel){
     	this.musicTabModel = mTabModel;
     }
     
@@ -445,7 +445,7 @@ public class MP3PlayerWindow {
 	
     private void setCurrentCover(){
     	File pathDisc = playList.getSongAtRow(mp3Player.currentSong).discPath;
-		if (!imageDealer.showImage(pathDisc, picLabel,ImageDealer.FRONT_COVER, COVER_DIM)){
+		if (!imageDealer.showDiscCover(pathDisc, picLabel,ImageDealer.FRONT_COVER, COVER_DIM)){
 			picLabel.setIcon(null);
 			picLabel.setText("Image not found");
 		}

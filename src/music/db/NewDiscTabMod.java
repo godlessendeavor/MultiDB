@@ -3,10 +3,8 @@ package music.db;
 import java.util.ArrayList;
 import java.util.Collections;
 
-import javax.swing.table.AbstractTableModel;
 
-
-public class NewDiscTabMod extends AbstractTableModel {
+public class NewDiscTabMod extends DiscTableModel {
 
 	private static final long serialVersionUID = 1L;
 	private String[] labels={"Id","Group","Title","Type","Style","Year","Location"};

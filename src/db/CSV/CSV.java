@@ -39,8 +39,10 @@ public class CSV {
 			csv.close();			
 		} catch (FileNotFoundException e) {
 			e.printStackTrace();
+			Errors.showError(Errors.FILE_NOT_FOUND, "File name: " + fileName);
 		} catch (IOException e) {
 			e.printStackTrace();
+			Errors.showError(Errors.FILE_IO_ERROR, "File name: " + fileName);
 		}
 		return data;
 	}
@@ -70,6 +72,7 @@ public class CSV {
 			else return Errors.COPYING_FILE_EXISTS;			
 		} catch (IOException e) {
 			e.printStackTrace();
+			return Errors.FILE_IO_ERROR;
 		}
 		return 0;
 	}

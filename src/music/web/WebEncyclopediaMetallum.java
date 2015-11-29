@@ -42,69 +42,71 @@ public class WebEncyclopediaMetallum {
 		ArrayList<Disc> discList = new ArrayList<Disc>(); 
 		
 		try {
-			String webURL=WEBEMURLSearchGroupDiscography1+id;
+			String webURL=WEBEMURLSearchGroupDiscography1+id+WEBEMURLSearchGroupDiscography2;
 			String HTMLText = WebReader.getHTMLfromURL(webURL);
+			//System.out.println(webURL);
 			if (HTMLText.compareTo("400")!=0){
-				  
-		 			  parser = new Parser(HTMLText);
-		 				
-		 			  NodeList nl = parser.parse(null); 
-		 			  NodeList trnodes=WebReader.getTagNodesOfType(nl,"tr",false);
-		 			  //System.out.println(trnodes.size());
-		 			  Node node;
-		 			  NodeList links;
-		 			  NodeList tdnodes;
-		 			  for (NodeIterator i = trnodes.elements (); i.hasMoreNodes (); ){
-		 				  disc = null;
-		 				  if ((node=i.nextNode()) instanceof TagNode){
-			 			    	links=WebReader.getTagNodesOfType(((TagNode)node).getChildren(),"a",false);
-			 			    	if (links.size()>0){    //node tr has a link for album
-			 			    		disc = new Disc();
-			 			    		for (NodeIterator itlinks = links.elements (); itlinks.hasMoreNodes (); ){
-			 			    			String href = ((TagNode)itlinks.nextNode()).getAttribute("href");
-			 			    			if (href!=null){
-				 			    			if (href.contains("albums")){
-				 			    				//add link for album to class Disco
-				 			    				disc.setLink(href);
-				 			    			}	
-				 			    			if (href.contains("review")){
-				 			    				//add link for album to class Disco
-				 			    				disc.setReview(href);
-				 			    			}
+			  
+	 			  parser = new Parser(HTMLText);
+	 				
+	 			  NodeList nl = parser.parse(null); 
+	 			  NodeList trnodes=WebReader.getTagNodesOfType(nl,"tr",false);
+	 			  //System.out.println(trnodes.size());
+	 			  Node node;
+	 			  NodeList links;
+	 			  NodeList tdnodes;
+	 			  for (NodeIterator i = trnodes.elements (); i.hasMoreNodes (); ){
+	 				  disc = null;
+	 				  if ((node=i.nextNode()) instanceof TagNode){
+		 			    	links=WebReader.getTagNodesOfType(((TagNode)node).getChildren(),"a",false);
+		 			    	if (links.size()>0){    //node tr has a link for album
+		 			    		disc = new Disc();
+		 			    		for (NodeIterator itlinks = links.elements (); itlinks.hasMoreNodes (); ){
+		 			    			String href = ((TagNode)itlinks.nextNode()).getAttribute("href");
+		 			    			if (href!=null){
+			 			    			if (href.contains("albums")){
+			 			    				//add link for album to class Disc
+			 			    				disc.setLink(href);
 			 			    			}	
-			 			    		}
+			 			    			if (href.contains("review")){
+			 			    				//add link for album to class Disc
+			 			    				disc.setReview(href);
+			 			    			}
+		 			    			}	
+		 			    		}
 
-		 			    			tdnodes=WebReader.getTagNodesOfType(((TagNode)node).getChildren(),"td",false);
-		 			    			if (disc!=null){
-			 			    			disc.setGroup(group);
-			 			    			disc.setStyle(style);
-			 			    			disc.setLoc(location);
-			 			    			disc.setTitle(tdnodes.elementAt(0).toPlainTextString());
-			 			    			disc.setType(tdnodes.elementAt(1).toPlainTextString());
-				    					disc.setYear(tdnodes.elementAt(2).toPlainTextString());
-				    					String mark=tdnodes.elementAt(3).toPlainTextString();
-				    					int perc = mark.indexOf("%");
-				    					if (perc>-1){
-				    						int paren = mark.indexOf("(");
-				    						if (paren>-1){
-				    							try{
-				    			            		Double dmark=Double.valueOf(mark.substring(paren+1,perc)).doubleValue();
-				    			            		dmark=dmark/10.0;
-				    			            		disc.setMark(dmark.toString());
-				    			            	}catch(NumberFormatException ex){
-				    			            	}
-				    						}
-				    					}
-				    					 
-				    					discList.add(disc);
-				    					
-		 			    			}
-		 			    		}		 			    	
-			 			    	//System.out.println(node.toHtml());
-		 				    }
-		 			  }
-		 			 
+	 			    			tdnodes=WebReader.getTagNodesOfType(((TagNode)node).getChildren(),"td",false);
+	 			    			if (disc!=null){
+		 			    			disc.setGroup(group);
+		 			    			disc.setStyle(style);
+		 			    			disc.setLoc(location);
+		 			    			disc.setTitle(tdnodes.elementAt(0).toPlainTextString());
+		 			    			disc.setType(tdnodes.elementAt(1).toPlainTextString());
+			    					disc.setYear(tdnodes.elementAt(2).toPlainTextString());
+			    					String mark=tdnodes.elementAt(3).toPlainTextString();
+			    					int perc = mark.indexOf("%");
+			    					if (perc>-1){
+			    						int paren = mark.indexOf("(");
+			    						if (paren>-1){
+			    							try{
+			    			            		Double dmark=Double.valueOf(mark.substring(paren+1,perc)).doubleValue();
+			    			            		dmark=dmark/10.0;
+			    			            		disc.setMark(dmark.toString());
+			    			            	}catch(NumberFormatException ex){
+			    			            	}
+			    						}
+			    					}
+			    					 
+			    					discList.add(disc);
+			    					
+	 			    			}
+	 			    		}		 			    	
+		 			    	//System.out.println(node.toHtml());
+	 				    }
+	 			  }		 			 
 		 		 return discList;
+			}else{
+				Errors.showError(Errors.WEB_NOT_FOUND, "Couldn't find web results for Encyclopedia Metallum");
 			}
 			
 			

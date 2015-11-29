@@ -198,7 +198,7 @@ public class ImageDealer {
 	private class FrameCloseHandler extends WindowAdapter{
 		@Override
 	    public void windowClosing(java.awt.event.WindowEvent windowEvent) {
-			ImageDealer.this.showImage(ImageDealer.this.currentPath, ImageDealer.this.currentLabel, FRONT_COVER);
+			ImageDealer.this.showDiscCover(ImageDealer.this.currentPath, ImageDealer.this.currentLabel, FRONT_COVER);
 		    selectCoverFrame.dispose();
 	    }
 	}
@@ -259,11 +259,11 @@ public class ImageDealer {
 		}
     }
     
-    public boolean showImage(File pathDisc,JLabel labelIn,int type){
-    	return showImage(pathDisc, labelIn, type, COVERS_DIM);
+    public boolean showDiscCover(File pathDisc,JLabel labelIn,int type){
+    	return showDiscCover(pathDisc, labelIn, type, COVERS_DIM);
     }
     
-    public boolean showImage(File pathDisc,JLabel labelIn,int type, Dimension dim){
+    public boolean showDiscCover(File pathDisc,JLabel labelIn,int type, Dimension dim){
     	int indexCover=0;
     	boolean found=false;
     	currentLabel = labelIn;
@@ -288,6 +288,7 @@ public class ImageDealer {
 			
 		if (found) {
 			if (type == FRONT_COVER) frontCover = true; else frontCover = false;
+			multiIm = new MultiDBImage();
 			multiIm.putImage(labelIn, MultiDBImage.FILE_TYPE, imageList.get(indexCover).path.getAbsolutePath(), dim);
 		} else  showListOfImages();			
 		return true;
@@ -391,145 +392,142 @@ public class ImageDealer {
     }
     
     
-///////////////////////////////////////////COVER HANDLERS///////////////////////////////
-///////////////////////////////////////////COVER HANDLERS///////////////////////////////
-///////////////////////////////////////////COVER HANDLERS///////////////////////////////
-
-    
-private class SaveCurrentCoverHandler implements ActionListener {
-
-
-    private MultiDBImage tempIm;
-    	
-    public void actionPerformed(ActionEvent evento) {
-    	tempIm=(MultiDBImage) spinnerCovers.getValue();
-    	SaveImageThread saveImageThread = new SaveImageThread(tempIm);
-    	saveImageThread.setDaemon(true);
-    	saveImageThread.start();
-    	
-    
-} //FIN HANDLER CHANGE NAME
-    
-
-
-public class SaveImageThread extends Thread {
-	private MultiDBImage im;
-    private String archivo,rutaArch,type,ext;
-    private File file;
-    private boolean success=false;
-    private Disc currDisc;
-    
-    public SaveImageThread(MultiDBImage im) {
-		super();
-		this.im=im;
-	}
-	@Override
-	public void run() {
-		file = im.path;
-		currDisc= new Disc(currentDisc);
-    	rutaArch = currDisc.path.getAbsolutePath();
-    	archivo=file.getName();
-    	int pos = archivo.lastIndexOf('.');
-    	if (pos>0) ext = "."+archivo.substring(pos+1);
-    	else ext=".jpg";
-    	im.type=ext.substring(1);
-    	try{	    	    	
-	    	if (!file.canWrite()) {
-	    		if (!file.createNewFile()) JOptionPane.showMessageDialog(selectCoverFrame, "Could not rename file");
-	    		else  {
-	    			im.writeImageToFile();
-	    			success=true;
-	    		}
-	    	} else success=true;
+	///////////////////////////////////////////COVER HANDLERS///////////////////////////////
+	///////////////////////////////////////////COVER HANDLERS///////////////////////////////
+	///////////////////////////////////////////COVER HANDLERS///////////////////////////////
+	
 	    
-	    	if (success){
-	    		File nfile;
-		    	if (frontCover) type="front"; 
-		    	else if (!otherCover) type="back";
-		    	else type="other";
-		    	String name;
-		    	if (type.compareTo("other")==0){
-		    		name=rutaArch + File.separator + im +ext;
-		    		if (newNameField.getText().compareTo("")!=0) name=rutaArch + File.separator + newNameField.getText() +ext;
-		    	}else name=rutaArch + File.separator + currDisc.group + " - " + currDisc.title + " - " + type+ext;
-		    	nfile= new File(name);
-	    		if (file.renameTo(nfile)) JOptionPane.showMessageDialog(selectCoverFrame, "File renamed succesfully to "+name);
-	    	    else JOptionPane.showMessageDialog(selectCoverFrame, "Could not rename file");	    	
-	    	}
-    	}catch(IOException e){
-    		Errors.showWarning(Errors.IMAGE_NOT_SAVED, e.getMessage());
-			//e.printStackTrace();
-		}
-    }
-	}
-}
-
-
-private class DeleteCurrentCoverHandler implements ActionListener {
-    private MultiDBImage tempIm,newIm;
-    private File file;
-    
-	public void actionPerformed(ActionEvent e) {
-		tempIm=(MultiDBImage) spinnerCovers.getValue();		
-		if (imageList.size()>1){
-			imageList.remove(tempIm);
-			selectFrameInit();
-			newIm=new MultiDBImage();
-			newIm.putImage(selectCoversView,imageList.get(0));
-			nofPicLabel.setText("Number of pics: "+imageList.size());
-			selectCoverFrame.getContentPane().add(selectCoversView);
-			selectCoverFrame.setVisible(true);
-		} else{
-			imageList.clear();
-			selectCoverFrame.dispose();
-		}
-		
-    	file = tempIm.path;
-    	
-		if(!file.delete()) {
-		    // Deletion failed
-			Errors.showWarning(Errors.FILE_DELETE_ERROR);
-		}
-	}
-} //FIN SELECT TYPE COVER
-
-
-private class SelectTypeCoverHandler implements ActionListener {
-
-	public void actionPerformed(ActionEvent e) {
-		
-		if (e.getActionCommand().compareTo("Back")==0) {
-			frontCover=false;
-			otherCover=false;
-			newNameField.setEnabled(false);
-		}
-		else if (e.getActionCommand().compareTo("Front")==0) {
-			frontCover=true;
-			otherCover=false;
-			newNameField.setEnabled(false);
-		}else{
-			frontCover=false;
-			otherCover=true;
-			newNameField.setEnabled(true);
+	private class SaveCurrentCoverHandler implements ActionListener {
+	
+	
+	    private MultiDBImage tempIm;
+	    	
+	    public void actionPerformed(ActionEvent evento) {
+	    	tempIm=(MultiDBImage) spinnerCovers.getValue();
+	    	SaveImageThread saveImageThread = new SaveImageThread(tempIm);
+	    	saveImageThread.setDaemon(true);
+	    	saveImageThread.start(); 	 
+	    }
+	    
+	
+	
+		private class SaveImageThread extends Thread {
+			private MultiDBImage im;
+		    private String archivo,rutaArch,type,ext;
+		    private File file;
+		    private boolean success=false;
+		    private Disc currDisc;
+		    
+		    public SaveImageThread(MultiDBImage im) {
+				super();
+				this.im=im;
+			}
+			@Override
+			public void run() {
+				file = im.path;
+				currDisc= new Disc(currentDisc);
+		    	rutaArch = currDisc.path.getAbsolutePath();
+		    	archivo=file.getName();
+		    	int pos = archivo.lastIndexOf('.');
+		    	if (pos>0) ext = "."+archivo.substring(pos+1);
+		    	else ext=".jpg";
+		    	im.type=ext.substring(1);
+		    	try{	    	    	
+			    	if (!file.canWrite()) {
+			    		if (!file.createNewFile()) JOptionPane.showMessageDialog(selectCoverFrame, "Could not rename file");
+			    		else  {
+			    			im.writeImageToFile();
+			    			success=true;
+			    		}
+			    	} else success=true;
+			    
+			    	if (success){
+			    		File nfile;
+				    	if (frontCover) type="front"; 
+				    	else if (!otherCover) type="back";
+				    	else type="other";
+				    	String name;
+				    	if (type.compareTo("other")==0){
+				    		name=rutaArch + File.separator + im +ext;
+				    		if (newNameField.getText().compareTo("")!=0) name=rutaArch + File.separator + newNameField.getText() +ext;
+				    	}else name=rutaArch + File.separator + currDisc.group + " - " + currDisc.title + " - " + type+ext;
+				    	nfile= new File(name);
+			    		if (file.renameTo(nfile)) JOptionPane.showMessageDialog(selectCoverFrame, "File renamed succesfully to "+name);
+			    	    else JOptionPane.showMessageDialog(selectCoverFrame, "Could not rename file");	    	
+			    	}
+		    	}catch(IOException e){
+		    		Errors.showWarning(Errors.IMAGE_NOT_SAVED, e.getMessage());
+					//e.printStackTrace();
+				}
+		    }
 		}
 	}
-} //FIN SELECT TYPE COVER
-
+	
+	
+	private class DeleteCurrentCoverHandler implements ActionListener {
+	    private MultiDBImage tempIm,newIm;
+	    private File file;
+	    
+		public void actionPerformed(ActionEvent e) {
+			tempIm=(MultiDBImage) spinnerCovers.getValue();		
+			if (imageList.size()>1){
+				imageList.remove(tempIm);
+				selectFrameInit();
+				newIm=new MultiDBImage();
+				newIm.putImage(selectCoversView,imageList.get(0));
+				nofPicLabel.setText("Number of pics: "+imageList.size());
+				selectCoverFrame.getContentPane().add(selectCoversView);
+				selectCoverFrame.setVisible(true);
+			} else{
+				imageList.clear();
+				selectCoverFrame.dispose();
+			}
+			
+	    	file = tempIm.path;
+	    	
+			if(!file.delete()) {
+			    // Deletion failed
+				Errors.showWarning(Errors.FILE_DELETE_ERROR);
+			}
+		}
+	}
+	
+	
+	private class SelectTypeCoverHandler implements ActionListener {
+	
+		public void actionPerformed(ActionEvent e) {
+			
+			if (e.getActionCommand().compareTo("Back")==0) {
+				frontCover=false;
+				otherCover=false;
+				newNameField.setEnabled(false);
+			}
+			else if (e.getActionCommand().compareTo("Front")==0) {
+				frontCover=true;
+				otherCover=false;
+				newNameField.setEnabled(false);
+			}else{
+				frontCover=false;
+				otherCover=true;
+				newNameField.setEnabled(true);
+			}
+		}
+	} 
 
    
-private class ViewCoverHandler implements ChangeListener {
-
-    // manejar evento de cambio en lista
-    public void stateChanged(ChangeEvent e) {
-        JSpinner spinner = (JSpinner) e.getSource();
-        //int lenght=0;
-        try{
-        	
-        	multiIm.putImage(selectCoversView, ((MultiDBImage) spinner.getValue()));
-        }catch(IndexOutOfBoundsException ex){
-        	Errors.writeError(Errors.GENERIC_ERROR, ex.toString());
-        }
-    }
-} //FIN HANDLER VIEW COVERS
+	private class ViewCoverHandler implements ChangeListener {
+	
+	    // manejar evento de cambio en lista
+	    public void stateChanged(ChangeEvent e) {
+	        JSpinner spinner = (JSpinner) e.getSource();
+	        //int lenght=0;
+	        try{
+	        	
+	        	multiIm.putImage(selectCoversView, ((MultiDBImage) spinner.getValue()));
+	        }catch(IndexOutOfBoundsException ex){
+	        	Errors.writeError(Errors.GENERIC_ERROR, ex.toString());
+	        }
+	    }
+	} //FIN HANDLER VIEW COVERS
 
 }

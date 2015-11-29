@@ -22,7 +22,7 @@ public class DataBaseFavorites extends AbstractDDBB {
     public static final int columns=5;
 
 
-    public TabMod tabModel;
+    public DiscTableModel tabModel;
     public JTextArea reviewView;
     public music.db.DataBaseTable musicDatabase;
     
@@ -30,11 +30,11 @@ public class DataBaseFavorites extends AbstractDDBB {
     	this.musicDatabase = musicDatabase;
     }
 
-	public TabMod getTabModel() {
+	public DiscTableModel getTabModel() {
 		return tabModel;
 	}
 
-	public void setTabModel(TabMod tabModel) {
+	public void setTabModel(DiscTableModel tabModel) {
 		this.tabModel = tabModel;
 	}
 

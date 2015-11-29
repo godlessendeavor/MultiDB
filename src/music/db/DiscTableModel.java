@@ -14,7 +14,7 @@ import main.MultiDB;
 import db.CSV.CSV;
 
 
-public class TabMod extends AbstractTableModel{
+public class DiscTableModel extends AbstractTableModel{
 
   
 	private static final long serialVersionUID = 1L;
@@ -33,7 +33,7 @@ public class TabMod extends AbstractTableModel{
     public static String table=MultiDB.musicTable;
     public static String mysqlPath=MultiDB.mysqlPath;
 
-    public TabMod() {
+    public DiscTableModel() {
     	data=new ArrayList<Disc>();
     	labels[Disc.COL_GROUP]="groupName";
     	labels[Disc.COL_TITLE]="title";

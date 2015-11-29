@@ -95,7 +95,7 @@ public class WebMusicInfoExtractor {
 				tableModel.removeRow(itCol);
 			}
 			if (groupList==null) return null;
-			if (groupList.size()>1){//if there's more than 1 group it has been to be selected from the list
+			if (groupList.size()>1){//if there's more than 1 group it has to be selected from the list
 				infoGroup.setText("Location: "+country+" Style: "+styleft);
 				for(int i=0;i<groupList.size();i++){
 					tableModel.addRow(new Vector<String>(4));
@@ -114,7 +114,7 @@ public class WebMusicInfoExtractor {
 	                try {
 	                      lock.wait();
 	                } catch (InterruptedException e) {
-	                                e.printStackTrace();
+	                      e.printStackTrace();
 	                }
 				}
 				if (selectedModelRow>=0){

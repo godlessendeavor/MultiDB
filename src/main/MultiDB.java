@@ -188,9 +188,9 @@ public class MultiDB extends JFrame {
     public main.Errors errors;
     
     ///n-tuplas
-    public music.db.TabMod musicTabModel;
+    public music.db.DiscTableModel musicTabModel;
     public music.db.DataBaseTable musicDataBase;
-    public TableRowSorter<music.db.TabMod> musicTableSorter; //trouble with tablerowsorter, used only for filtering words
+    public TableRowSorter<music.db.DiscTableModel> musicTableSorter; //trouble with tablerowsorter, used only for filtering words
     
     public movies.db.TabMod moviesTabModel;     
     public movies.db.DataBaseTable moviesDataBase;
@@ -350,7 +350,7 @@ public class MultiDB extends JFrame {
         ftpManager = new FTPManager();
         Errors.f=f;
         //n-tuplas
-        musicTabModel = new music.db.TabMod();
+        musicTabModel = new music.db.DiscTableModel();
         videosTabModel = new musicmovies.db.TabMod();
         moviesTabModel = new movies.db.TabMod();
         docsTabModel = new docs.db.TabMod(); 
@@ -522,13 +522,13 @@ public class MultiDB extends JFrame {
         menuViewNewDiscsViaWeb = new JMenu("Search new discs via web");
         menuViewNewDiscsViaWeb.setMnemonic('v');
         ViewNewDiscsHandler viewNewDiscsHandlerEM = new ViewNewDiscsHandler("webEM");
-        ViewNewDiscsHandler viewNewDiscsHandlerMB = new ViewNewDiscsHandler("webMB");
+        //ViewNewDiscsHandler viewNewDiscsHandlerMB = new ViewNewDiscsHandler("webMB");
         menuViaEM = new JMenuItem("Via Encyclopedia Metallum");
         menuViaEM.addActionListener(viewNewDiscsHandlerEM);
         menuViewNewDiscsViaWeb.add(menuViaEM);
-        menuViaMB = new JMenuItem("Via Musicbrainz");
-        menuViaMB.addActionListener(viewNewDiscsHandlerMB);
-        menuViewNewDiscsViaWeb.add(menuViaMB);
+        //menuViaMB = new JMenuItem("Via Musicbrainz");
+        //menuViaMB.addActionListener(viewNewDiscsHandlerMB);
+        //menuViewNewDiscsViaWeb.add(menuViaMB);
         menuMusicOptions.add(menuViewNewDiscsViaWeb);
         //item PLAYRANDOM
         menuLoadGroupData = new JMenuItem("Load band data");
@@ -656,7 +656,7 @@ public class MultiDB extends JFrame {
         musicJTable.setColumnSelectionAllowed(true); //se pueden seleccionar columnas
         musicJTable.setSelectionMode(ListSelectionModel.MULTIPLE_INTERVAL_SELECTION);
       
-        musicTableSorter = new TableRowSorter<music.db.TabMod>(musicTabModel);
+        musicTableSorter = new TableRowSorter<music.db.DiscTableModel>(musicTabModel);
         musicJTable.setRowSorter(musicTableSorter);
         for (int i=0;i<musicTabModel.getColumnCount();i++){ 
         	musicTableSorter.setSortable(i,false); //issue with TableRowSorter, disabling sorting, using only for filtering
@@ -1252,7 +1252,7 @@ public class MultiDB extends JFrame {
 
 		if (musicFolderConnected && present) {
 			pathDisc = (File) musicTabModel.getValueAt(selectedModelRow, Disc.COL_PATH);
-			if (!imageDealer.showImage(pathDisc, coversView, type)){
+			if (!imageDealer.showDiscCover(pathDisc, coversView, type)){
 				coversView.setIcon(null);
 				coversView.setText(COVERS_NOT_FOUND_MSG);
 			}
@@ -2197,24 +2197,24 @@ public class MultiDB extends JFrame {
    
    private class PlayRandomHandler implements ActionListener{
 
-       private Double mark=-1.0;
+       private Double score=-1.0;
        private int select=JOptionPane.OK_OPTION;
 
         public void actionPerformed(ActionEvent e) {
             	mp3Player.randomPlay=true;
-            	while ((mark<=0)||(mark>=10)){
-	            	String sMark = JOptionPane.showInputDialog("Please insert the minimum mark of discs which to play");
+            	while ((score<=0)||(score>10)){
+	            	String sScore = JOptionPane.showInputDialog("Please insert the minimum mark of discs which to play");
 	            	try{
-	            		if (sMark!=null){
-		            		mark=Double.valueOf(sMark).doubleValue();
-		            		if ((mark<=0)||(mark>=10)) JOptionPane.showMessageDialog(f,"Mark must be between 0 and 10");
+	            		if (sScore!=null){
+		            		score=Double.valueOf(sScore).doubleValue();
+		            		if ((score<=0.0)||(score>10.0)) JOptionPane.showMessageDialog(f,"Mark must be between 0 and 10");
 	            		} else break;
 	            	}catch(NumberFormatException ex){
-	            		if (mark==null) break;
+	            		if (score==null) break;
 	            		JOptionPane.showMessageDialog(f,"Mark must be between 0 and 10");
 	            	}	            	
             	}
-            	if ((mark!=null)&&(mark>=0)){
+            	if (score!=null){
 		            Object[] options = {"Yes, please","No way!"};
 		            select = JOptionPane.showOptionDialog(f,"Would you like to seek in favourites songs?","Question",JOptionPane.YES_NO_OPTION,JOptionPane.QUESTION_MESSAGE,
 		            		null,     //do not use a custom Icon
@@ -2226,8 +2226,9 @@ public class MultiDB extends JFrame {
 		            	else fav=false;
 		            	mp3PlayerWindow.setMusicTabModel(musicTabModel);
 		                mp3PlayerWindow.setPlayer(mp3Player);
-		            	mp3PlayerWindow.openAndStartPlaying(mark, fav, favoritesDataBase);
+		            	mp3PlayerWindow.openAndStartPlaying(score, fav, favoritesDataBase);
 		            }
+		            score = -1.0;
 	            }            	
         }
     } //Playing disc
@@ -2829,7 +2830,7 @@ public class MultiDB extends JFrame {
                            posGuion = discosGrupo[k].indexOf("-");
 
                            if (posGuion < 0) {
-                        	   Errors.writeError(Errors.WRONG_SYNTAX, "Following item does not follow standard YEAR - TITLE: " + backUpPath + sep + nombreGrupo + sep + discosGrupo[k]);
+                        	   //Errors.writeError(Errors.WRONG_SYNTAX, "Following item does not follow standard YEAR - TITLE: " + backUpPath + sep + nombreGrupo + sep + discosGrupo[k]);
                            } else {
                                Disc disco = new Disc();
                                String anho = discosGrupo[k].substring(0, posGuion);
