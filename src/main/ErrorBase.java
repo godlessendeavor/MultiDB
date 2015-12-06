@@ -29,19 +29,19 @@ public abstract class ErrorBase {
     public static final Integer DB_ACCESS = -11;
     
     //WEB READER ERRORS
-    public static final Integer UPLOADING_BUP=-101;
-    public static final Integer GROUP_NOT_FOUND=-102;
-    public static final Integer MOVIE_NOT_FOUND=-103;
-    public static final Integer WEB_IMAGE_ERROR=-104;
+    public static final Integer UPLOADING_BUP=-100;
+    public static final Integer GROUP_NOT_FOUND=-101;
+    public static final Integer MOVIE_NOT_FOUND=-102;
+    public static final Integer WEB_IMAGE_ERROR=-103;
     
     //FILE ERRORS
-    public static final Integer COPYING_FILE_EXISTS=-204;
-    public static final Integer FILE_NOT_FOUND=-205;
-    public static final Integer COPYING_IOERROR=-206;
-    public static final Integer WRITING_IOERROR=-207;
-    public static final Integer FILE_DELETE_ERROR=-208;
-    public static final Integer FILE_NOT_POSIBLE_TO_CREATE=-209;
-    public static final Integer FILE_IO_ERROR=-210;
+    public static final Integer COPYING_FILE_EXISTS=-201;
+    public static final Integer FILE_NOT_FOUND=-202;
+    public static final Integer COPYING_IOERROR=-203;
+    public static final Integer WRITING_IOERROR=-204;
+    public static final Integer FILE_DELETE_ERROR=-205;
+    public static final Integer FILE_NOT_POSIBLE_TO_CREATE=-206;
+    public static final Integer FILE_IO_ERROR=-207;
     
     //ERROR GUI
     public static final Integer SAVING_REVIEW = -300;
@@ -49,22 +49,25 @@ public abstract class ErrorBase {
     
     
     //WEB ERRORS
-    public static final Integer WEB_NOT_FOUND=-401;
-    public static final Integer WEB_MALF_URL=-402;
-    public static final Integer WEB_ERROR_NOT_FOUND=-403;
+    public static final Integer WEB_NOT_FOUND=-400;
+    public static final Integer WEB_MALF_URL=-401;
+    public static final Integer WEB_ERROR_NOT_FOUND=-402;
     
     //IMAGE ERRORS
-    public static final Integer IMAGE_NOT_SAVED=-501;
+    public static final Integer IMAGE_NOT_SAVED=-500;
    
     //FORMAT ERRORS
-    public static final Integer NEGATIVE_NUMBER=-601;
-    public static final Integer WRONG_SYNTAX = -602;
+    public static final Integer NEGATIVE_NUMBER=-600;
+    public static final Integer WRONG_SYNTAX = -601;
 
     //NULL ERRORS
-    public static final Integer VAR_NULL=-701;
+    public static final Integer VAR_NULL=-700;
     
     //ERROR FOR PRINTING STACKTRACE
-    public static final Integer GENERIC_ERROR = -801;
+    public static final Integer GENERIC_ERROR = -800;
+    
+    //THREAD ERRORS
+    public static final Integer THREAD_INTERRUPTED_ERROR = -900;
     
 	//Strings for definition of errors
     public static final String SEE_LOG = "See log for details";
@@ -113,6 +116,7 @@ public abstract class ErrorBase {
     	errorsMap.put(GENERIC_ERROR,"Generic error, see log for details"); 	
     	errorsMap.put(PROGRESS_BAR_ABORTED, "Current operation aborted"); 
     	errorsMap.put(WRONG_SYNTAX, "Syntax is wrong"); 
+    	errorsMap.put(THREAD_INTERRUPTED_ERROR, "Thread interrupted error");
     }
     
     public static void setWarnings(){

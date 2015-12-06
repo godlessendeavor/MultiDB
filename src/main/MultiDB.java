@@ -2302,8 +2302,8 @@ public class MultiDB extends JFrame {
 	        if (((String) musicTabModel.getValueAt(selectedModelRow, Disc.COL_PRESENT)).compareTo("YES") == 0) present = true;
 
 			if (musicFolderConnected && present) {
-				//Dimension dim = imageDealer.showImage((File)musicTabModel.getValueAt(selectedModelRow,Disc.COL_PATH), bigCoversView);
-				//bigCoversFrame.setSize(dim.width+10,dim.height+50);
+				Dimension dim = imageDealer.showCurrentImageInLabel(bigCoversView);
+				bigCoversFrame.setSize(dim.width+10,dim.height+50);
 				bigCoversFrame.setVisible(true);
 			}
 	   }

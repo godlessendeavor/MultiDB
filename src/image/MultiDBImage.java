@@ -185,16 +185,20 @@ public class MultiDBImage{
 	public void setImageFromFile(){
 		if (this.path!=null){
 			this.image=getImageFromFile(this.path);
-			this.width=this.image.getWidth(null);
-			this.height=this.image.getHeight(null);
+			if (this.image != null){
+				this.width=this.image.getWidth(null);
+				this.height=this.image.getHeight(null);
+			}		
 		}
 	} 
 	
 	public void setImageFromFile(File pathToFile){
 		if (pathToFile!=null){
 			this.image=getImageFromFile(pathToFile);
-			this.width=this.image.getWidth(null);
-			this.height=this.image.getHeight(null);
+			if (this.image != null){
+				this.width=this.image.getWidth(null);
+				this.height=this.image.getHeight(null);
+			}
 		}
 	} 
 	
@@ -206,11 +210,13 @@ public class MultiDBImage{
 	} 
 	
     public void putImage(JLabel labelFrom,int type, String name, Dimension dim) {
+    	this.name = name;
     	PutImage putImageThread = new PutImage(labelFrom,type,name,dim);
     	putImageThread.start();
     }
     
     public void putImage(JLabel labelFrom,int type, String name) {
+    	this.name = name;
     	PutImage putImageThread = new PutImage(labelFrom,type,name,COVERS_DIM);
     	putImageThread.start();
     }
@@ -239,9 +245,18 @@ public class MultiDBImage{
     	putImageThread.start();
     }
     
-    public void putImageMaxDim(JLabel labelFrom,Image image) {
-    	PutImage putImageThread = new PutImage(labelFrom,image,MAX_COVERS_DIM);
+    public Dimension putCurrentImageMaxDim(JLabel labelFrom) {
+    	//Dimension dim = new Dimension(this.image.getWidth(null), this.image.getHeight(null));
+    	PutImage putImageThread = new PutImage(labelFrom, FILE_TYPE, this.name, MAX_COVERS_DIM);
     	putImageThread.start();
+    	synchronized(putImageThread){
+             try{
+            	 putImageThread.wait();
+             }catch(InterruptedException e){
+                 Errors.writeError(Errors.THREAD_INTERRUPTED_ERROR, "Interrupted thread when drawing image "+this.name);
+             }
+         }
+    	return MAX_COVERS_DIM;
     }
     
     
@@ -279,8 +294,7 @@ public class MultiDBImage{
 			ImageIO.write(bufferedImage,type,file);
 		} catch (IOException e) {
 			Errors.writeError(Errors.IMAGE_NOT_SAVED,": "+file.getAbsolutePath());
-		}
-    	
+		}   	
  
     }   
     
@@ -402,35 +416,41 @@ public class MultiDBImage{
 
     		@Override
     		public void run() {
-    			if ((dim.width>MAX_COVERS_DIM.width)&&(dim.height>MAX_COVERS_DIM.height)){
-					dim.width=MAX_COVERS_DIM.width;
-					dim.height=MAX_COVERS_DIM.height;
-				}
-    			if (this.label==null){
-    				Errors.writeError(Errors.VAR_NULL,"Error in MultiDBImage when putting image on label");
-    			}else{
-	    			switch(this.type){
-	    			case(FILE_TYPE):
-	   		     		imageThread = MultiDBImage.getScaledImage(getImageFromFile(sourceName),dim.width, dim.height);
-	    				break;
-	    			case(URL_TYPE):
-	    				tempIm=MultiDBImage.this.getImageFromUrl(this.sourceName,true);
-	   		     		imageThread = MultiDBImage.getScaledImage(tempIm,dim.width, dim.height);  		    	
-	    				break;
-	    			case(IMAGE_TYPE):
-	    				if (this.imageThread==null){
-	        				Errors.writeError(Errors.VAR_NULL,"Error in MultiDBImage when putting image on label");
-	        			}
-	    				tempIm=imageThread;
-	   		     		imageThread = MultiDBImage.getScaledImage(tempIm,dim.width, dim.height);
-	    				break;
-	    			}
-	    			MultiDBImage.this.image=tempIm;
-	    			scaledIcon = new ImageIcon();
-	    		    scaledIcon.setImage(imageThread);
-	    		    this.label.setIcon(scaledIcon);
-	    		}
-    		}
+    			synchronized(this){
+    				if ((dim.width>MAX_COVERS_DIM.width)&&(dim.height>MAX_COVERS_DIM.height)){
+    					dim.width=MAX_COVERS_DIM.width;
+    					dim.height=MAX_COVERS_DIM.height;
+    				}
+        			if (this.label==null){
+        				Errors.writeError(Errors.VAR_NULL,"Error in MultiDBImage when putting image on label");
+        			}else{
+    	    			switch(this.type){
+    	    			case(FILE_TYPE):
+    	   		     		imageThread = MultiDBImage.getScaledImage(getImageFromFile(sourceName),dim.width, dim.height);
+        					tempIm = imageThread;
+    	    				break;
+    	    			case(URL_TYPE):
+    	    				tempIm = MultiDBImage.this.getImageFromUrl(this.sourceName,true);
+    	   		     		imageThread = MultiDBImage.getScaledImage(tempIm,dim.width, dim.height);  		    	
+    	    				break;
+    	    			case(IMAGE_TYPE):
+    	    				if (this.imageThread==null){
+    	        				Errors.writeError(Errors.VAR_NULL,"Error in MultiDBImage when putting image on label");
+    	        			}
+    	    				tempIm = imageThread;
+    	   		     		imageThread = MultiDBImage.getScaledImage(tempIm,dim.width, dim.height);
+    	    				break;
+    	    			}
+    	    			MultiDBImage.this.image=tempIm;
+    	    			scaledIcon = new ImageIcon();
+    	    		    scaledIcon.setImage(imageThread);
+    	    		    this.label.setIcon(scaledIcon);
+    	    		}
+        			notify();
+        		}
+    	            
+    	    }
+    			
     }
     
     

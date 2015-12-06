@@ -726,10 +726,10 @@ public class MP3PlayerWindow {
 			                //playing favorites only	 
 			                 {
 			                  	 seekFavSongs(selectedDiscs.get(randomDiscTableId),songsInPath);
-			                   	 if (favSongs.size()>0){
+			                   	 while (favSongs.size()>0){
 				                   	 randomSong=rand.nextInt(favSongs.size());
 				                     currentSong=songsInPath.get(favSongs.get(randomSong));
-				                     //TODO remove taking score when an interface to set from user is created
+				                     //TODO remove copying score from album when an interface to set score from user is created
 				                     //TODO how to get song number
 				                     try{
 				                    	 currentSong.score = Float.valueOf(randomDisc.mark);
@@ -745,14 +745,17 @@ public class MP3PlayerWindow {
 					                     {
 					                    	 playList.addSong(currentSong);
 						                     this.numSongs++;
+						                     break;
 					                     }			
 					                     else{
+					                    	 favSongs.remove(randomSong);
 					                    	 Errors.writeInfoLog(Errors.GENERIC_ERROR, "Already played song: "+currentSong.name+" from "+currentSong.group+" and album "+currentSong.album);
 					                    	 System.out.println("Already played song: "+currentSong.name+" from "+currentSong.group+" and album "+currentSong.album);
 					                     }
 				                     }
 				                     else
 				                     {
+				                    	 favSongs.remove(randomSong);
 				                    	 Errors.writeInfoLog(Errors.GENERIC_ERROR, "Song with tag_title null: "+currentSong.name+" from "+currentSong.group+" and album "+currentSong.album);
 				                    	 System.out.println("Song with tag_title null: "+currentSong.name+" from "+currentSong.group+" and album "+currentSong.album);
 				                     }
