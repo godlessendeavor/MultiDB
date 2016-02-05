@@ -101,6 +101,8 @@ public class MultiDBImage{
 		    Iterator<ImageReader> readers = ImageIO.getImageReadersBySuffix("jpg");
 		    if (!readers.hasNext()){
 		    	Errors.writeError(Errors.WEB_NOT_FOUND,urlstring);
+		    	finalStream.close();
+		    	is.close();
 		    	return null;
 		    }
 		    ImageReader imageReader = (ImageReader) readers.next();
@@ -108,6 +110,8 @@ public class MultiDBImage{
 		    
 		    String formatName = imageReader.getFormatName();
 		    if (!formatName.equalsIgnoreCase("jpeg") && !formatName.equalsIgnoreCase("png") && !formatName.equalsIgnoreCase("gif")) {	    	
+		    	finalStream.close();
+		    	is.close();
 		    	return null;
 		    }
 		    		    
@@ -119,6 +123,7 @@ public class MultiDBImage{
 		    }
 		    BufferedImage caption = imageReader.read(0);
 		    /*Image image = ImageIO.read(is);*/
+	    	finalStream.close();
 		    is.close();
 		    return toImage(caption);
 		} catch (MalformedURLException e) {

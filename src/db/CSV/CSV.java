@@ -36,6 +36,7 @@ public class CSV {
 				
 				data.add(outline);
 			}
+			fin.close();
 			csv.close();			
 		} catch (FileNotFoundException e) {
 			e.printStackTrace();
@@ -69,7 +70,11 @@ public class CSV {
 				}
 				csvOutput.close();
 			}
-			else return Errors.COPYING_FILE_EXISTS;			
+			else {
+				outstream.close();
+				return Errors.COPYING_FILE_EXISTS;			
+			}
+			outstream.close();
 		} catch (IOException e) {
 			e.printStackTrace();
 			return Errors.FILE_IO_ERROR;

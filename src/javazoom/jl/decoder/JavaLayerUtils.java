@@ -147,6 +147,7 @@ public class JavaLayerUtils
 		
 		Object obj = deserializeArray(str, elemType, length);
 		
+		str.close();
 		return obj;
 	}	
 	

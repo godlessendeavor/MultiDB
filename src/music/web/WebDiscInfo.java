@@ -4,8 +4,7 @@ import java.io.*;
 
 public class WebDiscInfo {
 	
-		private static final long serialVersionUID = 1L;
-	    public int id;
+		public int id;
 	    public String group;
 	    public String title;
 	    public String year;

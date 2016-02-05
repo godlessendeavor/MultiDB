@@ -4,9 +4,7 @@ import java.io.UnsupportedEncodingException;
 import java.net.URLEncoder;
 import java.util.ArrayList;
 
-import javax.swing.JButton;
 import javax.swing.JFrame;
-import javax.swing.JScrollPane;
 import javax.swing.JTable;
 import javax.swing.table.DefaultTableModel;
 
@@ -89,7 +87,7 @@ public class WebMusicBrainz {
 	
 	public ArrayList<Disc> getGroupDiscography(String HTMLText,Disc groupInfo,String web,String id){
 		ArrayList<Disc> discList = new ArrayList<Disc>();
-		int posPost=-1, posPrev=-1, posDisc=-1, posOther=-1;
+		int posPost=-1, posPrev=-1, posOther=-1;
 		
 		Disc disc;
 		selectFrame.setTitle("Select a group for "+groupInfo.group);
