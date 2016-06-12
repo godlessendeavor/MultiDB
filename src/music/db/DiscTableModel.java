@@ -34,7 +34,6 @@ public class DiscTableModel extends AbstractTableModel{
     public static String mysqlPath=MultiDB.mysqlPath;
 
     public DiscTableModel() {
-    	data=new ArrayList<Disc>();
     	labels[Disc.COL_GROUP]="groupName";
     	labels[Disc.COL_TITLE]="title";
     	labels[Disc.COL_STYLE]="style";
@@ -47,6 +46,10 @@ public class DiscTableModel extends AbstractTableModel{
     	labels[Disc.COL_REVIEW]="review";
     	labels[Disc.COL_PATH]="path";
     	labels[Disc.COL_ID]="Id";
+    }
+    
+    public void initDefaultData(){
+    	data=new ArrayList<Disc>();
         try {
             if (dataBase.cargaControlador()>-1) {
                 if (dataBase.open("jdbc:mysql://"+host+":"+port+"/"+database, user, pass)>-1) {
@@ -105,7 +108,9 @@ public class DiscTableModel extends AbstractTableModel{
         } catch (Exception ex) {
         	Errors.showError(Errors.DB_ACCESS, "Exception during access to DB "+ex.getMessage());  
         	ex.printStackTrace();
-        }     
+        }    
+        this.greyedOutRows.clear();
+    	this.fireTableDataChanged();
     }
     
     public void setAllData(ArrayList<Disc> data){

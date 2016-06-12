@@ -88,15 +88,16 @@ public class MP3Player {
         currentSong=0;
         playList();
     }
+    
     public void playList(){
-        try {
-        	setFile(list.getSongAtRow(currentSong).path.getAbsolutePath());
+        try {   	
+        	this.setFile(list.getSongAtRow(currentSong).path.getAbsolutePath());
             player = new ExtendedPlayer(is);
             player.setPlayBackListener(playBackListener);
             playFile();
         } catch (Exception ex) {
         	Errors.writeError(Errors.GENERIC_ERROR, "Error while playing mp3 file: " + ex.getMessage());
-        	//ex.printStackTrace();
+        	ex.printStackTrace();
         }
     }
 
@@ -158,7 +159,7 @@ public class MP3Player {
                 }
             } catch (Exception e) {
             	Errors.writeError(Errors.GENERIC_ERROR, "Error while playing mp3 file: " + e.getMessage());
-                //e.printStackTrace();
+                e.printStackTrace();
             }
         }
     }

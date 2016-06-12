@@ -48,7 +48,7 @@ public class DataBaseTable extends AbstractDDBB {
 		Disc disc = null;
 		ResultSet rs;
 		int row;
-		String mySelect = "select * from "+table+" where id=\"" + id + "\"";
+		String mySelect = "select * from "+database+"."+table+" where id=\"" + id + "\"";
 		try {
 			if (cargaControlador()>-1) {
 				if (open("jdbc:mysql://" + host + ":" + port+ "/" + database, user, pass)>-1) {
@@ -88,7 +88,7 @@ public class DataBaseTable extends AbstractDDBB {
 		Disc disc = null;
 		ResultSet rs;
 		int row;
-		String mySelect = "select * from "+table+" where groupName=\"" +  name+ "\"";
+		String mySelect = "select * from "+database+"."+table+" where groupName=\"" +  name+ "\"";
 		//System.out.println(mySelect);
 		try {
 			if (cargaControlador()>-1) {
@@ -129,7 +129,7 @@ public class DataBaseTable extends AbstractDDBB {
 		ArrayList<Disc> discList = new ArrayList<Disc>();
 		ResultSet rs;
 		int row;
-		String mySelect = "select * from "+table+" where groupName=\"" +  name+ "\"";
+		String mySelect = "select * from "+database+"."+table+" where groupName=\"" +  name+ "\"";
 		//System.out.println(mySelect);
 		try {
 			if (cargaControlador()>-1) {
@@ -171,7 +171,7 @@ public class DataBaseTable extends AbstractDDBB {
 		Disc disc = null;
 		ResultSet rs;
 		int row;
-		String mySelect = "select * from "+table+" where groupName=\"" + groupName+ "\" and title=\""+discName+"\"";
+		String mySelect = "select * from "+database+"."+table+" where groupName=\"" + groupName+ "\" and title=\""+discName+"\"";
 		//System.out.println(mySelect);
 		try {
 			if (cargaControlador()>-1) {
@@ -209,7 +209,7 @@ public class DataBaseTable extends AbstractDDBB {
 	// INSERT DISC IN DATABASE AND TABLEMODEL
 	public void insertNewDisc(Disc disc) {
 		disc.check();
-		String myInsert = "insert into "+table+" (groupName,title,year,style,loc,copy,type,mark,review) values (\""
+		String myInsert = "insert into "+database+"."+table+" (groupName,title,year,style,loc,copy,type,mark,review) values (\""
 				+ disc.group + "\",\"" + disc.title + "\",\"" + disc.year+ "\",\"" + disc.style + "\",\"" + disc.loc
 				+ "\",\"" + disc.copy + "\",\"" + disc.type + "\",\"" + disc.mark + "\",\"" + disc.review
 				+ "\")";
@@ -244,7 +244,7 @@ public class DataBaseTable extends AbstractDDBB {
 			if (cargaControlador()>-1) {
 				if (open("jdbc:mysql://" + host + ":" + port+ "/" + database, user, pass)>-1) {
 					
-					myDel = "delete from "+table+" where id=\"" + id + "\"";
+					myDel = "delete from "+database+"."+table+" where id=\"" + id + "\"";
 					if (delete(myDel) > -1) {
 						// System.out.println("Deleting succesful!!!");
 						tabModel.deleteDisc(row);
@@ -268,7 +268,7 @@ public class DataBaseTable extends AbstractDDBB {
 			if (cargaControlador()>-1) {
 				if (open("jdbc:mysql://" + host + ":" + port+ "/" + database, user, pass)>-1) {
 					disc.check();
-					myUpd = "update "+table+" set groupName=\"" + disc.group
+					myUpd = "update "+database+"."+table+" set groupName=\"" + disc.group
 							+ "\",title=\"" + disc.title + "\",style=\""
 							+ disc.style + "\",year=\"" + disc.year
 							+ "\",loc=\"" + disc.loc + "\",type=\"" + disc.type
@@ -297,7 +297,7 @@ public class DataBaseTable extends AbstractDDBB {
 			if (cargaControlador()>-1) {
 				if (open("jdbc:mysql://" + host + ":" + port+ "/" + database, user, pass)>-1) {					
 					disc.check();
-					myUpd = "update "+table+" set groupName=\"" + disc.group
+					myUpd = "update "+database+"."+table+" set groupName=\"" + disc.group
 							+ "\",title=\"" + disc.title + "\",style=\""
 							+ disc.style + "\",year=\"" + disc.year
 							+ "\",loc=\"" + disc.loc + "\",type=\"" + disc.type
@@ -324,7 +324,7 @@ public class DataBaseTable extends AbstractDDBB {
             if (cargaControlador()>-1) {
                 if (open("jdbc:mysql://localhost:"+port+"/"+database,user,pass)>-1) {
                     disc.check();
-                    myUpd = "update "+table+" set review=\"" + disc.review + "\" where id=\"" + disc.id + "\"";
+                    myUpd = "update "+database+"."+table+" set review=\"" + disc.review + "\" where id=\"" + disc.id + "\"";
                     //System.out.println(myUpd);
                     if (update(myUpd) > -1) {
                         //System.out.println("Updating succesful!!!");
@@ -350,45 +350,5 @@ public class DataBaseTable extends AbstractDDBB {
 		if (restoreBackupCSV(nameFile,database,table)>-1) return 0;
 		else return Errors.DB_RESTORE;
 	}
-	
-//	public boolean makeBackup(String dirDest){
-//		final int BUFFER = 32768;
-//		 try {
-//			 String exec = mysqlPath+
-//             "mysqldump --host=" + host + " --port=" + port +
-//             " --user=" + user + " --password=" + pass +
-//             " --compact --complete-insert --extended-insert " +
-//             "--skip-comments --skip-triggers " + database;
-//             Process run = Runtime.getRuntime().exec(exec);
-//             InputStream in = run.getInputStream();
-//             BufferedReader br = new BufferedReader(new InputStreamReader(in));
-//             StringBuffer temp = new StringBuffer() ;
-//             int count;
-//             char[] cbuf = new char[BUFFER];
-//             while ((count = br.read(cbuf, 0, BUFFER)) != -1) {
-//                 temp.append(cbuf, 0, count);
-//             }
-//             br.close();
-//             in.close();
-//             DateFormat dateFormat = new SimpleDateFormat("yyyyMMdd");
-//             Date date = new Date();
-//             
-//             File filedst = new File(dirDest+"\\"+dateFormat.format(date)+table+".sql");
-//             FileOutputStream dest = new FileOutputStream(filedst);
-//             ZipOutputStream zip = new ZipOutputStream(new BufferedOutputStream(dest));
-//             zip.setMethod(ZipOutputStream.DEFLATED);
-//             zip.setLevel(Deflater.BEST_COMPRESSION);
-//             zip.putNextEntry(new ZipEntry(dirDest+"\\"+dateFormat.format(date)+table+".sql"));
-//             zip.write(temp.toString().getBytes());
-//             zip.close();
-//             dest.close();
-//             return true;
-//         } catch (Exception ex) {
-//        	 ex.printStackTrace();
-//         	reviewView.append("Error while trying to make backup\n");
-//         	return false;
-//         }
-//	}
-	
-	
+		
 }

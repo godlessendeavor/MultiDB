@@ -51,10 +51,8 @@ import javax.swing.table.TableCellRenderer;
 import javax.swing.table.TableColumn;
 
 import main.Errors;
-import main.MultiDB;
 import main.file.FileDealer;
 import main.utils.LevenshteinDistance;
-import music.db.DataBaseFavorites;
 import music.db.Disc;
 import music.db.Song;
 import music.lyrics.LyricsFrame;
@@ -66,6 +64,7 @@ public class MP3PlayerWindow {
     public static final Dimension COVER_DIM = new Dimension(250,250);
     public static final int EQ_NUM_BANDS = 10;
     public final String LYR_PLAYER_NAME="playerLyricsMenu";
+    public final String ADD_TO_FAVORITES_NAME = "addToFavoritesMenu";
     
     public static final Rectangle PIC_PANEL_BOUNDS = new Rectangle(634, 53, COVER_DIM.width, COVER_DIM.height);
     public static final Rectangle INFO_PANEL_BOUNDS = new Rectangle( 634, 315, 249, 154);
@@ -93,6 +92,7 @@ public class MP3PlayerWindow {
     public LyricsFrame lyricsFrame;
     public boolean playFirstTime = true;
     private music.db.DiscTableModel musicTabModel;
+    public music.db.DataBaseFavorites musicFavoritesDataBase;
     private ImageDealer imageDealer;
   
     public int selectedViewRowPlayer = -1,selectedModelRowPlayer=-1;  
@@ -111,6 +111,10 @@ public class MP3PlayerWindow {
     
     public void setMusicTabModel(music.db.DiscTableModel mTabModel){
     	this.musicTabModel = mTabModel;
+    }
+    
+    public void setMusicFavoritesDB(music.db.DataBaseFavorites musicFavoritesDataBase){
+    	this.musicFavoritesDataBase = musicFavoritesDataBase;
     }
     
     public void setPlayer(music.mp3Player.MP3Player  mp3Player){
@@ -238,6 +242,11 @@ public class MP3PlayerWindow {
 		seeLyricsMenu.addActionListener(popupMenuSeeLyrics);
 		seeLyricsMenu.setName(LYR_PLAYER_NAME);
 		popupSong.add(seeLyricsMenu);
+		JMenuItem addToFavoritesMenu = new JMenuItem("Add to favorites");
+		PopupMenuAddToFavoritesHandler popupMenuAddToFavorites = new PopupMenuAddToFavoritesHandler();
+		addToFavoritesMenu.addActionListener(popupMenuAddToFavorites);
+		addToFavoritesMenu.setName(ADD_TO_FAVORITES_NAME);
+		popupSong.add(addToFavoritesMenu);
 	    
 	    //popupmenulistener
 	    PopupSongListener popupSongListener = new PopupSongListener();
@@ -429,19 +438,14 @@ public class MP3PlayerWindow {
 	}
 	
 	
-	public void openAndStartPlaying(File pathDisc, String group, String album){
+	public void openAndStartPlaying(Disc disc){
 		playList.removeAllRows();
         playList.numSongs=0;
-        playList.searchFiles(pathDisc,true,group,album);
+        playList.searchFiles(disc, true);
         if (playList.numSongs!=0){
             openAndStartPlaying(playList);
         }
 	}
-	
-	public void openAndStartPlaying(File pathDisc){
-		openAndStartPlaying(pathDisc, "undefined", "undefined");
-	}
-
 	
     private void setCurrentCover(){
     	File pathDisc = playList.getSongAtRow(mp3Player.currentSong).discPath;
@@ -548,7 +552,7 @@ public class MP3PlayerWindow {
 	        @Override
 	       public void playingStarted(PlayingEvent evt){
 	        	songSlider.setMaximum((int)evt.getTime()/1000000);
-	        	playList.fireTableDataChanged();
+	        	playList.fireTableDataChanged();	        	
 	        	setCurrentCover();
 	       }
 	        @Override
@@ -618,6 +622,16 @@ public class MP3PlayerWindow {
 	       }
 	   }
 	   
+	   
+	   
+	   private class PopupMenuAddToFavoritesHandler implements ActionListener{
+		   
+	       public void actionPerformed(ActionEvent e) {
+	    	   Song song = playList.getSongAtRow(selectedModelRowPlayer);
+	    	   musicFavoritesDataBase.insertNewSongIfNotExistent(song);
+	       }
+	   }
+	   
 	   private class ResizerHandler extends ComponentAdapter{
 		   
 		   @Override
@@ -671,9 +685,8 @@ public class MP3PlayerWindow {
 		   
 	       public boolean fav;
 	       public Double mark=0.0;
-	       private File pathDisc;
 	       private Random rand = new Random();
-	       private int randomDiscTableId=0,randomSong=0;
+	       private int randomSong=0;
 	       private List<Integer> selectedDiscs = new LinkedList<Integer>();
 	       private List<Integer> favSongs = new LinkedList<Integer>();
 	       private List<Song> songsInPath = new LinkedList<Song>();
@@ -688,81 +701,34 @@ public class MP3PlayerWindow {
 			@Override
 			public void run() {
 
-				selectedDiscs=getListOfDiscsByMark(mark);
-				/*System.out.println(selectedDiscs.size());
-	        	
-			    for(int j=0;j<selectedDiscs.size();j++){
-		            	playList.removeAllRows();
-		                playList.numSongs=0;
-		                currentGroup=(String)musicTabModel.getValueAt(selectedDiscs.get(j),Disc.COL_GROUP);
-	                    currentAlbum=(String)musicTabModel.getValueAt(selectedDiscs.get(j),Disc.COL_TITLE);
-	                    pathDisc = (File) musicTabModel.getValueAt(selectedDiscs.get(j),Disc.COL_PATH);
-	                    try {
-	                    	songsInPath=playList.searchFiles(pathDisc,false,currentGroup,currentAlbum);
-	                    } catch (MP3FilesNotFound ex) {
-	                    	System.out.println(currentGroup+ " "+currentAlbum);
-		                }
-		            } */
-				
-				
+				selectedDiscs=getListOfDiscsByMark(mark);				
 	            do{
 	            	playList.removeAllRows();
 	            	this.numSongs=0;
 	            	do {
-	            		randomDiscTableId=rand.nextInt(selectedDiscs.size());
-	            		favSongs.clear();
-	            		Disc randomDisc = musicTabModel.getDiscAtRow(selectedDiscs.get(randomDiscTableId));
 	            		//System.out.println("Seleccionando disco de grupo "+randomDisc.group+ " : "+randomDisc.title);
-	            		songsInPath.clear();
-	                    songsInPath=playList.searchFiles(randomDisc.path,false,randomDisc.group,randomDisc.title);
-	                    if (songsInPath.size()!=0){
-	                    	///playing no favorites
-		                     if (!fav){
-			                      randomSong=rand.nextInt(songsInPath.size());
-			                      currentSong=songsInPath.get(randomSong);
-			                      playList.addSong(currentSong);
-			                      this.numSongs++;
-			                 }else
-			                //playing favorites only	 
-			                 {
-			                  	 seekFavSongs(selectedDiscs.get(randomDiscTableId),songsInPath);
-			                   	 while (favSongs.size()>0){
-				                   	 randomSong=rand.nextInt(favSongs.size());
-				                     currentSong=songsInPath.get(favSongs.get(randomSong));
-				                     //TODO remove copying score from album when an interface to set score from user is created
-				                     //TODO how to get song number
-				                     try{
-				                    	 currentSong.score = Float.valueOf(randomDisc.mark);
-				                     }catch(NullPointerException ex){
-				                    	 Errors.writeError(Errors.GENERIC_ERROR, "Null score in disc with id "+randomDisc.id);
-				                     }
-				                     //TODO: verify if this is working
-				                     if (currentSong.tagTitle != null)
-				                     {
-				                    	 boolean insertFav = musicFavoritesDataBase.insertNewSongIfNotExistent(currentSong, randomDisc.id);
-					                     //boolean insertFav = true;
-					                     if (insertFav)
-					                     {
-					                    	 playList.addSong(currentSong);
-						                     this.numSongs++;
-						                     break;
-					                     }			
-					                     else{
-					                    	 favSongs.remove(randomSong);
-					                    	 Errors.writeInfoLog(Errors.GENERIC_ERROR, "Already played song: "+currentSong.name+" from "+currentSong.group+" and album "+currentSong.album);
-					                    	 System.out.println("Already played song: "+currentSong.name+" from "+currentSong.group+" and album "+currentSong.album);
-					                     }
-				                     }
-				                     else
-				                     {
-				                    	 favSongs.remove(randomSong);
-				                    	 Errors.writeInfoLog(Errors.GENERIC_ERROR, "Song with tag_title null: "+currentSong.name+" from "+currentSong.group+" and album "+currentSong.album);
-				                    	 System.out.println("Song with tag_title null: "+currentSong.name+" from "+currentSong.group+" and album "+currentSong.album);
-				                     }
-				                    
-			                   	 }
-			                 }
-	                    }
+	            		if (!fav){
+	                    	 ///playing no favorites	
+	            		     int randomDiscTableId = rand.nextInt(selectedDiscs.size());
+ 	            		     Disc randomDisc = musicTabModel.getDiscAtRow(selectedDiscs.get(randomDiscTableId));
+	            		     songsInPath.clear();
+	                         songsInPath=playList.searchFiles(randomDisc, true);
+	                         if (songsInPath.size()!=0){	 	                    
+			                     randomSong=rand.nextInt(songsInPath.size());
+			                     currentSong=songsInPath.get(randomSong);
+			                     playList.addSong(currentSong);
+			                     this.numSongs++;
+	                         }
+			              }else{
+				             //playing favorites only
+		                	 currentSong = musicFavoritesDataBase.getRandomSongGreaterThanScore(mark);
+		                	 if (currentSong != null){ 
+		                		 if (findSongFile(currentSong)){
+			                	     playList.addSong(currentSong);
+						             this.numSongs++;
+		                		 }
+		                	 }
+		                 }
 	            	}while(this.numSongs<20);	                
 	               
 	                playListTable.setModel(playList);
@@ -774,13 +740,13 @@ public class MP3PlayerWindow {
 	                	playFirstTime=false;
 	                	managePlayListTable();               
 	                }
-	                
+	                	                
 	                mp3Player.playList(playList);
 	                timerThread = new TimerThread();
 	                timerThread.setDaemon(true);
 	                timerThread.start();
 	                playerFrame.setVisible(true);
-
+	                
 	            	synchronized(MP3Player.lock) {
 	                   try {
 	                		MP3Player.lock.wait();
@@ -791,6 +757,85 @@ public class MP3PlayerWindow {
 	            	}
 	            } while(true);
 			}
+			
+			private boolean findSongFile(Song songToFind){
+				boolean found = false;
+				Song songFromFolder;
+				String[] files = songToFind.discPath.list();
+		    	if (files!=null){ 
+			        int tam = files.length;
+			        if (tam != 0) {  
+			            for (int j = 0; j < tam; j++) {
+			            	if (files[j].matches("(?i).*.mp3")){
+			            		songFromFolder = new Song();
+			            		songFromFolder.path = new File(songToFind.discPath.getAbsolutePath() + File.separator + files[j]);
+			            		songFromFolder.fillMP3Tags();
+			                    //System.out.println("Comparing "+ songToFind.tagTitle +" with "+currentSong.tagTitle);
+			                    if (songToFind.tagTitle.compareTo(songFromFolder.tagTitle) == 0){			                    	
+			                    	songToFind.path = songFromFolder.path;
+				                    int index=files[j].lastIndexOf(".");
+				                    songToFind.name = files[j].substring(0, index);
+			                    	songToFind.change=false;
+			                    	songToFind.time = new Long(0);
+			                    	songToFind.fillMP3Tags();
+				                    found = true;
+				                    break;
+			                    }
+			                }
+			            }	
+			        }else{
+	                   	 Errors.writeError(Errors.FILE_NOT_FOUND, "MP3 file not found for favorite song "+songToFind.tagTitle +" with id "+ songToFind.id);
+			        }
+			        if (!found){
+	                   	Errors.writeError(Errors.FILE_NOT_FOUND, "MP3 file not found for favorite song "+songToFind.tagTitle +" with id "+ songToFind.id);
+			        }
+		        }
+		    	return found;
+			}
+			
+			private void addFavoritesFromFolders(Disc randomDisc, int indexInList) //playing favorites only	 
+            {
+				 songsInPath.clear();
+                 songsInPath=playList.searchFiles(randomDisc, true);
+             	 seekFavSongs(selectedDiscs.get(indexInList),songsInPath);
+
+         		 //favSongs.clear();
+              	 for (int j = 0; j < favSongs.size(); j++){
+                  	 //randomSong=rand.nextInt(favSongs.size());
+                    currentSong=songsInPath.get(favSongs.get(j));
+                    //TODO remove copying score from album when an interface to set score from user is created
+                    //TODO how to get song number
+                    try{
+                   	 currentSong.score = Float.valueOf(randomDisc.mark);
+                    }catch(NullPointerException ex){
+                   	 Errors.writeError(Errors.GENERIC_ERROR, "Null score in disc with id "+randomDisc.id);
+                    }
+                    //TODO: verify if this is working
+                    if (currentSong.tagTitle != null)
+                    {
+                   	 boolean insertFav = musicFavoritesDataBase.insertNewSongIfNotExistent(currentSong);
+	                     //boolean insertFav = true;
+	                     if (insertFav)
+	                     {
+	                    	 playList.addSong(currentSong);
+		                     this.numSongs++;
+		                     break;
+	                     }			
+	                     else{
+	                    	 //favSongs.remove(randomSong);
+	                    	 //Errors.writeInfoLog(Errors.GENERIC_ERROR, "Already played song: "+currentSong.name+" from "+currentSong.group+" and album "+currentSong.album);
+	                    	 System.out.println("Already played song: "+currentSong.name+" from "+currentSong.group+" and album "+currentSong.album);
+	                     }
+                    }
+                    else
+                    {
+                   	 //favSongs.remove(randomSong);
+                   	 Errors.writeInfoLog(Errors.GENERIC_ERROR, "Song with tag_title null: "+currentSong.name+" from "+currentSong.group+" and album "+currentSong.album);
+                   	 System.out.println("Song with tag_title null: "+currentSong.name+" from "+currentSong.group+" and album "+currentSong.album);
+                    }
+                   
+              	 }
+            }
 			
 			 //method to return indexes of discs which mark is over than provided
 			public List<Integer> getListOfDiscsByMark(Double mark){
@@ -836,11 +881,11 @@ public class MP3PlayerWindow {
 					currFav=currFav.substring(1,currFav.length()-1);//removing double quotes
 					added=false;
 					for (int ind=0;ind<songList.size();ind++){
-						//System.out.println("probando "+currFav);
+						//System.out.println("#####probando "+currFav);
 						//first compare with name of file
 						Song currentSong = songList.get(ind);
 						if (currentSong.name!=null){	
-							//System.out.println("comparando con "+currentSong.name);
+							System.out.println("#####comparando con "+currentSong.name);
 							if (dist.compare(currFav, currentSong.name)){
 								favSongs.add(ind);								
 								added=true;
@@ -848,8 +893,8 @@ public class MP3PlayerWindow {
 							}
 						}
 						//comparing with tagTitle as well
+						//System.out.println("#####ahora comparando con "+currentSong.tagTitle);
 						if (dist.compare(currFav, currentSong.tagTitle)){	
-							//System.out.println("ahora comparando con "+currentSong.tagTitle);
 							//if (Pattern.compile(Pattern.quote(currFav), Pattern.CASE_INSENSITIVE).matcher(songList.get(ind).tagTitle).find()){
 							favSongs.add(ind);										
 							added=true;
@@ -860,7 +905,7 @@ public class MP3PlayerWindow {
 					//Temporary writing no found songs
 					if (!added){
 						try{
-							System.out.println("Song not found: "+currFav+" for band "+disc.group+" and album "+disc.title+"\n");
+							//System.out.println("Song not found: "+currFav+" for band "+disc.group+" and album "+disc.title+"\n");
 							fileWriter.append("Song not found: "+currFav+" for band "+disc.group+" and album "+disc.title+"\n");
 						}catch(IOException ex){
 							ex.printStackTrace();
@@ -898,7 +943,7 @@ public class MP3PlayerWindow {
 					            String timeSt;
 					            if (sec<10) timeSt= Long.toString(min) + ":0" + Long.toString(sec);
 					            else timeSt= Long.toString(min) + ":" + Long.toString(sec);
-					            if (mp3Player.currentSong<mp3Player.list.getRowCount()){
+					            if (mp3Player.currentSong < mp3Player.list.getRowCount()){
 					            	String titleShown;
 					              	if (mp3Player.list.getSongAtRow(mp3Player.currentSong).tagTitle==null)
 					              			titleShown=mp3Player.list.getSongAtRow(mp3Player.currentSong).name;

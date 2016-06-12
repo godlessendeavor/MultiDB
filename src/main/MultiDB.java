@@ -351,6 +351,7 @@ public class MultiDB extends JFrame {
         Errors.f=f;
         //n-tuplas
         musicTabModel = new music.db.DiscTableModel();
+        musicTabModel.initDefaultData();
         videosTabModel = new musicmovies.db.TabMod();
         moviesTabModel = new movies.db.TabMod();
         docsTabModel = new docs.db.TabMod(); 
@@ -1545,9 +1546,10 @@ public class MultiDB extends JFrame {
 	    	           if (tam == 0) {
 	    	               Errors.showWarning(Errors.WRONG_DIRECTORY,backUpPath.toString());
 	    	           } else{              //para todos los grupos de la carpeta
-	    	        	    RelateDBBUPThread relThread = new RelateDBBUPThread();
-	    	        	    relThread.setDaemon(true);
-	    	        	    relThread.start();
+	    	               musicTabModel.initDefaultData();
+	    	        	   RelateDBBUPThread relThread = new RelateDBBUPThread();
+	    	        	   relThread.setDaemon(true);
+	    	        	   relThread.start();
 	    		       	}
     	           }else{
     	        	   Errors.showError(Errors.FILE_IO_ERROR,"Back up path is not valid: "+backUpPath.getPath());
@@ -2185,13 +2187,12 @@ public class MultiDB extends JFrame {
 
    private class PopupMenuPlayHandler implements ActionListener{
 
-       File pathDisc;
+       Disc disc;
         public void actionPerformed(ActionEvent e) {
-             pathDisc = (File) musicTabModel.getValueAt(selectedModelRow,Disc.COL_PATH);
+        	disc = musicTabModel.getDiscAtRow(selectedModelRow);
              mp3PlayerWindow.setMusicTabModel(musicTabModel);
              mp3PlayerWindow.setPlayer(mp3Player);             
-             mp3PlayerWindow.openAndStartPlaying(pathDisc,(String)musicTabModel.getValueAt(selectedModelRow,Disc.COL_GROUP),(String)musicTabModel.getValueAt(selectedModelRow,Disc.COL_TITLE));
-           
+             mp3PlayerWindow.openAndStartPlaying(disc);           
         }
     } //Playing disc
    
@@ -2204,19 +2205,20 @@ public class MultiDB extends JFrame {
             	mp3Player.randomPlay=true;
             	while ((score<=0)||(score>10)){
 	            	String sScore = JOptionPane.showInputDialog("Please insert the minimum mark of discs which to play");
+	            	
 	            	try{
 	            		if (sScore!=null){
 		            		score=Double.valueOf(sScore).doubleValue();
 		            		if ((score<=0.0)||(score>10.0)) JOptionPane.showMessageDialog(f,"Mark must be between 0 and 10");
-	            		} else break;
+	            		} else return;
 	            	}catch(NumberFormatException ex){
-	            		if (score==null) break;
+	            		if (score == null) break;
 	            		JOptionPane.showMessageDialog(f,"Mark must be between 0 and 10");
 	            	}	            	
             	}
             	if (score!=null){
 		            Object[] options = {"Yes, please","No way!"};
-		            select = JOptionPane.showOptionDialog(f,"Would you like to seek in favourites songs?","Question",JOptionPane.YES_NO_OPTION,JOptionPane.QUESTION_MESSAGE,
+		            select = JOptionPane.showOptionDialog(f,"Would you like to seek in favorites songs?","Question",JOptionPane.YES_NO_OPTION,JOptionPane.QUESTION_MESSAGE,
 		            		null,     //do not use a custom Icon
 		            		options,  //the titles of buttons
 		            		options[0]); //default button title
@@ -2810,47 +2812,47 @@ public class MultiDB extends JFrame {
 	        	return;
 	       }
            for (int j = 0; j < tam; j++) {
-               String nombreGrupo = grupos[j];
-        	   pw.setPer(j+1, "Loking for titles of "+nombreGrupo);
-               infoText.setText("Loking for titles of "+nombreGrupo);
-               File discosGrupoF = new File(backUpPath + sep + nombreGrupo);               
-               if (discosGrupoF.isDirectory() == false) {
+               String bandName = grupos[j];
+        	   pw.setPer(j+1, "Loking for titles of "+bandName);
+               infoText.setText("Loking for titles of "+bandName);
+               File bandFolder = new File(backUpPath + sep + bandName);               
+               if (bandFolder.isDirectory() == false) {
                	   //Errors.writeError(Errors.WRONG_SYNTAX, backUpPath + sep + nombreGrupo);
                } else {
-                   String[] discosGrupo = discosGrupoF.list();
-                   Integer numeroDiscos = discosGrupo.length;
+                   String[] bandDiscography = bandFolder.list();
+                   Integer numberOfDiscs = bandDiscography.length;
 
                    //para todos los discos de este grupo
 
-                   for (int k = 0; k < numeroDiscos; k++) {
-                       File discoF = new File(backUpPath + sep + nombreGrupo +sep + discosGrupo[k]);
-                       if (discoF.isDirectory() == false) {
+                   for (int k = 0; k < numberOfDiscs; k++) {
+                       File currentDisc = new File(backUpPath + sep + bandName +sep + bandDiscography[k]);
+                       if (currentDisc.isDirectory() == false) {
                     	   //Errors.writeError(Errors.WRONG_SYNTAX, "Following file is not a directory: " + discoF.toString());
                        } else {
-                           posGuion = discosGrupo[k].indexOf("-");
+                           posGuion = bandDiscography[k].indexOf("-");
 
                            if (posGuion < 0) {
                         	   //Errors.writeError(Errors.WRONG_SYNTAX, "Following item does not follow standard YEAR - TITLE: " + backUpPath + sep + nombreGrupo + sep + discosGrupo[k]);
                            } else {
                                Disc disco = new Disc();
-                               String anho = discosGrupo[k].substring(0, posGuion);
+                               String anho = bandDiscography[k].substring(0, posGuion);
                                anho = anho.trim();
                                try {
                                    //Long anhoLong = Long.decode(anho);
-                                   longNombre = discosGrupo[k].length();
-                                   String nombreDisco = discosGrupo[k].substring(posGuion + 1, longNombre);
+                                   longNombre = bandDiscography[k].length();
+                                   String nombreDisco = bandDiscography[k].substring(posGuion + 1, longNombre);
                                    //creamos nuevo disco con los datos leidos
                                    disco.title = nombreDisco.trim();
-                                   disco.group = nombreGrupo;
+                                   disco.group = bandName;
                                    disco.year = anho;
-                                   disco.path = discoF;
+                                   disco.path = currentDisc;
                                    int pos;
                                    if((pos=musicTabModel.searchDisc(disco.group,disco.title))!=-1){
                                        musicTabModel.setValueAt("YES",pos,Disc.COL_PRESENT);
                                        musicTabModel.setValueAt(disco.path, pos,Disc.COL_PATH);
                                    }else{
                                        //reviewView.append("Disc not found in Database:"+nombreGrupo+"::"+discosGrupo[k]+"\n");
-                                       discsNF=discsNF+"Disc not found in Database:"+nombreGrupo+"::"+discosGrupo[k]+"\n";
+                                       discsNF=discsNF+"Disc not found in Database:"+bandName+"::"+bandDiscography[k]+"\n";
                                    }
                                    musicFolderConnected=true;
                                    menuPlay.setEnabled(true);
@@ -2862,7 +2864,7 @@ public class MultiDB extends JFrame {
                                    menuDownloadCover.setEnabled(true);
                                    
                                } catch (NumberFormatException e) {
-                            	   Errors.writeError(Errors.WRONG_SYNTAX, "Following item might have an error in name convention: " + backUpPath + sep + nombreGrupo + sep + discosGrupo[k]);
+                            	   Errors.writeError(Errors.WRONG_SYNTAX, "Following item might have an error in name convention: " + backUpPath + sep + bandName + sep + bandDiscography[k]);
                                }
 
                              }
